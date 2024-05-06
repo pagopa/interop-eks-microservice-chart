@@ -45,7 +45,6 @@ jobs:
         with:
           dry_run: true
           semantic_version: 19.0.5
-          branches: ['main', 'test-release']
           extra_plugins: |
             @semantic-release/release-notes-generator@10.0.3
             @semantic-release/git@10.0.1
