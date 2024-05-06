@@ -1,0 +1,11 @@
+{{- if and .Values.service .Values.service.targetGroupArn }}
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: TargetGroupBinding
+metadata:
+  name: {{ .Values.name }}
+spec:
+  serviceRef:
+    name: {{ .Values.name }}
+    port: {{ .Values.service.servicePort | default .Values.service.containerPort }}
+  targetGroupARN: {{ .Values.service.targetGroupArn }}
+{{- end }}

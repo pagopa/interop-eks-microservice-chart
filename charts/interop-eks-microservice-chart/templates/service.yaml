@@ -1,0 +1,50 @@
+{{- if .Values.service.create }}
+
+{{- if and .Values.healthcheck .Values.service.targetGroupArn }}
+  {{ fail "healthcheck and service.targetGroupArn cannot both be configured; please define just one." }}
+{{- end }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    prometheus: "true"
+    {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
+  {{- if .Values.healthcheck }}
+  annotations:
+    {{- if .Values.healthcheck.path }}
+    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.healthcheck.path | quote }}
+    alb.ingress.kubernetes.io/healthcheck-port: {{ .Values.healthcheck.port | default .Values.service.port | quote }}
+    {{- if .Values.healthcheck.successCodes }}
+    alb.ingress.kubernetes.io/success-codes: {{ .Values.healthcheck.successCodes | quote }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    {{- if and .Values.service .Values.service.containerPort }}
+    - port: {{ .Values.service.servicePort | default .Values.service.containerPort }}
+      targetPort: {{ .Values.service.targetPort | default "http" }}
+      protocol: {{ .Values.service.containerProtocol | default "TCP" }}
+      name: {{ .Values.service.portName | default "http" }}
+    {{- end }}
+    {{- if and .Values.service .Values.service.enableMonitoring }}
+    - port: {{ .Values.service.monitoringPort }}
+      targetPort: monitoring
+      protocol: TCP
+      name: monitoring
+    {{- end }}
+    {{- if and .Values.service .Values.service.additionalPorts }}
+    {{- range $key, $val := .Values.service.additionalPorts }}
+    - name: {{ $val.name }}
+      targetPort: {{ $val.containerPort }}
+      protocol: {{ $val.protocol }}
+    {{- end }}
+    {{- end }}
+  selector:
+    {{- include "interop-eks-microservice-chart.selectorLabels" . | nindent 4 }}
+
+{{- end }}

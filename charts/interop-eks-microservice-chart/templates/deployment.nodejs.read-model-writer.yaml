@@ -1,0 +1,136 @@
+{{- if and (eq .Values.techStack "nodejs") (eq .Values.moduleType "read-model-writer") }}
+
+{{ $root := . }}
+
+{{- $digestSuffix := "" }}
+{{- if .Values.image.digest }}
+{{- $digestSuffix = (nospace (cat "@" .Values.image.digest)) }}
+{{- end }}
+
+{{- $imageTag := "" }}
+{{- if .Values.image.tag }}
+{{- $imageTag = (nospace (cat ":" .Values.image.tag)) }}
+{{- end }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      {{- include "interop-eks-microservice-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "interop-eks-microservice-chart.labels" . | nindent 8 }}
+      annotations:
+        digest: {{ .Values.image.digest | quote }} # Used to force deployment on same image version but different content
+    spec:
+      serviceAccountName: {{ .Values.name | quote }}
+      containers:
+        - name: {{ .Values.name }}
+          image: "{{ .Values.image.repositoryPrefix }}/{{ .Values.image.repositoryName | default .Values.name }}{{ $imageTag }}{{ $digestSuffix }}"
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          {{- if and .Values.deployment .Values.deployment.command }}
+          command: {{ .Values.deployment.command }}
+          {{- end }}
+          {{- if and .Values.deployment .Values.deployment.args }}
+          args: {{ .Values.deployment.args }}
+          {{- end }}
+          env:
+            - name: PORT
+              value: {{ .Values.service.containerPort | quote}}
+            - name: HOST
+              value: {{ .Values.deployment.host | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.deployment.logLevel | quote }}
+            - name: KAFKA_BROKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: common-kafka
+                  key: KAFKA_BROKERS
+            - name: READMODEL_DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: common-read-model
+                  key: READMODEL_DB_HOST
+            - name: READMODEL_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: common-read-model
+                  key: READMODEL_DB_NAME
+            - name: READMODEL_DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: common-read-model
+                  key: READMODEL_DB_PORT
+            - name: READMODEL_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: read-model
+                  key: PROJECTION_USR
+            - name: READMODEL_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: read-model
+                  key: PROJECTION_PSW 
+            {{- if .Values.configmap }}
+            {{- range $key, $val := .Values.configmap }}
+            - name: {{ $key }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ $root.Values.name | quote }}
+                  key: {{ $key }}
+            {{- end }}
+            {{- end }}
+            {{- if and .Values.deployment .Values.deployment.envFieldRef }}
+            {{- range $key, $val := .Values.deployment.envFieldRef }}
+            - name: {{ $key }}
+              valueFrom:
+                fieldRef:
+                  fieldPath: {{ $val }}
+            {{- end }}
+            {{- end }}
+            {{- if and .Values.deployment .Values.deployment.env }}
+            {{- range $key, $val := .Values.deployment.env }}
+            - name: "{{ $key }}"
+              value: "{{ $val }}"
+            {{- end }}
+            {{- end }}
+            {{- if and .Values.deployment .Values.deployment.envFromConfigmaps }}
+            {{- range $key, $val := .Values.deployment.envFromConfigmaps -}}
+            {{ $configmapAddress := mustRegexSplit "\\." $val 2 }}
+            - name: {{ $key }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ index $configmapAddress 0 }}
+                  key: {{ index $configmapAddress 1 }}
+            {{- end }}
+            {{- end }}
+            {{- if and .Values.deployment .Values.deployment.envFromSecrets }}
+            {{- range $key, $val := .Values.deployment.envFromSecrets -}}
+            {{ $secretAddress := mustRegexSplit "\\." $val 2 }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ index $secretAddress 0 }}
+                  key: {{ index $secretAddress 1 }}
+            {{- end }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if and .Values.deployment .Values.deployment.volumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.deployment.volumeMounts | nindent 12 }}
+          {{- end }}
+      {{- if and .Values.deployment .Values.deployment.volumes }}
+      volumes:
+        {{- toYaml .Values.deployment.volumes | nindent 8 }}
+      {{- end }}
+
+{{- end }}

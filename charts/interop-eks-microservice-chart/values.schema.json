@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "properties": {
+    "image": {
+      "description": "Container Image",
+      "properties": {
+        "repositoryPrefix": {
+          "type": "string"
+        },
+        "imagePullPolicy": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "repositoryPrefix"
+      ]
+    },
+    "resources": {
+      "description": "Container Resources consumption",
+      "properties": {
+        "requests": {
+          "properties": {
+            "cpu": {
+              "type": "string"
+            },
+            "mem": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "limits": {
+          "properties": {
+            "cpu": {
+              "type": "string"
+            },
+            "mem": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "techStack": {
+      "description": "Technology used to develop the service",
+      "type": "string",
+      "enum": [ "nodejs", "scala", "frontend"]
+    },
+    "service": {
+      "description": "Service properties",
+      "required": [
+        "containerPort"
+      ],
+      "properties": {
+        "type": {
+          "description": "Service Type",
+          "type": "string",
+          "enum": [ "ClusterIP", "NodePort" ],
+          "default": "ClusterIP"
+        },
+        "containerPort": {
+          "$comment": "This property shouldn't have a default value",
+          "description": "Port",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "monitoringPort": {
+          "description": "Monitoring Port",
+          "minimum": 0,
+          "type": "integer",
+          "default": 9095
+        },
+        "managementPort": {
+          "description": "Management Port",
+          "minimum": 0,
+          "type": "integer",
+          "default": 8558
+        }
+      },
+      "type": "object"
+    },
+    "name": {
+      "description": "Service name",
+      "type": "string"
+    },
+    "namespace": {
+      "description": "Kubernetes namespace",
+      "type": "string"
+    },
+    "replicas": {
+      "description": "Deployment replicas",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "name",
+    "namespace",
+    "resources",
+    "replicas",
+    "techStack"
+  ],
+  "title": "Values",
+  "type": "object"
+}
