@@ -12,13 +12,8 @@ on:
 
 jobs:
   bump:
-    name: Bump ${{ matrix.chart }}
+    name: Bump charts version
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 1
-      fail-fast: false
-      matrix:
-        chart: ["interop-eks-microservice-chart"]
     permissions:
       contents: write
     outputs:
@@ -50,7 +45,7 @@ jobs:
       - name: Bump chart version
         if: steps.semantic.outputs.new_release_published == 'true'
         run: |
-          for chart_dir in charts/*; do;
+          for chart_dir in charts/*; do
             pushd "${chart_dir}"
 
             echo "Bumping chart version in ${chart_dir}/Chart.yaml"
