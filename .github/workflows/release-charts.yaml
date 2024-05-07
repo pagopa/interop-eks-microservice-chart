@@ -48,7 +48,7 @@ jobs:
           for chart_dir in charts/*; do
             pushd "${chart_dir}"
 
-            echo "Bumping chart version in ${chart_dir}/Chart.yaml"
+            echo "Bumping chart version ${{ steps.semantic.outputs.new_release_version }} in ${chart_dir}/Chart.yaml"
             yq -i ".version = \"${{ steps.semantic.outputs.new_release_version }}\"" "./Chart.yaml"
             git add "./Chart.yaml"
 
