@@ -1,7 +1,7 @@
 module.exports = {
   branches: ["main", "test-release"],
   ci: false,
-  tagFormat: "${version}",
+  tagFormat: "interop-eks-*-${version}",
   plugins: [
     [
       "@semantic-release/commit-analyzer",
