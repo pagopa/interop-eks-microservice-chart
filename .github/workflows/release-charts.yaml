@@ -1,4 +1,4 @@
-name: Release Charts
+name: Release Chart
 
 on:
   workflow_dispatch:
@@ -12,12 +12,10 @@ on:
 
 jobs:
   bump:
-    name: Bump charts version
+    name: Bump chart version
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    outputs:
-      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
 
     steps:
       - name: Checkout
@@ -56,17 +54,11 @@ jobs:
       - name: Bump chart version
         if: steps.semantic.outputs.new_release_published == 'true'
         run: |
-          for chart_dir in charts/*; do
-            pushd "${chart_dir}"
+          echo "Bumping chart version ${{ steps.semantic.outputs.new_release_version }}"
+          yq -i ".version = \"${{ steps.semantic.outputs.new_release_version }}\"" "charts/interop-eks-microservice-chart/Chart.yaml"
+          git add "charts/interop-eks-microservice-/Chart.yaml"
 
-            echo "Bumping chart version ${{ steps.semantic.outputs.new_release_version }} in ${chart_dir}/Chart.yaml"
-            yq -i ".version = \"${{ steps.semantic.outputs.new_release_version }}\"" "./Chart.yaml"
-            git add "./Chart.yaml"
-
-            popd
-          done;
-
-          git commit -m "Bump charts version ${{ steps.semantic.outputs.new_release_version }}"
+          git commit -m "Bump chart version ${{ steps.semantic.outputs.new_release_version }}"
           git push -u origin ${{ github.ref_name }}
 
       - name: Run chart-releaser
