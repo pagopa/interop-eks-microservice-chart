@@ -1,1 +1,1 @@
-# interop-helm-charts
+# interop-eks-microservice-chart
