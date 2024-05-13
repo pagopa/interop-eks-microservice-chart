@@ -1,5 +1,5 @@
 module.exports = {
-  branches: ["main", "test-release"],
+  branches: ["main"],
   ci: false,
   tagFormat: "interop-eks-microservice-chart-${version}",
   plugins: [
