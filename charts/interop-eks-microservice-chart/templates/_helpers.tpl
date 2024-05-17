@@ -37,8 +37,18 @@ Common labels
 app.kubernetes.io/name: {{ .Values.name }}
 helm.sh/chart: {{ include "interop-eks-microservice-chart.chart" . }}
 {{ include "interop-eks-microservice-chart.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
+{{- if .Values.image.tag }}
+{{- $imageTag := "" }}
+{{- $imageTag = (nospace .Values.image.tag) }}
+app.kubernetes.io/version: {{ $imageTag }}
+{{ else if .Values.image.digest }}
+{{- $digestSuffix := "" }}
+{{- $digestSuffix = (nospace .Values.image.digest) }}
+app.kubernetes.io/version: {{ $digestSuffix }}
+{{ else if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end -}}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
