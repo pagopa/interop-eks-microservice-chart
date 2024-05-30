@@ -1,32 +1,45 @@
 
-Interop-eks-microservice-chart
-===========
+# interop-eks-microservice-chart
+
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
-
-## Configuration
+## Values
 
 The following table lists the configurable parameters of the Interop-eks-microservice-chart chart and their default values.
 
-| Parameter                | Description             | Default        |
-| ------------------------ | ----------------------- | -------------- |
-| `securityContext.runAsUser` |  | `1001` |
-| `securityContext.allowPrivilegeEscalation` |  | `false` |
-| `image.imagePullPolicy` |  | `"Always"` |
-| `service.type` |  | `"ClusterIP"` |
-| `service.monitoringPort` |  | `9095` |
-| `service.managementPort` |  | `8558` |
-| `service.enableHttp` |  | `true` |
-| `service.targetPort` |  | `"http"` |
-| `service.enableMonitoring` |  | `true` |
-| `service.enableManagement` |  | `true` |
-| `ingress.enable` |  | `false` |
-| `ingress.className` |  | `"alb"` |
-| `ingress.groupName` |  | `"interop-be"` |
-| `deployment.flyway.enableFlywayInitContainer` |  | `false` |
-| `deployment.enableReadinessProbe` |  | `true` |
-| `deployment.enableLivenessProbe` |  | `true` |
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| deployment.enableLivenessProbe | bool | `true` | Enable liveness probe on main container |
+| deployment.enableReadinessProbe | bool | `true` | Enable readiness probe on main container |
+| deployment.flyway.commonsDbConfigmapName | string | `nil` | Configmap with DB values |
+| deployment.flyway.enableFlywayInitContainer | bool | `false` |  |
+| deployment.host | string | `nil` | (nodejs) Container host |
+| deployment.logLevel | string | `nil` | (nodejs) Container log level |
+| healthcheck | object | `{"path":null,"port":null,"successCodes":null}` | Service annotations |
+| image.digest | string | `nil` |  |
+| image.imagePullPolicy | string | `"Always"` |  |
+| image.repositoryPrefix | string | `nil` |  |
+| image.tag | string | `nil` |  |
+| ingress.className | string | `"alb"` |  |
+| ingress.enable | bool | `false` | Enable K8s Ingress deployment generation |
+| ingress.groupName | string | `"interop-be"` |  |
+| name | string | `nil` | Name of the service that will be deployed on K8s cluster |
+| namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
+| replicas | int | `nil` | Number of desired replicas for the service being deployed |
+| resources | object | `{"limits":{"cpu":null,"mem":null},"requests":{"cpu":null,"mem":null}}` | K8s container resources requests and limits |
+| roleArn | string | `nil` | ServiceAccount roleARN |
+| securityContext | object | `{"allowPrivilegeEscalation":false,"runAsUser":1001}` | Pod securityContext del Pod, used in Deployment yaml |
+| service.containerPort | string | `nil` |  |
+| service.create | bool | `true` | Enable K8s Service deployment generation |
+| service.enableManagement | bool | `true` | Enable container management port |
+| service.enableMonitoring | bool | `true` | Enable container monitoring port |
+| service.managementPort | int | `8558` |  |
+| service.monitoringPort | int | `9095` |  |
+| service.targetPort | string | `"http"` |  |
+| service.type | enum | `"ClusterIP"` | K8s Service type, allowed values: [ "ClusterIP", "NodePort" ] |
+| techStack | enum | `nil` | Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "scala", "frontend"] |
 
 ## 1. Configurazione del Deployment di un MicroServizio
 
@@ -77,7 +90,6 @@ env:
 
 Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "configmap".
 
-
 #### 1.1.2. <ins>envFromConfigmaps - Referenziare una ConfigMap esterna</ins>
 
 Per referenziare una chiave da una ConfigMap esterna, è necessario aggiungere una coppia chiave/valore nel blocco "deployment.envFromConfigmaps" nel file _values.yaml_ specifico per il microservizio.
@@ -108,7 +120,6 @@ env:
 
 Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "envFromConfigmaps".
 
-
 #### 1.1.3. <ins>envFromSecrets - Referenziare un Secret esterno</ins>
 
 Per referenziare una chiave da un Secret esterno è necessario aggiungere una coppia chiave/valore nel blocco "deployment.envFromSecrets" nel file _values.yaml_ specifico per il microservizio.
@@ -137,7 +148,6 @@ sarà aggiunto un riferimento nel Deployment nella sezione _env_:
 ```
 
 Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "envFromSecrets".
-
 
 #### 1.1.4 <ins>env - Definire variabili d'ambiente custom</ins>
 
@@ -221,278 +231,7 @@ Il campo "volumeMounts" può contenere la definizione di uno o più oggetti.
 
 ---
 
-## 2. Common ConfigMaps
-
-Di seguito sono descritte le ConfigMap esterne che possono essere referenziate dai singoli microservizi seguendo la sintassi indicata in "envFromConfigmaps - Referenziare una ConfigMap esterna"; le seguenti ConfigMap sono comuni a tutti i Deployment e raggruppano dei valori comuni a tutti i microservizi.
-Al fine di essere utilizzate, le ConfigMap comuni devono essere già state installate nel namespace/ambiente in cui si vogliono rilasciare i microservizi.
-
-### 2.1. interop-be-commons
-
-Il nome di questa ConfigMap è "interop-be-commons" ed include parametri di configurazione generali ed URL di utilità comune, come ad esempio:
-
-* AGREEMENT_MANAGEMENT_URL
-* AGREEMENT_PROCESS_URL
-* SELFCARE_V2_URL
-* WELL_KNOWN_URLS
-* PERSISTENCE_EVENTS_QUEUE_URL
-* ...
-
-Per utilizzare una delle chiavi specificate nella ConfigMap "interop-be-commons" è sufficiente referenziarla nel file _values.yaml_ del microservizio, ad esempio "agreement-management" per ambiente "qa", come segue:
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-deployment:
-  envFromConfigmaps:
-    CUSTOM_KEY_AGREEMENT_MANAGEMENT_URL: "interop-be-commons.AGREEMENT_MANAGEMENT_URL"
-```
-
-
-### 2.2. interop-be-db-commons
-
-Il nome di questa ConfigMap è "interop-be-db-commons" ed include parametri di configurazione generali relativi alle connessioni ai DB postgres, documentDB e redis, ad esempio:
-
-* POSTGRES_HOST
-* POSTGRES_PORT
-* READ_MODEL_DB_HOST
-* RATE_LIMITER_REDIS_HOST
-* ...
-
-Per utilizzare una delle chiavi specificate nella ConfigMap "interop-be-db-commons" è sufficiente referenziarla nel file _values.yaml_ del microservizio, ad esempio "agreement-management" per ambiente "qa", come segue:
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-deployment:
-  envFromConfigmaps:
-    CUSTOM_KEY_POSTGRES_HOST: "interop-be-db-commons.POSTGRES_HOST"
-```
-
-### 2.3. common-db-migrations
-
-Il nome di questa ConfigMap è "common-db-migrations" ed include script di inizializzazione del db postgres; in particolare si occupa di creare le tabelle event_journal, event_tag, snapshot, akka_projection_offset_store, akka_projection_management.
-
-Per referenziare questa ConfigMap è sufficiente mapparla con un volume nella definizione del Deployment del microservizio, ad esempio "agreement-management" per ambiente "qa", come segue:
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-volumes:
-  - name: migrations-files
-    projected:
-      sources:
-       - configMap:
-          name: common-db-migrations
-```
-
----
-
-## 4. Common Values
-
-Per ogni ambiente sono definiti dei valori di default utilizzati dalla Chart dei microservizi e dei cronjob; tali valori sono reperibili nei file presenti in "commons/<ENV>/values.yaml" e, se necessario, possono essere sovrascritti dai microservizi.
-
-
-### 4.1 Valori di default
-Di seguito l'elenco dei campi con esempi di valorizzazioni, ad esempio per l'ambiente "dev":
-
-```
-# /commons/dev/values-microservice.yaml
-
-# Namespace su cui è rilasciato il servizio e le sue risorse
-namespace: "dev"
-
-# Numero di repliche per il servizio
-replicas: 1
-
-# Tecnologia utilizzata per sviluppare il servizio, ad esempio "scala" o "nodejs" per i backend e "frontend" per servizi di frontend
-techStack: "scala"
-
-# Porta su cui è esposto il servizio
-service:
-  port: 8088
-
-# Configurazione dell'immagine Docker del servizio; necessario specificare il nome dell'immagine specifica associata al servizio.
-image:
-  repositoryPrefix: "505630707203.dkr.ecr.eu-central-1.amazonaws.com"
-  imagePullPolicy: Always
-
-# Nome della ConfigMap con le configurazioni comuni relative ai Db
-commonsDbConfigmapName: "interop-be-db-commons"
-
-# Risorse utilizzate (richieste/limite) dal container
-resources:
-  requests:
-    cpu: "500m"
-    memory: "2Gi"
-  limits:
-    cpu: "500m"
-    memory: "2Gi"
-```
-
-### 4.2 Esempio di override
-Dati i valori di default specificati nel file _values.yaml_ della Chart ed i valori comuni a tutti i servizi definiti in _commons/<ENV>/values-microservice .yaml_, è sempre possibile indicare dei valori che li sovrascrivano per il servizio che si sta sviluppando.
-In ogni caso, in dipendenza da come sono gestiti ed implementati i progetti contenenti le definizioni delle Chart e dei servizi, l'override è eseguito a partire dalla definizione più generale, quella della Chart, passando per eventuali definizioni comuni per ambienti, nella directory commons, fino ad arrivare a definizioni specifiche per i servizi sviluppati, nelle directory microservices e jobs; il valore più specifico ha una priorità maggiore rispetto a quelli più generali.
-
-**<u>Caso 1</u> - Chart e Servizio**
-
-Considerando il seguente contenuto del _values.yaml_ della Chart "interop-eks-microservice-chart":
-```
-# /interop-eks-microservice-chart/values.yaml
-
-service:
-  port: 8080
-```
-
-Nei commons non è specificato nessun override per tale valore, ma in fase di sviluppo di un servizio, ad esempio "agreement-management", è possibile indicare quanto segue nel _values.yaml_ dell'ambiente "qa":
-```
-# /microservices/agreement-management/qa/values.yaml
-
-service:
-  port: 8081
-```
-
-In fase di generazione dei template Helm, il valore finale considerato sarà quello specificato nel values del servizio, quindi:
-```
-service:
-  port: 8081
-```
-
-**<u>Caso 2</u> - Commons e Servizio**
-
-Considerando il seguente contenuto del _values.yaml_ definito nei commons dell'ambiente "qa":
-```
-# /commons/qa/values-microservice.yaml
-
-service:
-  port: 8081
-```
-
-e tenendo conto che nel _values.yaml_ della Chart "interop-eks-microservice-chart" non è specificato alcun valore, in fase di sviluppo di un servizio, ad esempio "agreement-management", è possibile indicare quanto segue nel _values.yaml_ dello stesso:
-```
-# /microservices/agreement-management/qa/values.yaml
-
-service:
-  port: 8082
-```
-
-In fase di generazione dei template Helm, il valore finale considerato sarà quello specificato nel values del servizio, quindi:
-```
-service:
-  port: 8082
-```
-
-**<u>Caso 3</u> - Chart e Commons**
-
-Considerando il seguente contenuto del _values.yaml_ della Chart "interop-eks-microservice-chart":
-```
-# /interop-eks-microservice-chart/values.yaml
-
-service:
-  port: 8080
-```
-
-e dato il seguente contenuto del _values.yaml_ definito nei commons dell'ambiente "qa":
-```
-# /commons/qa/values-microservice.yaml
-
-service:
-  port: 8081
-```
-
-se in fase di sviluppo di un servizio, ad esempio "agreement-management", non si indica alcun valore specifico, durante la generazione dei template Helm il valore finale considerato sarà quello dei common values dell'ambiente selezionato, quindi:
-```
-service:
-  port: 8081
-```
-
-**<u>Caso 4</u> - Chart, Commons e Servizio**
-
-Considerando il seguente contenuto del _values.yaml_ della Chart "interop-eks-microservice-chart":
-```
-# /interop-eks-microservice-chart/values.yaml
-
-service:
-  port: 8080
-```
-
-e dato il seguente contenuto del _values.yaml_ definito nei commons dell'ambiente "qa":
-```
-# /commons/qa/values-microservice.yaml
-
-service:
-  port: 8081
-```
-
-se in fase di sviluppo di un servizio, ad esempio "agreement-management", si indica un valore specifico:
-```
-# /microservices/agreement-management/qa/values.yaml
-
-service:
-  port: 8082
-```
-
-durante la generazione dei template Helm il valore finale considerato sarà quello indicato per il servizio, quindi:
-```
-service:
-  port: 8082
-```
-
-**<u>Caso 5</u> - Solo Chart**
-
-Considerando il seguente contenuto del _values.yaml_ della Chart "interop-eks-microservice-chart":
-```
-# /interop-eks-microservice-chart/values.yaml
-
-service:
-  port: 8080
-```
-
-se in fase di sviluppo di un servizio, ad esempio "agreement-management", non si indica alcun valore specifico, durante la generazione dei template Helm, il valore finale considerato sarà quello dei values della Chart, quindi:
-```
-service:
-  port: 8080
-```
-
-**<u>Caso 6</u> - Solo commons**
-
-Considerando il seguente contenuto del _values.yaml_ nei commons dell'ambiente "qa":
-```
-# /commons/qa/values-microservice.yaml
-
-service:
-  port: 8081
-```
-
-se in fase di sviluppo di un servizio, ad esempio "agreement-management", non si indica alcun valore specifico, durante la generazione dei template Helm il valore finale considerato sarà quello dei common values dell'ambiente selezionato, quindi:
-```
-service:
-  port: 8081
-```
-
-**<u>Caso 7</u> - Solo servizio**
-
-Considerando il seguente contenuto del _values.yaml_ di un servizio, ad esempio "agreement-management" (microservices/agreement-management/qa/values.yaml):
-```
-# /microservices/agreement-management/qa/values.yaml
-
-service:
-  port: 8082
-```
-
-durante la generazione dei template Helm il valore finale considerato sarà quello indicato per il servizio stesso, quindi:
-```
-service:
-  port: 8082
-```
-
-### 4.3 Cronjob
-
-Nei commons degli ambienti di rilascio sono presenti dei values separati per i classici microservizi, per cui è previsto anche un Service Kubernetes, definiti nel file _values-microservice.yaml_ e per i job in esecuzione programmata, Cronjob Kubernetes, per i quali è utilizzato il file _values-cronjob.yaml_.
-Nonostante sussita questa separazione fisica dei values, ai fini dello sviluppo di uno dei due tra Microservizi e Cronjob, valgono le stesse regole di override precedentemente descritte.
-
----
-
-## 5. FlyWay init container
+## 2. FlyWay init container
 
 Alcuni microservizi possono avere la necessità di utilizzare Flyway per la gestione di migrazioni del DB; al fine di soddisfare tale requisito, è possibile abilitare un Flyway init container aggiungendo ai _values.yaml_ la seguente configurazione, ad esempio per il servizio "agreement-management" nell'ambiente "qa":
 
@@ -536,47 +275,9 @@ resources:
     cpu: "500m"
 ```
 
-Altri valori di default sono definiti all'interno della Chart e, come per quelli comuni per ambiente, possono essere sovrascritti:
-
-```
-# /interop-eks-microservice-chart/values.yaml
-
-# securityContext del Pod, utilizzata nel Deployment
-securityContext:
-  runAsUser: 1001
-  allowPrivilegeEscalation: false
-
-# Pull policy dell'immagine Docker
-image:
-  imagePullPolicy: Always
-
-# Configurazione utilizzata dall Service e dal Deployment
-service:
-  type: "ClusterIP"
-  monitoringPort: 9095
-  managementPort: 8558
-  enableHttp: true
-  targetPort: "http"
-  enableMonitoring: true
-  enableManagement: true
-
-# Configurazione dell'Ingress, disabilitato se non indicato esplicitamente
-ingress:
-  enable: false
-  className: alb
-  groupName: "interop-be"
-
-# Configurazione del Deployment con Flyway disattivato e sonde attive
-deployment:
-  flyway:
-    enableFlywayInitContainer: false
-  enableReadinessProbe: true
-  enableLivenessProbe: true
-```
-
 ---
 
-## 6.  Ingress
+## 3.  Ingress
 
 Per installare ed abilitare l'Ingress per un dato microservizio, ad esempio agreement-management per l'ambiente "qa", è necessario definire il seguente blocco nel _values.yaml_:
 
@@ -605,7 +306,7 @@ ingress:
   groupName: "custom-group-name"
 ```
 
-Opzionalmente, 
+Opzionalmente,
 
 * è possibile definire un host con cui eseguire l'override del default "*":
 
@@ -624,8 +325,9 @@ ingress:
 ingress:
   groupOrder: 1
 ```
+---
 
-## 7. Service
+## 4. Service
 
 E' possibile abilitare e customizzare le seguenti annotations per il Service generato per il microservizio:
 
@@ -648,7 +350,6 @@ Di seguito i mapping tra annotations e values:
   * "alb.ingress.kubernetes.io/healthcheck-path" è popolato con il contenuto di "healthcheck.path"
   * "alb.ingress.kubernetes.io/healthcheck-port" è popolato con il contenuto di "healthcheck.port" o, se non è presente, con "service.port"
   * "alb.ingress.kubernetes.io/success-codes" è popolato con il contenuto di "healthcheck.successCodes"
-
 
 In aggiunta alle annotations, è possibile specificare delle porte custom su cui esporre il servizio applicando la seguente configurazione al file _values.yaml_ del microservizio che si sta sviluppando, ad esempio "agreement-management" in ambiente "qa"
 
@@ -716,57 +417,159 @@ spec:
 ```
 ---
 
+## 5. Tipologie di Deployment
 
-## 8. Script
+### 5.1. TechStack NodeJS
 
-## 8.1 Generazione dei Template Helm
-
-E' possibile generare i template Helm di un Cronjob o di un Microservizio senza applicare alcuna modifica al cluster Kubernetes per cui si vogliono produrre i manifest.
-
-
-**Generazione dei template di un singolo microservizio**
-
-Per generare i template di un Microservizio in ambiente di "qa", ad esempio per "agreement-management", è possibile utilizzare lo script "helmTemplate-svc-single.sh" nel seguente modo:
+Di seguito sono descritti di template di Deployment utilizzati per Microservizi sviluppati in NodeJS; per poter essere utilizzati è necessario impostare il valore di *techStack* nel file _values.yaml_ dello specifico Microservizio.
+Ad esempio, per il servizio _catalog-process_ in ambiente di _dev-refactor_ è necessario utilizzare la seguente configurazione:
 
 ```
-sh helmTemplate-svc-single.sh -e qa -m agreement-management -d
+# /microservices/catalog-process/dev-refactor/values.yaml
+
+techStack: "nodejs"
 ```
 
-o utilizzando la sintassi estesa
+Questa configurazione è necessaria per tutti i Deployment di seguito descritti.
+
+#### 5.1.1. <ins>Default NodeJS Microservice Deployment</ins>
+
+Il deployment di default utilizzato per Microservizi sviluppati in NodeJS è "deployment.nodejs.yaml"; per poter essere utilizzato, nel file _values.yaml_ non deve essere impostato il valore di _moduleType_.
+
+Per questo Deployment è previsto l'utilizzo del FlyWay InitContainer; di seguito sono elencate le variabili d'ambiente in uso per tale container:
+
+  * POSTGRES_HOST: mappata con la chiave _POSTGRES_HOST_ della ConfigMap _interop-be-db-commons_
+  * POSTGRES_PORT: mappata con la chiave _POSTGRES_PORT_ della ConfigMap _interop-be-db-commons_
+  * POSTGRES_DB: mappata con la chiave _POSTGRES_DB_ della ConfigMap _interop-be-db-commons_
+  * FLYWAY_URL: valore composto dinamicamente in base ai valori di POSTGRES_HOST, POSTGRES_PORT e POSTGRES_DB recuperati dalla ConfigMap _interop-be-db-commons_
+  * FLYWAY_CREATE_SCHEMAS: valorizzato con _true_
+  * FLYWAY_PLACEHOLDER_REPLACEMENT: valorizzato con _true_
+  * FLYWAY_SCHEMAS: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio
+  * FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio
+  * FLYWAY_USER: mappato con la chiave _POSTGRES_USR_ del Secret comune "postgres"
+  * FLYWAY_PASSWORD: mappato con la chiave _POSTGRES_PSW_ del Secret comune "postgres"
+
+Per il container principale, sono definite le seguenti variabili d'ambiente:
+  * NAMESPACE: mappato con il fieldRef metadata.namespace
+  * REQUIRED_CONTACT_POINT_NR: mappato con il valore _replicas_ definito nel _values.yaml_
+  * DEV_ENDPOINTS_ENABLED: mappato con la chiave DEV_ENDPOINTS_ENABLED della ConfigMap comune _interob-be-commons_
+
+#### 5.1.2. <ins>Generic Consumer Deployment</ins>
+
+Il deployment "deployment.nodejs.generic-consumer.yaml" è attualmente in uso solo per l'ambiente _dev-refactor_ e per i seguenti microservizi:
+  * authorization-updater
+  * notifier-seeder
+
+Può essere attivato impostando il valore di **moduleType** nel _values.yaml_ del microservizio, ad esempio per _authorization-updater_ in ambiente _dev-refactor_:
 
 ```
-sh helmTemplate-svc-single.sh --environment qa --microservice agreement-management --debug
+# /microservices/authorization-updater/dev-refactor/values.yaml
+
+techStack: "nodejs"
+moduleType: "generic-consumer"
 ```
 
-E' possibile combinare opzioni in versione compressa o estesa ed accedere all'help dello script con la seguente opzione:
+A differenza del Deployment di default, sono definite le seguenti variabili d'ambiente per il container principale:
+  * LOG_LEVEL: mappato con il valore definito in _deployment.logLeveL_
+  ```
+  deployment:
+    logLeveL_: "INFO"
+  ```
+  * KAFKA_BROKERS: mappato con la chiave _KAFKA_BROKERS_ della ConfigMap comune "common-kafka"
+
+Per questo Deployment non è previsto l'utilizzo del FlyWay InitContainer.
+
+#### 5.1.3. <ins>Process Microservice Deployment</ins>
+
+Il deployment "deployment.nodejs.process-microservice.yaml" è attualmente in uso solo per l'ambiente _dev-refactor_ e per il seguente microservizio:
+  * catalog-process
+
+Può essere attivato impostando il valore di **moduleType** nel _values.yaml_ del microservizio, ad esempio per _catalog-process_ in ambiente _dev-refactor_:
 
 ```
-sh helmTemplate-svc-single.sh --help
-sh helmTemplate-svc-single.sh -h
+# /microservices/catalog-process/dev-refactor/values.yaml
+
+techStack: "nodejs"
+moduleType: "process-ms"
 ```
 
-L'esecuzione di questo script comporta la creazione di una directory "out_agreement-management_qa" conenente un file yaml con i template generati per il servizio ed ambiente specificati.
+Per questo Deployment è previsto l'utilizzo del FlyWay InitContainer; a differenza del Deployment di default, sono utilizzate delle chiavi specifiche della ConfigMap comune **common-event-store**:
 
-**Generazione dei template di un singolo cronjob**
+  * POSTGRES_HOST: mappata con la chiave _EVENTSTORE_DB_HOST_ della ConfigMap
+  * POSTGRES_PORT: mappata con la chiave _EVENTSTORE_DB_PORT_ della ConfigMap
+  * POSTGRES_DB: mappata con la chiave _EVENTSTORE_DB_NAME_ della ConfigMap
 
-Per generare i template di un Cronjob in ambiente di "qa", ad esempio per "attributes-loader", è possibile utilizzare lo script "helmTemplate-cron-single.sh" nel seguente modo:
+Inoltre, sempre per l'init container, sono definite le seguenti variabili d'ambiente:
+  * FLYWAY_URL: valore composto dinamicamente in base ai valori di EVENTSTORE_DB_HOST, EVENTSTORE_DB_PORT e EVENTSTORE_DB_NAME recuperati dalla suddetta ConfigMap
+  * POSTGRES_DB: mappato con la chiave _EVENTSTORE_DB_NAME_ della ConfigMap comune "common-event-store"
+  * FLYWAY_USER: mappato con la chiave _POSTGRES_USR_ della ConfigMap comune "event-store"
+  * FLYWAY_PASSWORD: mappato con la chiave _POSTGRES_PSW_ del Secret comune "event-store"
+  * FLYWAY_SCHEMAS: mappato con la chiave _EVENTSTORE_DB_SCHEMA_ della ConfigMap specifica del microservizio
+  * FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: mappato con la chiave _EVENTSTORE_DB_SCHEMA_ della ConfigMap specifica del microservizio
+
+Per il container principale, sono definite le seguenti variabili d'ambiente:
+  * PORT: mappato con il value definito in _service.containerPort_
+  ```
+  service:
+    containerPort: 8080
+  ```
+  * HOST: mappato con il valore definito in _deployment.host_
+  ```
+  deployment:
+    host: "0.0.0.0"
+  ```
+  * LOG_LEVEL: mappato con il valore definito in _deployment.logLeveL_
+  ```
+  deployment:
+    logLeveL_: "INFO"
+  ```
+  * EVENTSTORE_DB_HOST: mappato con la chiave _EVENTSTORE_DB_HOST_ della ConfigMap comune "common-event-store"
+  * EVENTSTORE_DB_NAME: mappato con la chiave _EVENTSTORE_DB_NAME_ della ConfigMap comune "common-event-store"
+  * EVENTSTORE_DB_PORT: mappato con la chiave _EVENTSTORE_DB_PORT_ della ConfigMap comune "common-event-store"
+  * EVENTSTORE_DB_USERNAME: mappato con la chiave _POSTGRES_USR_ della ConfigMap comune "event-store"
+  * EVENTSTORE_DB_PASSWORD: mappato con la chiave _POSTGRES_PSW_ del Secret comune "event-store"
+  * EVENTSTORE_DB_USE_SSL: valorizzato con "true"
+  * READMODEL_DB_HOST: mappato con la chiave _READMODEL_DB_HOST_ della ConfigMap comune "common-read-model"
+  * READMODEL_DB_NAME: mappato con la chiave _READMODEL_DB_NAME_ della ConfigMap comune "common-read-model"
+  * READMODEL_DB_PORT: mappato con la chiave _READMODEL_DB_PORT_ della ConfigMap comune "common-read-model"
+  * READMODEL_DB_USERNAME: mappato con la chiave _READONLY_USR_ della ConfigMap comune "read-model"
+  * READMODEL_DB_PASSWORD: mappato con la chiave _READONLY_PSW_ del Secret comune "read-model"
+
+#### 5.1.4. <ins>Read Model Writer Deployment</ins>
+
+Il deployment "deployment.nodejs.read-model-writer.yaml" è attualmente in uso solo per l'ambiente _dev-refactor_ e per il seguente microservizio:
+  * catalog-read-model-writer
+
+Può essere attivato impostando il valore di **moduleType** nel _values.yaml_ del microservizio, ad esempio per _catalog-read-model-writer_ in ambiente _dev-refactor_:
 
 ```
-sh helmTemplate-cron-single.sh -e qa -j attributes-loader -d
+# /microservices/catalog-read-model-writer/dev-refactor/values.yaml
+
+techStack: "nodejs"
+moduleType: "read-model-writer"
 ```
 
-o utilizzando la sintassi estesa
+A differenza del Deployment di default, sono definite le seguenti variabili d'ambiente per il container principale:
+  * PORT: mappato con il value definito in _service.containerPort_
+    ```
+    service:
+      containerPort: 8080
+    ```
+  * HOST: mappato con il valore definito in _deployment.host_
+  ```
+  deployment:
+    host: "0.0.0.0"
+  ```
+  * LOG_LEVEL: mappato con il valore definito in _deployment.logLeveL_
+  ```
+  deployment:
+    logLeveL_: "INFO"
+  ```
+  * KAFKA_BROKERS: mappato con la chiave _KAFKA_BROKERS_ della ConfigMap comune "common-kafka"
+  * READMODEL_DB_HOST: mappato con la chiave _READMODEL_DB_HOST_ della ConfigMap comune "common-read-model"
+  * READMODEL_DB_NAME: mappato con la chiave _READMODEL_DB_NAME_ della ConfigMap comune "common-read-model"
+  * READMODEL_DB_PORT: mappato con la chiave _READMODEL_DB_PORT_ della ConfigMap comune "common-read-model"
+  * READMODEL_DB_USERNAME: mappato con la chiave _READMODEL_DB_USERNAME_ della ConfigMap comune "common-read-model"
+  * READMODEL_DB_PASSWORD: mappato con la chiave _PROJECTION_PSW_ del Secret comune "read-model"
 
-```
-sh helmTemplate-cron-single.sh --environment qa --job attributes-loader --debug
-```
-
-E' possibile combinare opzioni in versione compressa o estesa ed accedere all'help dello script con la seguente opzione:
-
-```
-sh helmTemplate-cron-single.sh --help
-sh helmTemplate-cron-single.sh -h
-```
-
-L'esecuzione di questo script comporta la creazione di una directory "out_cron_attributes-loader_qa" conenente un file yaml con i template generati per il cronjob ed ambiente specificati.
-
+Per questo Deployment non è previsto l'utilizzo del FlyWay InitContainer.
