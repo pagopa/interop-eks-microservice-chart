@@ -1,23 +1,63 @@
 # Default values for interop-eks-microservice-chart.
 
+# -- Name of the service that will be deployed on K8s cluster
+name:
+
+# -- Namespace hosting the service that will be deployed on K8s cluster
+namespace:
+
+# -- (enum) Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "scala", "frontend"]
+techStack: 
+
+# -- (int) Number of desired replicas for the service being deployed
+replicas: 
+
+# -- ServiceAccount roleARN
+roleArn:
+
+# -- Service annotations
+healthcheck:
+  path:
+  port:
+  successCodes:
+
+# -- Pod securityContext del Pod, used in Deployment yaml
 securityContext:
   runAsUser: 1001
   allowPrivilegeEscalation: false
 
 image:
   imagePullPolicy: Always
+  repositoryPrefix:
+  tag:
+  digest:
+
+# -- K8s container resources requests and limits
+resources:
+  requests:
+    cpu:
+    mem:
+  limits:
+    cpu:
+    mem:
 
 service:
+  # -- Enable K8s Service deployment generation
   create: true
+  # -- (enum) K8s Service type, allowed values: [ "ClusterIP", "NodePort" ]
   type: "ClusterIP"
   monitoringPort: 9095
   managementPort: 8558
+  containerPort:
   
   targetPort: "http"
+  # -- Enable container monitoring port
   enableMonitoring: true
+  # -- Enable container management port
   enableManagement: true
 
 ingress:
+  # -- Enable K8s Ingress deployment generation
   enable: false
   className: alb
   groupName: "interop-be"
@@ -25,5 +65,14 @@ ingress:
 deployment:
   flyway:
     enableFlywayInitContainer: false
+    # -- Configmap with DB values
+    commonsDbConfigmapName:
+  # -- (string) (nodejs) Container host
+  host:
+  # -- (string) (nodejs) Container log level
+  logLevel:
+  # -- Enable readiness probe on main container
   enableReadinessProbe: true
+  # -- Enable liveness probe on main container
   enableLivenessProbe: true
+
