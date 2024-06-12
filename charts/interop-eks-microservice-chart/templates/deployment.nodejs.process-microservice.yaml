@@ -42,11 +42,23 @@ spec:
             - configMapRef:
                 name: {{ .Values.name | quote }}
           env:
+            {{- if .Values.deployment.flyway.commonsDbConfigmapName }}
+            {{- $configmap := (lookup "v1" "ConfigMap" .Values.namespace .Values.deployment.flyway.commonsDbConfigmapName) }}
+            {{- if $configmap }}
+            {{- $POSTGRES_HOST := get $configmap.data "EVENTSTORE_DB_HOST" }}
+            {{- $POSTGRES_PORT := get $configmap.data "EVENTSTORE_DB_PORT" }}
+            {{- $POSTGRES_DB := get $configmap.data "EVENTSTORE_DB_NAME" }}
+            {{- if and $POSTGRES_HOST $POSTGRES_PORT $POSTGRES_DB }}
+            - name: FLYWAY_URL
+              value: jdbc:postgresql://{{ $POSTGRES_HOST }}:{{ $POSTGRES_PORT }}/{{ $POSTGRES_DB }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
-                  name: {{ .Values.commonsDbConfigmapName }}
-                  key: POSTGRES_DB
+                  name: {{ .Values.deployment.flyway.commonsDbConfigmapName }}
+                  key: EVENTSTORE_DB_NAME
             - name: FLYWAY_USER
               valueFrom:
                 secretKeyRef:

@@ -290,8 +290,12 @@ image:
   repositoryPrefix: "505630707203.dkr.ecr.eu-central-1.amazonaws.com"
   imagePullPolicy: Always
 
-# Nome della ConfigMap con le configurazioni comuni relative ai Db
-commonsDbConfigmapName: "interop-be-db-commons"
+
+deployment:
+  flyway:
+    enableFlywayInitContainer: false
+    # Nome della ConfigMap con le configurazioni comuni relative ai Db
+    commonsDbConfigmapName: "interop-be-db-commons"
 
 # Risorse utilizzate (richieste/limite) dal container
 resources:
@@ -476,6 +480,7 @@ Alcuni microservizi possono avere la necessità di utilizzare Flyway per la gest
 deployment:
   flyway:
     enableFlywayInitContainer: true
+    commonsDbConfigmapName: "interop-be-db-commons"
 ```
 
 Per un corretto avvio del container, è necessario che nel cluster / namespace in cui è rilasciato il microservizio siano presenti le ConfigMap ed i Secret di seguito elencati:

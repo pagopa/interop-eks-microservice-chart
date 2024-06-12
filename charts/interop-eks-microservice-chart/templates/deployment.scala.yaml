@@ -43,8 +43,8 @@ spec:
             - configMapRef:
                 name: {{ .Values.name | quote }}
           env:
-            {{- if .Values.commonsDbConfigmapName }}
-            {{- $configmap := (lookup "v1" "ConfigMap" .Values.namespace .Values.commonsDbConfigmapName) }}
+            {{- if .Values.deployment.flyway.commonsDbConfigmapName }}
+            {{- $configmap := (lookup "v1" "ConfigMap" .Values.namespace .Values.deployment.flyway.commonsDbConfigmapName) }}
             {{- if $configmap }}
             {{- $POSTGRES_HOST := get $configmap.data "POSTGRES_HOST" }}
             {{- $POSTGRES_PORT := get $configmap.data "POSTGRES_PORT" }}

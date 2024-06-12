@@ -1,45 +1,16 @@
 
-# interop-eks-microservice-chart
+{{ template "chart.header" . }}
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+{{ template "chart.badgesSection" . }}
 
-A Helm chart for PagoPa Interop Microservices
+{{ template "chart.description" . }}
 
-## Values
+{{ template "chart.valuesHeader" . }}
 
 The following table lists the configurable parameters of the Interop-eks-microservice-chart chart and their default values.
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| deployment.enableLivenessProbe | bool | `true` | Enable liveness probe on main container |
-| deployment.enableReadinessProbe | bool | `true` | Enable readiness probe on main container |
-| deployment.flyway.commonsDbConfigmapName | string | `nil` | Configmap with DB values |
-| deployment.flyway.enableFlywayInitContainer | bool | `false` |  |
-| deployment.host | string | `nil` | (nodejs) Container host |
-| deployment.logLevel | string | `nil` | (nodejs) Container log level |
-| healthcheck | object | `{"path":null,"port":null,"successCodes":null}` | Service annotations |
-| image.digest | string | `nil` |  |
-| image.imagePullPolicy | string | `"Always"` |  |
-| image.repositoryPrefix | string | `nil` |  |
-| image.tag | string | `nil` |  |
-| ingress.className | string | `"alb"` |  |
-| ingress.enable | bool | `false` | Enable K8s Ingress deployment generation |
-| ingress.groupName | string | `"interop-be"` |  |
-| name | string | `nil` | Name of the service that will be deployed on K8s cluster |
-| namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
-| replicas | int | `nil` | Number of desired replicas for the service being deployed |
-| resources | object | `{"limits":{"cpu":null,"mem":null},"requests":{"cpu":null,"mem":null}}` | K8s container resources requests and limits |
-| roleArn | string | `nil` | ServiceAccount roleARN |
-| securityContext | object | `{"allowPrivilegeEscalation":false,"runAsUser":1001}` | Pod securityContext del Pod, used in Deployment yaml |
-| service.containerPort | string | `nil` |  |
-| service.create | bool | `true` | Enable K8s Service deployment generation |
-| service.enableManagement | bool | `true` | Enable container management port |
-| service.enableMonitoring | bool | `true` | Enable container monitoring port |
-| service.managementPort | int | `8558` |  |
-| service.monitoringPort | int | `9095` |  |
-| service.targetPort | string | `"http"` |  |
-| service.type | enum | `"ClusterIP"` | K8s Service type, allowed values: [ "ClusterIP", "NodePort" ] |
-| techStack | enum | `nil` | Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "scala", "frontend"] |
+{{ template "chart.valuesTable" . }}
+
 
 ## 1. Configurazione del Deployment di un MicroServizio
 
@@ -90,6 +61,7 @@ env:
 
 Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "configmap".
 
+
 #### 1.1.2. <ins>envFromConfigmaps - Referenziare una ConfigMap esterna</ins>
 
 Per referenziare una chiave da una ConfigMap esterna, è necessario aggiungere una coppia chiave/valore nel blocco "deployment.envFromConfigmaps" nel file _values.yaml_ specifico per il microservizio.
@@ -120,6 +92,7 @@ env:
 
 Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "envFromConfigmaps".
 
+
 #### 1.1.3. <ins>envFromSecrets - Referenziare un Secret esterno</ins>
 
 Per referenziare una chiave da un Secret esterno è necessario aggiungere una coppia chiave/valore nel blocco "deployment.envFromSecrets" nel file _values.yaml_ specifico per il microservizio.
@@ -148,6 +121,7 @@ sarà aggiunto un riferimento nel Deployment nella sezione _env_:
 ```
 
 Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "envFromSecrets".
+
 
 #### 1.1.4 <ins>env - Definire variabili d'ambiente custom</ins>
 
@@ -306,7 +280,7 @@ ingress:
   groupName: "custom-group-name"
 ```
 
-Opzionalmente,
+Opzionalmente, 
 
 * è possibile definire un host con cui eseguire l'override del default "*":
 
@@ -350,6 +324,7 @@ Di seguito i mapping tra annotations e values:
   * "alb.ingress.kubernetes.io/healthcheck-path" è popolato con il contenuto di "healthcheck.path"
   * "alb.ingress.kubernetes.io/healthcheck-port" è popolato con il contenuto di "healthcheck.port" o, se non è presente, con "service.port"
   * "alb.ingress.kubernetes.io/success-codes" è popolato con il contenuto di "healthcheck.successCodes"
+
 
 In aggiunta alle annotations, è possibile specificare delle porte custom su cui esporre il servizio applicando la seguente configurazione al file _values.yaml_ del microservizio che si sta sviluppando, ad esempio "agreement-management" in ambiente "qa"
 
@@ -432,6 +407,7 @@ techStack: "nodejs"
 
 Questa configurazione è necessaria per tutti i Deployment di seguito descritti.
 
+
 #### 5.1.1. <ins>Default NodeJS Microservice Deployment</ins>
 
 Il deployment di default utilizzato per Microservizi sviluppati in NodeJS è "deployment.nodejs.yaml"; per poter essere utilizzato, nel file _values.yaml_ non deve essere impostato il valore di _moduleType_.
@@ -444,10 +420,11 @@ Per questo Deployment è previsto l'utilizzo del FlyWay InitContainer; di seguit
   * FLYWAY_URL: valore composto dinamicamente in base ai valori di POSTGRES_HOST, POSTGRES_PORT e POSTGRES_DB recuperati dalla ConfigMap _interop-be-db-commons_
   * FLYWAY_CREATE_SCHEMAS: valorizzato con _true_
   * FLYWAY_PLACEHOLDER_REPLACEMENT: valorizzato con _true_
-  * FLYWAY_SCHEMAS: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio
-  * FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio
+  * FLYWAY_SCHEMAS: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio 
+  * FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio 
   * FLYWAY_USER: mappato con la chiave _POSTGRES_USR_ del Secret comune "postgres"
   * FLYWAY_PASSWORD: mappato con la chiave _POSTGRES_PSW_ del Secret comune "postgres"
+
 
 Per il container principale, sono definite le seguenti variabili d'ambiente:
   * NAMESPACE: mappato con il fieldRef metadata.namespace
@@ -534,6 +511,7 @@ Per il container principale, sono definite le seguenti variabili d'ambiente:
   * READMODEL_DB_PORT: mappato con la chiave _READMODEL_DB_PORT_ della ConfigMap comune "common-read-model"
   * READMODEL_DB_USERNAME: mappato con la chiave _READONLY_USR_ della ConfigMap comune "read-model"
   * READMODEL_DB_PASSWORD: mappato con la chiave _READONLY_PSW_ del Secret comune "read-model"
+
 
 #### 5.1.4. <ins>Read Model Writer Deployment</ins>
 
