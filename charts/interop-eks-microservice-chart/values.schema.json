@@ -24,7 +24,7 @@
             "cpu": {
               "type": "string"
             },
-            "mem": {
+            "memory": {
               "type": "string"
             }
           },
@@ -35,7 +35,7 @@
             "cpu": {
               "type": "string"
             },
-            "mem": {
+            "memory": {
               "type": "string"
             }
           },
