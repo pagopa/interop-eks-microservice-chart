@@ -4,6 +4,15 @@
   {{ fail "healthcheck and service.targetGroupArn cannot both be configured; please define just one." }}
 {{- end }}
 
+{{- $healthcheckPort := "" }}
+{{- if  .Values.healthcheck.port }}
+{{- $healthcheckPort = .Values.healthcheck.port }}
+{{- else if .Values.service.servicePort -}}
+{{- $healthcheckPort = .Values.service.servicePort }}
+{{- else -}}
+{{- $healthcheckPort = .Values.service.containerPort }}
+{{- end }}
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -16,7 +25,7 @@ metadata:
   annotations:
     {{- if .Values.healthcheck.path }}
     alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.healthcheck.path | quote }}
-    alb.ingress.kubernetes.io/healthcheck-port: {{ .Values.healthcheck.port | default .Values.service.port | quote }}
+    alb.ingress.kubernetes.io/healthcheck-port: {{ $healthcheckPort| quote }}
     {{- if .Values.healthcheck.successCodes }}
     alb.ingress.kubernetes.io/success-codes: {{ .Values.healthcheck.successCodes | quote }}
     {{- end }}
