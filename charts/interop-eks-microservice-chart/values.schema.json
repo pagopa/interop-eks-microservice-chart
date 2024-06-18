@@ -51,9 +51,6 @@
     },
     "service": {
       "description": "Service properties",
-      "required": [
-        "containerPort"
-      ],
       "properties": {
         "type": {
           "description": "Service Type",
