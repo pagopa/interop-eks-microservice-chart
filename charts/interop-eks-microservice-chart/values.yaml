@@ -41,6 +41,7 @@ resources:
     cpu:
     memory:
 
+
 service:
   # -- Enable K8s Service deployment generation
   create: true
