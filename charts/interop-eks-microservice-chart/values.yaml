@@ -36,10 +36,11 @@ image:
 resources:
   requests:
     cpu:
-    mem:
+    memory:
   limits:
     cpu:
-    mem:
+    memory:
+
 
 service:
   # -- Enable K8s Service deployment generation
