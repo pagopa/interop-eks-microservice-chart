@@ -62,7 +62,7 @@
           "$comment": "This property shouldn't have a default value",
           "description": "Port",
           "minimum": 0,
-          "type": "integer"
+          "type": ["integer", "null"]
         },
         "monitoringPort": {
           "description": "Monitoring Port",
