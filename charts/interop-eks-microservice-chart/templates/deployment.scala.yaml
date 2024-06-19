@@ -104,23 +104,14 @@ spec:
           {{- else }}
           args: ["-Dconfig.override_with_env_vars=true"]
           {{- end }}
-          {{- if and .Values.deployment .Values.deployment.enableLivenessProbe }}
+          {{- if and .Values.deployment .Values.deployment.livenessProbe }}
           livenessProbe:
-            httpGet:
-              path: "/alive"
-              port: management
-            periodSeconds: 5
-            failureThreshold: 3
-            initialDelaySeconds: 30
-          {{- end }} # End enableLivenessProbe
-          {{- if and .Values.deployment .Values.deployment.enableReadinessProbe }}
+            {{- toYaml .Values.deployment.livenessProbe | nindent 12 }}
+          {{- end }} # End livenessProbe
+          {{- if and .Values.deployment .Values.deployment.readinessProbe }}
           readinessProbe:
-            httpGet:
-              path: "/ready"
-              port: management
-            periodSeconds: 5
-            failureThreshold: 3
-          {{- end }} # End enableReadinessProbe
+            {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
+          {{- end }} # End readinessProbe
           ports:
             {{- if and .Values.service .Values.service.enableManagement }}
             - name: management
@@ -153,11 +144,6 @@ spec:
                   fieldPath: metadata.namespace
             - name: REQUIRED_CONTACT_POINT_NR
               value: {{ .Values.replicas | quote }}
-            - name: DEV_ENDPOINTS_ENABLED
-              valueFrom:
-                configMapKeyRef:
-                 name: interop-be-commons
-                 key: DEV_ENDPOINTS_ENABLED
             {{- if .Values.configmap }}
             {{- range $key, $val := .Values.configmap }}
             - name: {{ $key }}
