@@ -100,22 +100,14 @@ spec:
           {{- if and .Values.deployment .Values.deployment.args }}
           args: {{ .Values.deployment.args }}
           {{- end }}
-          {{- if and .Values.deployment .Values.deployment.enableLivenessProbe }}
+          {{- if and .Values.deployment .Values.deployment.livenessProbe }}
           livenessProbe:
-            httpGet:
-              path: "/status"
-              port: http
-            periodSeconds: 5
-            initialDelaySeconds: 15
-          {{- end }} # End enableLivenessProbe
-          {{- if and .Values.deployment .Values.deployment.enableReadinessProbe }}
+            {{- toYaml .Values.deployment.livenessProbe | nindent 12 }}
+          {{- end }} # End livenessProbe
+          {{- if and .Values.deployment .Values.deployment.readinessProbe }}
           readinessProbe:
-            httpGet:
-              path: "/status"
-              port: http
-            periodSeconds: 5
-            initialDelaySeconds: 15
-          {{- end }} # End enableReadinessProbe
+            {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
+          {{- end }} # End readinessProbe
           ports:
             {{- if and .Values.service .Values.service.containerPort }}
             - name: {{ .Values.service.portName | default "http" }}
@@ -132,17 +124,6 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           env:
-            - name: NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: REQUIRED_CONTACT_POINT_NR
-              value: {{ .Values.replicas | quote }}
-            - name: DEV_ENDPOINTS_ENABLED
-              valueFrom:
-                configMapKeyRef:
-                 name: interop-be-commons
-                 key: DEV_ENDPOINTS_ENABLED
             {{- if .Values.configmap }}
             {{- range $key, $val := .Values.configmap }}
             - name: {{ $key }}
