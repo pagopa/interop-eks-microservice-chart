@@ -67,12 +67,4 @@ deployment:
     enableFlywayInitContainer: false
     # -- Configmap with DB values
     commonsDbConfigmapName:
-  # -- (string) (nodejs) Container host
-  host:
-  # -- (string) (nodejs) Container log level
-  logLevel:
-  # -- Enable readiness probe on main container
-  enableReadinessProbe: true
-  # -- Enable liveness probe on main container
-  enableLivenessProbe: true
 
