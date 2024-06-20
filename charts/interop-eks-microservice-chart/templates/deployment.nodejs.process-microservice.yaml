@@ -124,10 +124,6 @@ spec:
           env:
             - name: PORT
               value: {{ .Values.service.containerPort | quote}}
-            - name: HOST
-              value: {{ .Values.deployment.host | quote }}
-            - name: LOG_LEVEL
-              value: {{ .Values.deployment.logLevel | quote}}
             - name: EVENTSTORE_DB_HOST
               valueFrom:
                 configMapKeyRef:

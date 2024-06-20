@@ -43,8 +43,6 @@ spec:
           args: {{ .Values.deployment.args }}
           {{- end }}
           env:
-            - name: LOG_LEVEL
-              value: {{ .Values.deployment.logLevel | quote }}
             - name: KAFKA_BROKERS
               valueFrom:
                 configMapKeyRef:
