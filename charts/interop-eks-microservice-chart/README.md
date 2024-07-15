@@ -13,8 +13,8 @@ The following table lists the configurable parameters of the Interop-eks-microse
 |-----|------|---------|-------------|
 | deployment.enableLivenessProbe | bool | `true` | Enable liveness probe on main container |
 | deployment.enableReadinessProbe | bool | `true` | Enable readiness probe on main container |
-| deployment.flyway.commonsDbConfigmapName | string | `nil` | Configmap with DB values |
-| deployment.flyway.enableFlywayInitContainer | bool | `false` |  |
+| deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with DB values |
+| deployment.flywayInitContainer.create | bool | `false` |  |
 | deployment.host | string | `nil` | (nodejs) Container host |
 | deployment.logLevel | string | `nil` | (nodejs) Container log level |
 | healthcheck | object | `{"path":null,"port":null,"successCodes":null}` | Service annotations |

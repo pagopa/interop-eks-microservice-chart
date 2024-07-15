@@ -32,7 +32,7 @@ spec:
         digest: {{ .Values.image.digest | quote }} # Used to force deployment on same image version but different content
     spec:
       serviceAccountName: {{ .Values.name | quote }}
-      {{- if and .Values.deployment .Values.deployment.flyway .Values.deployment.flyway.enableFlywayInitContainer }}
+      {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
       initContainers:
         - name: migrate-db
           image: flyway/flyway:8.2.3
@@ -42,43 +42,87 @@ spec:
             - configMapRef:
                 name: {{ .Values.name | quote }}
           env:
-            {{- if .Values.deployment.flyway.commonsDbConfigmapName }}
-            {{- $configmap := (lookup "v1" "ConfigMap" .Values.namespace .Values.deployment.flyway.commonsDbConfigmapName) }}
-            {{- if $configmap }}
-            {{- $POSTGRES_HOST := get $configmap.data "EVENTSTORE_DB_HOST" }}
-            {{- $POSTGRES_PORT := get $configmap.data "EVENTSTORE_DB_PORT" }}
-            {{- $POSTGRES_DB := get $configmap.data "EVENTSTORE_DB_NAME" }}
-            {{- if and $POSTGRES_HOST $POSTGRES_PORT $POSTGRES_DB }}
-            - name: FLYWAY_URL
-              value: jdbc:postgresql://{{ $POSTGRES_HOST }}:{{ $POSTGRES_PORT }}/{{ $POSTGRES_DB }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            - name: POSTGRES_DB
+            # CURRENT
+            #{{- if .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+            #{{- $configmap := (lookup "v1" "ConfigMap" .Values.namespace .Values.deployment.flywayInitContainer.migrationsConfigmap) }}
+            #{{- if $configmap }}
+            #{{- $POSTGRES_HOST := get $configmap.data "EVENTSTORE_DB_HOST" }}
+            #{{- $POSTGRES_PORT := get $configmap.data "EVENTSTORE_DB_PORT" }}
+            #{{- $POSTGRES_DB := get $configmap.data "EVENTSTORE_DB_NAME" }}
+            #{{- if and $POSTGRES_HOST $POSTGRES_PORT $POSTGRES_DB }}
+            #- name: FLYWAY_URL
+            #  value: jdbc:postgresql://{{ $POSTGRES_HOST }}:{{ $POSTGRES_PORT }}/{{ $POSTGRES_DB }}
+            #{{- end }}
+            #{{- end }}
+            #{{- end }}
+            #- name: POSTGRES_DB
+            #  valueFrom:
+            #    configMapKeyRef:
+            #      name: {{ .Values.deployment.flywayInitContainer.commonsDbConfigmap }}
+            #      key: EVENTSTORE_DB_NAME
+            #- name: FLYWAY_USER
+            #  valueFrom:
+            #    secretKeyRef:
+            #      name: event-store
+            #      key: POSTGRES_USR
+            #- name: FLYWAY_PASSWORD
+            #  valueFrom:
+            #    secretKeyRef:
+            #      name: event-store
+            #      key: POSTGRES_PSW
+            #- name: FLYWAY_SCHEMAS
+            #  valueFrom:
+            #    configMapKeyRef:
+            #      name: {{ .Values.name | quote }}
+            #      key: EVENTSTORE_DB_SCHEMA
+            #- name: FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA
+            #  valueFrom:
+            #    configMapKeyRef:
+            #      name: {{ .Values.name | quote }}
+            #      key: EVENTSTORE_DB_SCHEMA
+            #
+            # TOBE in values.yaml
+            # deployment:
+            #   flywayInitContainer:
+            #     create: true
+            #     env:
+            #       FLYWAY_CREATE_SCHEMAS: "true"
+            #       FLYWAY_PLACEHOLDER_REPLACEMENT: "true"
+            #     envFromConfigmaps:
+            #       POSTGRES_HOST: "{{ .configmap.name }}.EVENTSTORE_DB_HOST"
+            #       POSTGRES_PORT: "{{ .configmap.name }}.EVENTSTORE_DB_PORT"
+            #       POSTGRES_DB: "{{ .Values.deployment.flywayInitContainer.commonsDbConfigmap }}.EVENTSTORE_DB_NAME"
+            #       FLYWAY_SCHEMAS: "{{ .Values.name }}.EVENTSTORE_DB_SCHEMA"
+            #       FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: "{{ .Values.name }}.EVENTSTORE_DB_SCHEMA"
+            #     envFromSecrets:
+            #       FLYWAY_USER: "event-store.POSTGRES_USR"
+            #       FLYWAY_PASSWORD: "event-store.POSTGRES_PSW"
+            {{- if .Values.deployment.flywayInitContainer.envFromConfigmaps }}
+            {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromConfigmaps -}}
+            {{ $configmapAddress := mustRegexSplit "\\." $val 2 }}
+            - name: {{ $key }}
               valueFrom:
                 configMapKeyRef:
-                  name: {{ .Values.deployment.flyway.commonsDbConfigmapName }}
-                  key: EVENTSTORE_DB_NAME
-            - name: FLYWAY_USER
+                  name: {{ index $configmapAddress 0 }}
+                  key: {{ index $configmapAddress 1 }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.deployment.flywayInitContainer.env }}
+            {{- range $key, $val := .Values.deployment.env }}
+            - name: "{{ $key }}"
+              value: "{{ $val }}"
+            {{- end }}
+            {{- end }}
+            {{- if .Values.deployment.flywayInitContainer.envFromSecrets }}
+            {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromSecrets -}}
+            {{ $secretAddress := mustRegexSplit "\\." $val 2 }}
+            - name: {{ $key }}
               valueFrom:
                 secretKeyRef:
-                  name: event-store
-                  key: POSTGRES_USR
-            - name: FLYWAY_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: event-store
-                  key: POSTGRES_PSW
-            - name: FLYWAY_SCHEMAS
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Values.name | quote }}
-                  key: EVENTSTORE_DB_SCHEMA
-            - name: FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Values.name | quote }}
-                  key: EVENTSTORE_DB_SCHEMA
+                  name: {{ index $secretAddress 0 }}
+                  key: {{ index $secretAddress 1 }}
+            {{- end }}
+            {{- end }}
           volumeMounts:
             - name: migrations-files
               mountPath: "/flyway/sql"
