@@ -213,8 +213,8 @@ Alcuni microservizi possono avere la necessità di utilizzare Flyway per la gest
 # /microservices/agreement-management/qa/values.yaml
 
 deployment:
-  flyway:
-    enableFlywayInitContainer: true
+  flywayInitContainer:
+    create: true
 ```
 
 Per un corretto avvio del container, è necessario che nel cluster / namespace in cui è rilasciato il microservizio siano presenti le ConfigMap ed i Secret di seguito elencati:
@@ -228,8 +228,10 @@ Per un corretto avvio del container, è necessario che nel cluster / namespace i
   # /microservices/agreement-management/qa/values.yaml
 
   deployment:
-    flyway:
-      postgresSchema: "qa_agreement"
+    flywayInitContainer:
+      create: true
+      envFromConfigmaps:
+        postgresSchema: "agreement-management.postgresSchema"
   ```
 * Secret "postgres" - secret del Db postgres, di seguito le chiavi referenziate:
   * POSTGRES_USR

@@ -63,8 +63,7 @@ ingress:
   groupName: "interop-be"
 
 deployment:
-  flyway:
-    enableFlywayInitContainer: false
-    # -- Configmap with DB values
-    commonsDbConfigmapName:
-
+  flywayInitContainer:
+    create: false
+    # -- Configmap with migrations
+    migrationsConfigmap:
