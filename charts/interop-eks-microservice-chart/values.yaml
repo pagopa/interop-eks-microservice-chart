@@ -65,17 +65,5 @@ ingress:
 deployment:
   flywayInitContainer:
     create: false
-    # -- Configmap with DB values
+    # -- Configmap with migrations
     migrationsConfigmap:
-    # default per interop
-    # env:
-    #  FLYWAY_CREATE_SCHEMAS: "true"
-    # envFromSecrets:
-    #  FLYWAY_USER: "secretName.username"
-    # envFromConfigmaps:
-    #  FLYWAY_SCHEMAS: "confimapName.key"
-    # migrationsConfigmap: ...
-  #OLD: 
-    # flyway:
-    #  enableFlywayInitContainer: false
-    #commonsDbConfigmapName:
