@@ -73,3 +73,4 @@ deployment:
   envFromConfigmaps: {}
   # -- List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef)
   envFromSecrets: {}
+
