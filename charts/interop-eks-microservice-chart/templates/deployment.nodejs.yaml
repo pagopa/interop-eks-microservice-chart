@@ -165,6 +165,13 @@ spec:
           {{- end }}
       {{- if and .Values.deployment .Values.deployment.volumes }}
       volumes:
+        {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
+        - name: migrations-files
+          projected:
+            sources:
+              - configMap:
+                  name: {{ .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+        {{- end }}
         {{- toYaml .Values.deployment.volumes | nindent 8 }}
       {{- end }}
 

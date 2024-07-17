@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.3.1](https://img.shields.io/badge/Version-1.3.1-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -11,12 +11,11 @@ The following table lists the configurable parameters of the Interop-eks-microse
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| deployment.enableLivenessProbe | bool | `true` | Enable liveness probe on main container |
-| deployment.enableReadinessProbe | bool | `true` | Enable readiness probe on main container |
-| deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with DB values |
+| deployment.env | object | `{}` | List of environment variables for a container, specifying a value directly for each named variable |
+| deployment.envFromConfigmaps | object | `{}` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
+| deployment.envFromSecrets | object | `{}` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
 | deployment.flywayInitContainer.create | bool | `false` |  |
-| deployment.host | string | `nil` | (nodejs) Container host |
-| deployment.logLevel | string | `nil` | (nodejs) Container log level |
+| deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
 | healthcheck | object | `{"path":null,"port":null,"successCodes":null}` | Service annotations |
 | image.digest | string | `nil` |  |
 | image.imagePullPolicy | string | `"Always"` |  |
@@ -28,7 +27,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
 | namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
 | replicas | int | `nil` | Number of desired replicas for the service being deployed |
-| resources | object | `{"limits":{"cpu":null,"mem":null},"requests":{"cpu":null,"mem":null}}` | K8s container resources requests and limits |
+| resources | object | `{"limits":{"cpu":null,"memory":null},"requests":{"cpu":null,"memory":null}}` | K8s container resources requests and limits |
 | roleArn | string | `nil` | ServiceAccount roleARN |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"runAsUser":1001}` | Pod securityContext del Pod, used in Deployment yaml |
 | service.containerPort | string | `nil` |  |
@@ -239,8 +238,8 @@ Alcuni microservizi possono avere la necessità di utilizzare Flyway per la gest
 # /microservices/agreement-management/qa/values.yaml
 
 deployment:
-  flyway:
-    enableFlywayInitContainer: true
+  flywayInitContainer:
+    create: true
 ```
 
 Per un corretto avvio del container, è necessario che nel cluster / namespace in cui è rilasciato il microservizio siano presenti le ConfigMap ed i Secret di seguito elencati:
@@ -254,8 +253,10 @@ Per un corretto avvio del container, è necessario che nel cluster / namespace i
   # /microservices/agreement-management/qa/values.yaml
 
   deployment:
-    flyway:
-      postgresSchema: "qa_agreement"
+    flywayInitContainer:
+      create: true
+      envFromConfigmaps:
+        postgresSchema: "agreement-management.postgresSchema"
   ```
 * Secret "postgres" - secret del Db postgres, di seguito le chiavi referenziate:
   * POSTGRES_USR
