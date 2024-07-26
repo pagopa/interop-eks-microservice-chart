@@ -39,9 +39,6 @@ spec:
           image: flyway/flyway:8.2.3
           args:
             - migrate
-          envFrom:
-            - configMapRef:
-                name: {{ .Values.name | quote }}
           env:
             {{- if .Values.deployment.flywayInitContainer.envFromConfigmaps }}
             {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromConfigmaps -}}
@@ -54,7 +51,7 @@ spec:
             {{- end }}
             {{- end }}
             {{- if .Values.deployment.flywayInitContainer.env }}
-            {{- range $key, $val := .Values.deployment.env }}
+            {{- range $key, $val := .Values.deployment.flywayInitContainer.env }}
             - name: "{{ $key }}"
               value: "{{ $val }}"
             {{- end }}
