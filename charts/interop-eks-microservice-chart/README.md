@@ -11,9 +11,14 @@ The following table lists the configurable parameters of the Interop-eks-microse
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| deployment.env | object | `nil` | List of environment variables for a container, specifying a value directly for each named variable |
+| deployment.envFromConfigmaps | object | `nil` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
+| deployment.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
+| deployment.envFromSecrets | object | `nil` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
 | deployment.flywayInitContainer.create | bool | `false` |  |
 | deployment.flywayInitContainer.env | object | `nil` | List of environment variables for a container, specifying a value directly for each named variable |
 | deployment.flywayInitContainer.envFromConfigmaps | object | `nil` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
+| deployment.flywayInitContainer.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
 | deployment.flywayInitContainer.envFromSecrets | object | `nil` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
 | deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
 | healthcheck | object | `{"path":null,"port":null,"successCodes":null}` | Service annotations |
