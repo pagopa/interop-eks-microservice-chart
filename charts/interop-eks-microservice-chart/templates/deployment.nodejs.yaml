@@ -120,8 +120,8 @@ spec:
                   key: {{ $key }}
             {{- end }}
             {{- end }}
-            {{- if and .Values.deployment .Values.deployment.envFieldRef }}
-            {{- range $key, $val := .Values.deployment.envFieldRef }}
+            {{- if and .Values.deployment .Values.deployment.envFromFieldRef }}
+            {{- range $key, $val := .Values.deployment.envFromFieldRef }}
             - name: {{ $key }}
               valueFrom:
                 fieldRef:
@@ -162,14 +162,13 @@ spec:
           {{- end }}
       {{- if and .Values.deployment (or .Values.deployment.volumes (and .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create)) }}
       volumes:
-        {{- if and .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
+        {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
         - name: migrations-files
           projected:
             sources:
-            - configMap:
-                name: {{ .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+              - configMap:
+                  name: {{ .Values.deployment.flywayInitContainer.migrationsConfigmap }}
         {{- end }}
-        {{- if .Values.deployment.volumes }}
         {{- toYaml .Values.deployment.volumes | nindent 8 }}
         {{- end }}
       {{- end }}

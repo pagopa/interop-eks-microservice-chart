@@ -136,7 +136,7 @@ sarà aggiunto un riferimento nel Deployment nella sezione _env_:
 
 Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "env".
 
-#### 1.1.5 <ins>envFieldRef - Referenziare informazioni del Pod</ins>
+#### 1.1.5 <ins>envFromFieldRef - Referenziare informazioni del Pod</ins>
 
 Per esporre dei campi del Pod al runtime del container, è possibile utilizzare il campo "fieldRef", come da [documentazione](https://kubernetes.io/docs/concepts/workloads/pods/downward-api/#downwardapi-fieldRef) ufficiale Kubernetes.
 Un campo esposto con "fieldRef" può essere referenziato dal Deployment di un microservizio, ad esempio "agreement-management" per ambiente "qa", inserendo la seguente configurazione nel file _values.yaml_ come segue:
@@ -145,7 +145,7 @@ Un campo esposto con "fieldRef" può essere referenziato dal Deployment di un mi
 # /microservices/agreement-management/qa/values.yaml
 
 deployment:
-  envFieldRef:
+  envFromFieldRef:
     NAMESPACE: "metadata.namespace"
 ```
 
@@ -159,7 +159,7 @@ env:
        fieldPath: "metadata.namespace"
 ```
 
-Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "envFieldRef".
+Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "envFromFieldRef".
 
 ### 1.2 Volumi
 
