@@ -67,9 +67,9 @@ deployment:
     create: false
     # -- Configmap with migrations
     migrationsConfigmap:
-  # -- List of environment variables for a container, specifying a value directly for each named variable
-  env: {}
-  # -- List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef)
-  envFromConfigmaps: {}
-  # -- List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef)
-  envFromSecrets: {}
+    # -- (object) List of environment variables for a container, specifying a value directly for each named variable
+    env: 
+    # -- (object) List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef)
+    envFromConfigmaps: 
+    # -- (object) List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef)
+    envFromSecrets: 

@@ -11,10 +11,10 @@ The following table lists the configurable parameters of the Interop-eks-microse
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| deployment.env | object | `{}` | List of environment variables for a container, specifying a value directly for each named variable |
-| deployment.envFromConfigmaps | object | `{}` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
-| deployment.envFromSecrets | object | `{}` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
 | deployment.flywayInitContainer.create | bool | `false` |  |
+| deployment.flywayInitContainer.env | object | `nil` | List of environment variables for a container, specifying a value directly for each named variable |
+| deployment.flywayInitContainer.envFromConfigmaps | object | `nil` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
+| deployment.flywayInitContainer.envFromSecrets | object | `nil` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
 | deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
 | healthcheck | object | `{"path":null,"port":null,"successCodes":null}` | Service annotations |
 | image.digest | string | `nil` |  |
@@ -171,7 +171,7 @@ sarà aggiunto un riferimento nel Deployment nella sezione _env_:
 
 Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "env".
 
-#### 1.1.5 <ins>envFieldRef - Referenziare informazioni del Pod</ins>
+#### 1.1.5 <ins>envFromFieldRef - Referenziare informazioni del Pod</ins>
 
 Per esporre dei campi del Pod al runtime del container, è possibile utilizzare il campo "fieldRef", come da [documentazione](https://kubernetes.io/docs/concepts/workloads/pods/downward-api/#downwardapi-fieldRef) ufficiale Kubernetes.
 Un campo esposto con "fieldRef" può essere referenziato dal Deployment di un microservizio, ad esempio "agreement-management" per ambiente "qa", inserendo la seguente configurazione nel file _values.yaml_ come segue:
@@ -180,7 +180,7 @@ Un campo esposto con "fieldRef" può essere referenziato dal Deployment di un mi
 # /microservices/agreement-management/qa/values.yaml
 
 deployment:
-  envFieldRef:
+  envFromFieldRef:
     NAMESPACE: "metadata.namespace"
 ```
 
@@ -194,7 +194,7 @@ env:
        fieldPath: "metadata.namespace"
 ```
 
-Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "envFieldRef".
+Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "envFromFieldRef".
 
 ### 1.2 Volumi
 

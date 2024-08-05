@@ -84,8 +84,8 @@ spec:
                   key: {{ $key }}
             {{- end }}
             {{- end }}
-            {{- if and .Values.deployment .Values.deployment.envFieldRef }}
-            {{- range $key, $val := .Values.deployment.envFieldRef }}
+            {{- if and .Values.deployment .Values.deployment.envFromFieldRef }}
+            {{- range $key, $val := .Values.deployment.envFromFieldRef }}
             - name: {{ $key }}
               valueFrom:
                 fieldRef:
