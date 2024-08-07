@@ -43,7 +43,7 @@ resources:
 
 service:
   # -- Enable K8s Service deployment generation
-  create: true
+  create: false
   # -- (enum) K8s Service type, allowed values: [ "ClusterIP", "NodePort" ]
   type: "ClusterIP"
   monitoringPort: 9095
