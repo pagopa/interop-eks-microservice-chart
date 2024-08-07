@@ -169,8 +169,8 @@ spec:
               - configMap:
                   name: {{ .Values.deployment.flywayInitContainer.migrationsConfigmap }}
         {{- end }}
+        {{ if .Values.deployment.volumes }}
         {{- toYaml .Values.deployment.volumes | nindent 8 }}
         {{- end }}
       {{- end }}
-
 {{- end }}
