@@ -1,5 +1,5 @@
 apiVersion: v2
 name: interop-eks-microservice-chart
 description: A Helm chart for PagoPa Interop Microservices
-version: 1.7.0
+version: 1.7.1
 appVersion: "1.0.0"
