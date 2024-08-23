@@ -96,7 +96,7 @@ spec:
             {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
           {{- end }} # End readinessProbe
           ports:
-            {{- if and .Values.service .Values.service.containerPort }}
+            {{- if and .Values.service .Values.service.create .Values.service.containerPort }}
             - name: {{ .Values.service.portName | default "http" }}
               containerPort: {{ .Values.service.containerPort }}
               protocol: {{ .Values.service.containerProtocol | default "TCP" }}
