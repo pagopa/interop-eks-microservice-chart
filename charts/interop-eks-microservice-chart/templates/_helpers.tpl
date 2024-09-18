@@ -69,7 +69,6 @@ Create the name of the service account to use
 
   {{- $pattern := `{{\.Values[^}]+}}` -}}
   {{- $valuesMatches := (regexFindAll $pattern $givenValue -1) }}
-  {{- $matchesCount := len $valuesMatches -}}
   
   {{/* For every match check if the rendered template is valid, i.e. not empty/null */}}
   {{- range $index, $match := $valuesMatches }}
