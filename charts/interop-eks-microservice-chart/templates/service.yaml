@@ -40,12 +40,6 @@ spec:
       protocol: {{ .Values.service.containerProtocol | default "TCP" }}
       name: {{ .Values.service.portName | default "http" }}
     {{- end }}
-    {{- if and (eq .Values.techStack "scala") .Values.service .Values.service.enableMonitoring }}
-    - port: {{ .Values.service.monitoringPort }}
-      targetPort: monitoring
-      protocol: TCP
-      name: monitoring
-    {{- end }}
     {{- if and .Values.service .Values.service.additionalPorts }}
     {{- range $key, $val := .Values.service.additionalPorts }}
     - name: {{ $val.name }}
