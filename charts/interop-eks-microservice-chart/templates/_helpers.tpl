@@ -67,14 +67,14 @@ Create the name of the service account to use
   {{- $givenContext := .context }}
   {{- $givenScope := .scope }}
 
-  {{- $pattern := `{{\.Values[^}]+}}` -}}
+  {{- $pattern := `{{\.Values[^}]+}}` }}
   {{- $valuesMatches := (regexFindAll $pattern $givenValue -1) }}
   
-  {{/* For every match check if the rendered template is valid, i.e. not empty/null */}}
+  {{- /* For every match check if the rendered template is valid, i.e. not empty/null */}}
   {{- range $index, $match := $valuesMatches }}
-    {{- $renderedValue := include "interop-eks-microservice-chart.render-tpl-value" (dict "value" $match "context" $givenContext "scope" $givenScope) -}}
+    {{- $renderedValue := include "interop-eks-microservice-chart.render-tpl-value" (dict "value" $match "context" $givenContext "scope" $givenScope) }}
     {{- if or (eq $renderedValue nil) (eq $renderedValue "")  }}
-      {{ fail (printf "Error: %s must be set and non-empty" $givenValue) }}
+      {{ fail (printf "Error: %s must be set and non-empty" $match) }}
     {{- end }}
   {{- end }}
 {{- end -}}
@@ -84,15 +84,15 @@ Create the name of the service account to use
   {{- $givenValue := .value }}
   {{- $givenContext := .context }}
   {{- $givenScope := .scope }}
-  {{- $renderedValue := "" -}}
+  {{- $renderedValue := "" }}
   
   {{- if and (ne $givenScope nil) (ne $givenScope "") }}  
     {{- $renderedValue = tpl (cat "{{- with $.RelativeScope -}}" $givenValue "{{- end }}") (merge (dict "RelativeScope" $givenScope) $givenContext) }}
   {{- else }}
-    {{- $renderedValue = tpl $givenValue $givenContext }}
+    {{- $renderedValue = tpl $givenValue $givenContext -}}
   {{- end }}
 
-  {{- $renderedValue }}
+  {{- $renderedValue -}}
 {{- end -}}
 
 {{/*
@@ -109,11 +109,8 @@ Usage:
   {{- $givenContext := .context }}
 
   {{- include "interop-eks-microservice-chart.check-tpl-value" (dict "value" $value "context" $givenContext "scope" $givenScope) -}}
-
-  {{- $renderedValue := include "interop-eks-microservice-chart.render-tpl-value" (dict "value" $value "context" $givenContext "scope" $givenScope) -}}
-  {{- $renderedValue -}}
-
+  {{- include "interop-eks-microservice-chart.render-tpl-value" (dict "value" $value "context" $givenContext "scope" $givenScope) -}}
 {{- else }}
-    {{- $value -}}
+  {{- $value -}}
 {{- end -}}
 {{- end -}}
