@@ -12,6 +12,7 @@ techStack:
 
 # -- ServiceAccount roleARN
 serviceAccount:
+  # -- (string) ServiceAccount roleARN
   roleArn:
 
 service:
