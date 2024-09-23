@@ -67,8 +67,9 @@ spec:
             {{- end }}
             {{- if and .Values.deployment .Values.deployment.env }}
             {{- range $key, $val := .Values.deployment.env }}
+            {{- $preprocessedEnvValue := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
             - name: "{{ $key }}"
-              value: "{{ $val }}"
+              value: "{{ $preprocessedEnvValue }}"
             {{- end }}
             {{- end }}
             {{- if and .Values.deployment .Values.deployment.envFromConfigmaps }}

@@ -278,8 +278,8 @@ namespace: "dev"
 # Numero di repliche per il servizio
 replicas: 1
 
-# Tecnologia utilizzata per sviluppare il servizio, ad esempio "scala" o "nodejs" per i backend e "frontend" per servizi di frontend
-techStack: "scala"
+# Tecnologia utilizzata per sviluppare il servizio, ad esempio "nodejs" per i backend e "frontend" per servizi di frontend
+techStack: "nodejs"
 
 # Porta su cui è esposto il servizio
 service:

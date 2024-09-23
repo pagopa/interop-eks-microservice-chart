@@ -6,7 +6,7 @@ name:
 # -- Namespace hosting the service that will be deployed on K8s cluster
 namespace:
 
-# -- (enum) Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "scala", "frontend"]
+# -- (enum) Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"]
 techStack: 
 
 # -- (int) Number of desired replicas for the service being deployed

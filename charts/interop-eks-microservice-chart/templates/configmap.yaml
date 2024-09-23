@@ -17,7 +17,9 @@ data:
   {{- end }}
   {{- end }}
   {{- if .Values.configmap -}}
-    {{- toYaml .Values.configmap | nindent 42 }}
+    {{- range $key, $val := .Values.configmap }}
+    {{ $key }}: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }} 
+    {{- end }}
   {{- end }}
 {{- end }}
 {{- else if .Values.configmap -}}
@@ -27,5 +29,7 @@ metadata:
   name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
 data:
-  {{- toYaml .Values.configmap | nindent 2 }}
+  {{- range $key, $val := .Values.configmap }}
+  {{ $key }}: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }} 
+  {{- end }}
 {{- end }}
