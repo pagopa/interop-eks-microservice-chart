@@ -9,39 +9,17 @@ namespace:
 # -- (enum) Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"]
 techStack: 
 
-# -- (int) Number of desired replicas for the service being deployed
-replicas: 
 
 # -- ServiceAccount roleARN
-roleArn:
-
-# -- Service annotations
-healthcheck:
-  path:
-  port:
-  successCodes:
-
-# -- Pod securityContext del Pod, used in Deployment yaml
-securityContext:
-  runAsUser: 1001
-  allowPrivilegeEscalation: false
-
-image:
-  imagePullPolicy: Always
-  repositoryPrefix:
-  tag:
-  digest:
-
-# -- K8s container resources requests and limits
-resources:
-  requests:
-    cpu:
-    memory:
-  limits:
-    cpu:
-    memory:
+serviceAccount:
+  roleArn:
 
 service:
+  # -- Service annotations
+  healthcheck:
+    path:
+    port:
+    successCodes:
   # -- Enable K8s Service deployment generation
   create: false
   # -- (enum) K8s Service type, allowed values: [ "ClusterIP", "NodePort" ]
@@ -63,6 +41,25 @@ ingress:
   groupName: "interop-be"
 
 deployment:
+  # -- (int) Number of desired replicas for the service being deployed
+  replicas: 
+  # -- (object) Pod securityContext, applied to main container
+  securityContext:
+    runAsUser: 1001
+    allowPrivilegeEscalation: false
+  image:
+    imagePullPolicy: Always
+    repositoryPrefix:
+    tag:
+    digest:
+  # -- (object)  K8s container resources requests and limits
+  resources:
+    requests:
+      cpu:
+      memory:
+    limits:
+      cpu:
+      memory:
   # -- (object) List of environment variables for a container, specifying a value directly for each named variable
   env: 
   # -- (object) List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef)
