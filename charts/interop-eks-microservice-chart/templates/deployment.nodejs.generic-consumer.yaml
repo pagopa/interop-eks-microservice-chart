@@ -3,13 +3,13 @@
 {{ $root := . }}
 
 {{- $digestSuffix := "" }}
-{{- if .Values.image.digest }}
-{{- $digestSuffix = (nospace (cat "@" .Values.image.digest)) }}
+{{- if .Values.deployment.image.digest }}
+{{- $digestSuffix = (nospace (cat "@" .Values.deployment.image.digest)) }}
 {{- end }}
 
 {{- $imageTag := "" }}
-{{- if .Values.image.tag }}
-{{- $imageTag = (nospace (cat ":" .Values.image.tag)) }}
+{{- if .Values.deployment.image.tag }}
+{{- $imageTag = (nospace (cat ":" .Values.deployment.image.tag)) }}
 {{- end }}
 
 apiVersion: apps/v1
@@ -20,7 +20,7 @@ metadata:
   labels:
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicas }}
+  replicas: {{ .Values.deployment.replicas }}
   selector:
     matchLabels:
       {{- include "interop-eks-microservice-chart.selectorLabels" . | nindent 6 }}
@@ -29,18 +29,22 @@ spec:
       labels:
         {{- include "interop-eks-microservice-chart.labels" . | nindent 8 }}
       annotations:
-        digest: {{ .Values.image.digest | quote }} # Used to force deployment on same image version but different content
+        digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
     spec:
       serviceAccountName: {{ .Values.name | quote }}
       containers:
         - name: {{ .Values.name }}
-          image: "{{ .Values.image.repositoryPrefix }}/{{ .Values.image.repositoryName | default .Values.name }}{{ $imageTag }}{{ $digestSuffix }}"
-          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          image: "{{ .Values.deployment.image.repositoryPrefix }}/{{ .Values.deployment.image.repositoryName | default .Values.name }}{{ $imageTag }}{{ $digestSuffix }}"
+          imagePullPolicy: {{ .Values.deployment.image.imagePullPolicy }}
           {{- if and .Values.deployment .Values.deployment.command }}
           command: {{ .Values.deployment.command }}
           {{- end }}
           {{- if and .Values.deployment .Values.deployment.args }}
           args: {{ .Values.deployment.args }}
+          {{- end }}
+          {{- if .Values.deployment.securityContext }}
+          securityContext:
+            {{- toYaml .Values.deployment.securityContext | nindent 12 }}
           {{- end }}
           env:
             - name: KAFKA_BROKERS
@@ -93,7 +97,7 @@ spec:
             {{- end }}
             {{- end }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.deployment.resources | nindent 12 }}
           {{- if and .Values.deployment .Values.deployment.volumeMounts }}
           volumeMounts:
             {{- toYaml .Values.deployment.volumeMounts | nindent 12 }}

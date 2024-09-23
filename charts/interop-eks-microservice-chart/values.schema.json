@@ -1,46 +1,53 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
   "properties": {
-    "image": {
-      "description": "Container Image",
-      "properties": {
-        "repositoryPrefix": {
-          "type": "string"
+    "deployment": {
+      "image": {
+        "description": "Container Image",
+        "properties": {
+          "repositoryPrefix": {
+            "type": "string"
+          },
+          "imagePullPolicy": {
+            "type": "string"
+          }
         },
-        "imagePullPolicy": {
-          "type": "string"
-        }
+        "type": "object",
+        "required": [
+          "repositoryPrefix"
+        ]
       },
-      "type": "object",
-      "required": [
-        "repositoryPrefix"
-      ]
-    },
-    "resources": {
-      "description": "Container Resources consumption",
-      "properties": {
-        "requests": {
-          "properties": {
-            "cpu": {
-              "type": "string"
+      "replicas": {
+        "description": "Deployment replicas",
+        "type": "integer"
+      },
+      "resources": {
+        "description": "Container Resources consumption",
+        "properties": {
+          "requests": {
+            "properties": {
+              "cpu": {
+                "type": "string"
+              },
+              "memory": {
+                "type": "string"
+              }
             },
-            "memory": {
-              "type": "string"
-            }
+            "type": "object"
           },
-          "type": "object"
+          "limits": {
+            "properties": {
+              "cpu": {
+                "type": "string"
+              },
+              "memory": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
         },
-        "limits": {
-          "properties": {
-            "cpu": {
-              "type": "string"
-            },
-            "memory": {
-              "type": "string"
-            }
-          },
-          "type": "object"
-        }
+        "type": "object"
       },
       "type": "object"
     },
@@ -86,17 +93,13 @@
     "namespace": {
       "description": "Kubernetes namespace",
       "type": "string"
-    },
-    "replicas": {
-      "description": "Deployment replicas",
-      "type": "integer"
-    }
+    }    
   },
   "required": [
     "name",
     "namespace",
-    "resources",
-    "replicas",
+    "deployment.resources",
+    "deployment.replicas",
     "techStack"
   ],
   "title": "Values",
