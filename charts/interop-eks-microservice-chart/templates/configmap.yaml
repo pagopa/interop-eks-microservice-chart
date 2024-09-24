@@ -18,7 +18,7 @@ data:
   {{- end }}
   {{- if .Values.configmap -}}
     {{- range $key, $val := .Values.configmap }}
-    {{ $key }}: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }} 
+    {{ $key }}: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) | quote }} 
     {{- end }}
   {{- end }}
 {{- end }}
@@ -30,6 +30,6 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
   {{- range $key, $val := .Values.configmap }}
-  {{ $key }}: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }} 
+  {{ $key }}: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) | quote }} 
   {{- end }}
 {{- end }}
