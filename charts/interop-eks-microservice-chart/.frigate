@@ -298,13 +298,14 @@ deployment:
     migrationsConfigmap: "interop-be-db-commons"
 
 # Risorse utilizzate (richieste/limite) dal container
-resources:
-  requests:
-    cpu: "500m"
-    memory: "2Gi"
-  limits:
-    cpu: "500m"
-    memory: "2Gi"
+deployment:
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "2Gi"
+    limits:
+      cpu: "500m"
+      memory: "2Gi"
 ```
 
 ### 4.2 Esempio di override

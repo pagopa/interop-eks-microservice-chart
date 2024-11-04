@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.3.1](https://img.shields.io/badge/Version-1.3.1-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.7.1](https://img.shields.io/badge/Version-1.7.1-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -21,28 +21,28 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.flywayInitContainer.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
 | deployment.flywayInitContainer.envFromSecrets | object | `nil` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
 | deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
-| healthcheck | object | `{"path":null,"port":null,"successCodes":null}` | Service annotations |
-| image.digest | string | `nil` |  |
-| image.imagePullPolicy | string | `"Always"` |  |
-| image.repositoryPrefix | string | `nil` |  |
-| image.tag | string | `nil` |  |
+| deployment.image.digest | string | `nil` |  |
+| deployment.image.imagePullPolicy | string | `"Always"` |  |
+| deployment.image.repositoryPrefix | string | `nil` |  |
+| deployment.image.tag | string | `nil` |  |
+| deployment.replicas | int | `nil` | Number of desired replicas for the service being deployed |
+| deployment.resources | object | `{"limits":{"cpu":null,"memory":null},"requests":{"cpu":null,"memory":null}}` | K8s container resources requests and limits |
+| deployment.securityContext | object | `{"allowPrivilegeEscalation":false,"runAsUser":1001}` | Pod securityContext, applied to main container |
 | ingress.className | string | `"alb"` |  |
 | ingress.enable | bool | `false` | Enable K8s Ingress deployment generation |
 | ingress.groupName | string | `"interop-be"` |  |
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
 | namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
-| replicas | int | `nil` | Number of desired replicas for the service being deployed |
-| resources | object | `{"limits":{"cpu":null,"memory":null},"requests":{"cpu":null,"memory":null}}` | K8s container resources requests and limits |
-| roleArn | string | `nil` | ServiceAccount roleARN |
-| securityContext | object | `{"allowPrivilegeEscalation":false,"runAsUser":1001}` | Pod securityContext del Pod, used in Deployment yaml |
 | service.containerPort | string | `nil` |  |
-| service.create | bool | `true` | Enable K8s Service deployment generation |
+| service.create | bool | `false` | Enable K8s Service deployment generation |
 | service.enableManagement | bool | `true` | Enable container management port |
 | service.enableMonitoring | bool | `true` | Enable container monitoring port |
+| service.healthcheck | object | `{"path":null,"port":null,"successCodes":null}` | Service annotations |
 | service.managementPort | int | `8558` |  |
 | service.monitoringPort | int | `9095` |  |
 | service.targetPort | string | `"http"` |  |
 | service.type | enum | `"ClusterIP"` | K8s Service type, allowed values: [ "ClusterIP", "NodePort" ] |
+| serviceAccount.roleArn | string | `nil` | ServiceAccount roleARN |
 | techStack | enum | `nil` | Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"] |
 
 ## 1. Configurazione del Deployment di un MicroServizio
