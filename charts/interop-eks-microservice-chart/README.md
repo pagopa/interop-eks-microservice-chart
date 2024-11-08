@@ -42,7 +42,6 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | service.monitoringPort | int | `9095` |  |
 | service.targetPort | string | `"http"` |  |
 | service.type | enum | `"ClusterIP"` | K8s Service type, allowed values: [ "ClusterIP", "NodePort" ] |
-| serviceAccount | object | `{"roleArn":null}` | ServiceAccount roleARN |
 | serviceAccount.roleArn | string | `nil` | ServiceAccount roleARN |
 | techStack | enum | `nil` | Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"] |
 
