@@ -1,0 +1,69 @@
+name: Helm Chart Testing
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  helm-template-test:
+    runs-on: ubuntu-22.04
+
+    env:
+      CHART_PATH: "./charts/interop-eks-microservice-chart"
+      TEST_VALUES_PATH: "./tests"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+
+      #- name: Set up Helm
+      #  run: |
+      #    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+      #    chmod 700 get_helm.sh
+      #    ./get_helm.sh
+
+      - name: Set up yamllint for YAML linting
+        run: |
+          sudo apt-get install yamllint -y
+
+      - name: Set up kubeval for Kubernetes schema validation
+        run: |
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          tar xf kubeval-linux-amd64.tar.gz
+          sudo mv kubeval /usr/local/bin/kubeval
+
+      - name: Helm Lint
+        run: |
+          helm lint ${{ env.CHART_PATH }}
+
+      # Test Helm template with default values
+      - name: Render Helm template with default values
+        run: |
+          helm template eks-microservice ${{ env.CHART_PATH }} -f ??? > rendered-default.yaml
+
+      - name: YAML Lint rendered template (default values)
+        run: |
+          yamllint rendered-default.yaml
+
+      - name: Schema validation with kubeval (default values)
+        run: |
+          kubeval rendered-default.yaml
+
+      # Test Helm template with backward-compatible configurations
+      - name: Render Helm template with previous version values
+        run: |
+          helm template mychart ${{ env.CHART_PATH }} -f ${{ env.CHART_PATH }}/values-v1.yaml > rendered-v1.yaml
+
+      - name: YAML Lint rendered template (previous version values)
+        run: |
+          yamllint rendered-v1.yaml
+
+      - name: Schema validation with kubeval (previous version values)
+        run: |
+          kubeval rendered-v1.yaml
+
+      # Cleanup rendered files
+      - name: Cleanup
+        run: |
+          rm -f rendered-default.yaml rendered-v1.yaml
