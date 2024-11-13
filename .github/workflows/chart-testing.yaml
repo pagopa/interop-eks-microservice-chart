@@ -11,7 +11,7 @@ jobs:
 
     env:
       CHART_PATH: "./charts/interop-eks-microservice-chart"
-      TEST_VALUES_PATH: "./tests"
+      TESTS_PATH: "./tests"
 
     steps:
       - name: Checkout repository
@@ -37,33 +37,29 @@ jobs:
         run: |
           helm lint ${{ env.CHART_PATH }}
 
-      # Test Helm template with default values
-      - name: Render Helm template with default values
+      - name: Execute tests in subfolders
         run: |
-          helm template eks-microservice ${{ env.CHART_PATH }} -f ??? > rendered-default.yaml
+          for test_dir in ${{ env.TESTS_PATH }}/*; do
+            if [[ -f "$test_dir/Chart.yaml" && -f "$test_dir/values.yaml" ]]; then
+              echo "Running test in $test_dir"
 
-      - name: YAML Lint rendered template (default values)
-        run: |
-          yamllint rendered-default.yaml
+              # Render the template using the test case's values.yaml
+              helm template mychart ${{ env.CHART_PATH }} -f "$test_dir/values.yaml" --debug > "$test_dir/rendered.yaml"
 
-      - name: Schema validation with kubeval (default values)
-        run: |
-          kubeval rendered-default.yaml
+              # or Execute the validate.sh script
+              bash "$test_dir/validate.sh" > "$test_dir/rendered.yaml"
 
-      # Test Helm template with backward-compatible configurations
-      - name: Render Helm template with previous version values
-        run: |
-          helm template mychart ${{ env.CHART_PATH }} -f ${{ env.CHART_PATH }}/values-v1.yaml > rendered-v1.yaml
+              # YAML Lint on the rendered template
+              yamllint "$test_dir/rendered.yaml"
 
-      - name: YAML Lint rendered template (previous version values)
-        run: |
-          yamllint rendered-v1.yaml
+              # Schema validation with kubeval
+              kubeval "$test_dir/rendered.yaml"
+              # alt: kubectl senza context + apply --dry-run=client --validate=true -> no, tenta comunque di contattare api server (usare kind per creare cluster temporaneo?)
+              # alt2: generare k8s file statico e fare diff dopo template
 
-      - name: Schema validation with kubeval (previous version values)
-        run: |
-          kubeval rendered-v1.yaml
-
-      # Cleanup rendered files
-      - name: Cleanup
-        run: |
-          rm -f rendered-default.yaml rendered-v1.yaml
+              # Cleanup
+              rm -f "$test_dir/rendered.yaml"
+            else
+              echo "Skipping $test_dir as it doesn't contain required files (Chart.yaml, values.yaml, or validate.sh)"
+            fi
+          done
