@@ -1,0 +1,39 @@
+name: "test-generic-consumer"
+namespace: "dev"
+techStack: "nodejs"
+moduleType: "generic-consumer"
+
+externalValue: "externalValue"
+
+service:
+  create: false
+
+serviceAccount:
+  roleArn: "arn:aws:iam::00000000:role/test-generic-consumer-dev"
+  
+configmap:
+  KAFKA_CLIENT_ID: "dev-test-generic-consumer"
+  KAFKA_GROUP_ID: "dev-test-generic-consumer"
+  EXTERNAL_VALUE: "{{.Values.externalValue}}"
+  
+deployment:
+  replicas: 1
+  env:
+    LOG_LEVEL: "info"
+    AWS_ROLE_SESSION_NAME: "metadata.name"
+    TOPIC_STARTING_OFFSET: "latest"
+    EXTERNAL_VALUE: "{{.Values.externalValue}}"
+    FIXED_VALUE: "fixed_value"
+  envFromFieldRef:
+    AWS_ROLE_SESSION_NAME: "metadata.name"
+  envFromConfigmaps:
+    AGREEMENT_TOPIC: "common-kafka.AGREEMENT_TOPIC"
+  envFromSecrets:
+    SOME_SECRET: "secret-map.SECRET_KEY"
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "2Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"

@@ -1,0 +1,38 @@
+name: "test-read-model-writer"
+namespace: "dev"
+techStack: "nodejs"
+moduleType: "read-model-writer"
+
+topicStartingOffset: "earliest"
+externalValue: "externalValue"
+
+service:
+  create: false
+  containerPort: 8088
+
+serviceAccount:
+  roleArn: "arn:aws:iam::505630707203:role/read-model-writer-dev"
+
+configmap:
+  KAFKA_CLIENT_ID: "dev-pagopa-test-read-model-writer"
+  KAFKA_GROUP_ID: "dev-read-model-writer"
+  EXTERNAL_VALUE: "{{.Values.externalValue}}"
+
+deployment:
+  replicas: 1
+  env:
+    FIXED_VALUE: "fixed_value"
+    TOPIC_STARTING_OFFSET: "{{.Values.topicStartingOffset}}"
+  envFromFieldRef:
+    AWS_ROLE_SESSION_NAME: "metadata.name"
+  envFromConfigmaps:
+    PURPOSE_TOPIC: "common-kafka.PURPOSE_TOPIC"
+  envFromSecrets:
+    SOME_SECRET: "secret-map.SECRET_KEY"
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "2Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"

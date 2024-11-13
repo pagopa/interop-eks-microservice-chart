@@ -1,6 +1,0 @@
-dependencies:
-- name: interop-eks-microservice-chart
-  repository: file://../../charts/interop-eks-microservice-chart
-  version: 1.9.0
-digest: sha256:ebc4f5e9d376af89081a4cafdd66cd90dcfa60e7c053449d0c5626b8f2d8cac8
-generated: "2024-11-11T17:56:30.861214+01:00"

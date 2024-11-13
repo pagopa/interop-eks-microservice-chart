@@ -1,13 +1,12 @@
-locals:
-  awsAccountId: "00000000"
-  environment: "test"
-
 name: "nodejs-service"
-techStack: "nodejs"
 namespace: "test-namespace"
+techStack: "nodejs"
+
+externalValue: "some_value"
 
 service:
   create: true
+  containerPort: 8807
   additionalPorts:
     - name: monitoring
       containerPort: 9095
@@ -22,6 +21,7 @@ serviceAccount:
 configmap:
   POSTGRES_DB: "postgres_db"
   POSTGRES_SCHEMA: "test-namespace_myschema"
+  EXTERNAL: "{{.Values.externalValue}}"
 
 deployment:
   replicas: 2
@@ -32,6 +32,18 @@ deployment:
     requests:
       cpu: "500m"
       memory: "1Gi"
+  livenessProbe:
+    httpGet:
+      path: "/service/0.0/status"
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: "/service/0.0/status"
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 5
   flywayInitContainer:
     create: true
     migrationsConfigmap: "common-db-migrations"
@@ -39,9 +51,14 @@ deployment:
       FLYWAY_URL: jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)
       FLYWAY_CREATE_SCHEMAS: "true"
       FLYWAY_PLACEHOLDER_REPLACEMENT: "true"
+      FLYWAY_SCHEMAS_ENV: "{{.Values.name}}.POSTGRES_SCHEMA"
+      POSTGRES_HOST: "HOST"
+      POSTGRES_PORT: "PORT"
+      POSTGRES_DB: "DB"
+      EXTERNAL_ENV: "{{.Values.externalValue}}"
     envFromConfigmaps:
-      FLYWAY_SCHEMAS: "{{.Values.locals.serviceName}}.POSTGRES_SCHEMA"
-      FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: "{{.Values.locals.serviceName}}.POSTGRES_SCHEMA"
+      FLYWAY_SCHEMAS: "nodejs-service.POSTGRES_SCHEMA"
+      FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: "nodejs-service.POSTGRES_SCHEMA"
       POSTGRES_HOST: "common-event-store.EVENTSTORE_DB_HOST"
       POSTGRES_PORT: "common-event-store.EVENTSTORE_DB_PORT"
       POSTGRES_DB: "common-event-store.EVENTSTORE_DB_NAME"
@@ -50,23 +67,11 @@ deployment:
       FLYWAY_PASSWORD: "postgres.POSTGRES_PSW"
   command: ["bin/nodejs-service"]
   args: ["-Dconfig.override_with_env_vars=true"]
-  readinessProbe:
-    httpGet:
-      path: /ready
-      port: management
-    periodSeconds: 5
-    failureThreshold: 3
-  livenessProbe:
-    httpGet:
-      path: "/alive"
-      port: management
-    periodSeconds: 5
-    failureThreshold: 3
-    initialDelaySeconds: 30
   envFromFieldRef:
     NAMESPACE: "metadata.name"
   env:
-    REQUIRED_CONTACT_POINT_NR: "1"
+    REQUIRED_CONTACT_POINT_NR: "{{.Values.deployment.replicas}}"
+    NAMES_WELL_KNOWN_URLS: "{{.Values.name}}.WELL_KNOWN_URLS"
   envFromConfigmaps:
     WELL_KNOWN_URLS: "common-jwt.WELL_KNOWN_URLS"
     AGREEMENT_MANAGEMENT_URL: "common-services-urls.AGREEMENT_MANAGEMENT_URL"
