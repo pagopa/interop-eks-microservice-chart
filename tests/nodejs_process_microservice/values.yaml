@@ -8,6 +8,7 @@ externalValue: "externalValue"
 
 service:
   create: true
+  containerPort: 8088
 
 serviceAccount: 
   roleArn: "arn:aws:iam::00000000:role/test-proces-ms-dev"
@@ -19,6 +20,18 @@ configmap:
   
 deployment:
   replicas: 1
+  image:
+    repositoryPrefix: "000000000000.dkr.ecr.eu-central-1.amazonaws.com"
+    imagePullPolicy: Always
+    tag: $IMAGE_TAG_PLACEHOLDER
+    digest: $IMAGE_DIGEST_PLACEHOLDER
+  resources:
+    limits:
+      cpu: 100m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 1Gi
   livenessProbe:
     httpGet:
       path: /status
@@ -38,8 +51,8 @@ deployment:
       FLYWAY_CREATE_SCHEMAS: "true"
       FLYWAY_PLACEHOLDER_REPLACEMENT: "true"
       FLYWAY_URL: "jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
-      POSTGRES_HOST: "HOST"
-      POSTGRES_PORT: "PORT"
+      POSTGRES_HOST: "{{.Values.name}}"
+      POSTGRES_PORT: "{{.Values.externalValue}}"
       POSTGRES_DB: "DB"
     envFromConfigmaps:
       FROM_CONFIGMAPS: "configmap-name.configmap_key"
@@ -49,7 +62,7 @@ deployment:
   env:
     LOG_LEVEL: "info"
     FIXED_VALUE: "fixed_value"
-    EXTERNAL_VALUE: "{{.Values.externalValue}}"
+    EXTERNAL_VALUE_ENV: "{{.Values.externalValue}}"
   envFromConfigmaps:
     WELL_KNOWN_URLS: "common-jwt.WELL_KNOWN_URLS"
   envFromSecrets:

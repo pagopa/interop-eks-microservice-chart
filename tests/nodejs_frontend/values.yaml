@@ -18,6 +18,11 @@ ingress:
   host: "192.168.1.2"
 
 deployment:
+  image:
+    repositoryPrefix: "000000000000.dkr.ecr.eu-central-1.amazonaws.com"
+    imagePullPolicy: Always
+    tag: latest #$IMAGE_TAG_PLACEHOLDER
+    digest: $IMAGE_DIGEST_PLACEHOLDER
   resources:
     requests:
       cpu: "250m"

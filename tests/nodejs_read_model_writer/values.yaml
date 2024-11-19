@@ -11,7 +11,7 @@ service:
   containerPort: 8088
 
 serviceAccount:
-  roleArn: "arn:aws:iam::505630707203:role/read-model-writer-dev"
+  roleArn: "arn:aws:iam::000000000000:role/read-model-writer-dev"
 
 configmap:
   KAFKA_CLIENT_ID: "dev-pagopa-test-read-model-writer"
@@ -20,6 +20,11 @@ configmap:
 
 deployment:
   replicas: 1
+  image:
+    repositoryPrefix: "000000000000.dkr.ecr.eu-central-1.amazonaws.com"
+    imagePullPolicy: Always
+    tag: $IMAGE_TAG_PLACEHOLDER
+    digest: $IMAGE_DIGEST_PLACEHOLDER
   env:
     FIXED_VALUE: "fixed_value"
     TOPIC_STARTING_OFFSET: "{{.Values.topicStartingOffset}}"

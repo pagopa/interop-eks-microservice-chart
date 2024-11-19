@@ -19,12 +19,17 @@ serviceAccount:
   roleArn: "arn:aws:iam::000000000:role/interop-iam-service-dev-nodejs-service"
 
 configmap:
-  POSTGRES_DB: "postgres_db"
+  POSTGRES_DB_CM: "postgres_db"
   POSTGRES_SCHEMA: "test-namespace_myschema"
   EXTERNAL: "{{.Values.externalValue}}"
 
 deployment:
   replicas: 2
+  image:
+    repositoryPrefix: "000000000000.dkr.ecr.eu-central-1.amazonaws.com"
+    imagePullPolicy: Always
+    tag: $IMAGE_TAG_PLACEHOLDER
+    digest: $IMAGE_DIGEST_PLACEHOLDER
   resources:
     limits:
       cpu: "500m"
@@ -59,9 +64,9 @@ deployment:
     envFromConfigmaps:
       FLYWAY_SCHEMAS: "nodejs-service.POSTGRES_SCHEMA"
       FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: "nodejs-service.POSTGRES_SCHEMA"
-      POSTGRES_HOST: "common-event-store.EVENTSTORE_DB_HOST"
-      POSTGRES_PORT: "common-event-store.EVENTSTORE_DB_PORT"
-      POSTGRES_DB: "common-event-store.EVENTSTORE_DB_NAME"
+      POSTGRES_HOST_CM: "common-event-store.EVENTSTORE_DB_HOST"
+      POSTGRES_PORT_CM: "common-event-store.EVENTSTORE_DB_PORT"
+      POSTGRES_DB_EXT_CM: "common-event-store.EVENTSTORE_DB_NAME"
     envFromSecrets:
       FLYWAY_USER: "postgres.POSTGRES_USR"
       FLYWAY_PASSWORD: "postgres.POSTGRES_PSW"
