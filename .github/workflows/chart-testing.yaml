@@ -37,6 +37,13 @@ jobs:
         run: |
           helm lint ${{ env.CHART_PATH }}
 
+      #!!!
+      - name: Test with CT https://github.com/helm/chart-testing -> yamllint + yamale + install con kind
+        run: echo
+      #!!!
+      - name: Helm unit test https://github.com/quintush/helm-unittest
+        run: echo
+      
       - name: Execute tests in subfolders
         run: |
           for test_dir in ${{ env.TESTS_PATH }}/*; do
