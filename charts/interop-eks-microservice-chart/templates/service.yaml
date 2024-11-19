@@ -43,6 +43,7 @@ spec:
     {{- if and .Values.service .Values.service.additionalPorts }}
     {{- range $key, $val := .Values.service.additionalPorts }}
     - name: {{ $val.name }}
+      port: {{ $val.containerPort }}
       targetPort: {{ $val.containerPort }}
       protocol: {{ $val.protocol }}
     {{- end }}
