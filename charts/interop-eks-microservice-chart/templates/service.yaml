@@ -35,14 +35,15 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     {{- if and .Values.service .Values.service.containerPort }}
-    - port: {{ .Values.service.servicePort | default .Values.service.containerPort }}
+    - name: {{ .Values.service.portName | default "http" }}
+      port: {{ .Values.service.servicePort | default .Values.service.containerPort }}
       targetPort: {{ .Values.service.targetPort | default "http" }}
       protocol: {{ .Values.service.containerProtocol | default "TCP" }}
-      name: {{ .Values.service.portName | default "http" }}
     {{- end }}
     {{- if and .Values.service .Values.service.additionalPorts }}
     {{- range $key, $val := .Values.service.additionalPorts }}
     - name: {{ $val.name }}
+      port: {{ $val.containerPort }}
       targetPort: {{ $val.containerPort }}
       protocol: {{ $val.protocol }}
     {{- end }}

@@ -1,0 +1,70 @@
+name: "test-frontend"
+namespace: "dev"
+techStack: "frontend"
+externalValue: "externalValue"
+
+service:
+  create: true
+  containerPort: 80
+  targetPort: 80
+  healthcheck:
+    path: "/ui"
+    successCodes: "301"
+
+ingress:
+  enable: true
+  applicationPath: "/ui"
+  groupName: "theGroupName"
+  host: "192.168.1.2"
+
+deployment:
+  image:
+    repositoryPrefix: "000000000000.dkr.ecr.eu-central-1.amazonaws.com"
+    imagePullPolicy: Always
+    tag: latest #$IMAGE_TAG_PLACEHOLDER
+    digest: $IMAGE_DIGEST_PLACEHOLDER
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "1Gi"
+    limits:
+      cpu: "250m"
+      memory: "1Gi"
+
+frontend:
+  nginx:
+    default.conf: |-
+      server {
+        listen       80;
+        listen  [::]:80;
+        server_name  localhost;
+        absolute_redirect off;
+
+        location /ui {
+            root   /usr/share/nginx/html;
+            sub_filter_once off;
+            sub_filter_types *;
+            sub_filter **CSP_NONCE** $request_id;
+            add_header Content-Security-Policy "default-src 'self'; object-src 'none'; connect-src 'self' https://test.s3.eu-central-1.amazonaws.com; script-src 'nonce-$request_id'; style-src 'self' 'unsafe-inline'; worker-src 'none'; font-src 'self'; img-src 'self' data:; base-uri 'self'";
+            add_header Strict-Transport-Security "max-age=31536000";
+            add_header X-Content-Type-Options "nosniff";
+            add_header X-Frame-Options "SAMEORIGIN";
+            add_header Referrer-Policy "no-referrer";
+            rewrite /ui/index.html /ui permanent;
+            try_files $uri /ui/index.html =404;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+      }
+  additionalAssets: 
+    env.js: |- 
+      window.pagopa_env = {
+        MIXPANEL_PROJECT_ID: "MIXPANEL_PROJECT_ID",
+        ONETRUST_DOMAIN_SCRIPT_ID: "ONETRUST_DOMAIN_SCRIPT_ID",
+        CLIENT_ASSERTION_JWT_AUDIENCE: "CLIENT_ASSERTION_JWT_AUDIENCE",
+        WELL_KNOWN_URLS : "WELL_KNOWN_URLS"
+      }
+

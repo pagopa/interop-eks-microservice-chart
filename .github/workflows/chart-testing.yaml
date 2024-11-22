@@ -1,0 +1,87 @@
+name: Helm Chart Testing
+
+on:
+  pull_request:
+    branches:
+      - main
+      - feature/*
+
+jobs:
+  helm-template-test:
+    runs-on: ubuntu-22.04
+
+    env:
+      CHART_PATH: "./charts/interop-eks-microservice-chart"
+      TESTS_PATH: "./tests"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+
+      #- name: Set up Helm
+      #  run: |
+      #    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+      #    chmod 700 get_helm.sh
+      #    ./get_helm.sh
+
+      - name: Set up yamllint for YAML linting
+        run: |
+          sudo apt-get install yamllint curl -y
+
+      #- name: Set up kubeval for Kubernetes schema validation
+      #  run: |
+      #    wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+      #    tar xf kubeval-linux-amd64.tar.gz
+      #    sudo mv kubeval /usr/local/bin/kubeval
+
+      - name: Helm Lint
+        run: |
+          helm lint ${{ env.CHART_PATH }}
+
+      #- name: Test with CT https://github.com/helm/chart-testing -> yamllint + yamale + install con kind
+      #  run: echo
+      
+      #- name: Helm unit test https://github.com/quintush/helm-unittest
+      #  run: echo
+      
+      - name: Kubeconform download
+        run: |
+          set -euo pipefail
+
+          curl -sSLO https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+          tar -xzf kubeconform-linux-amd64.tar.gz
+          chmod +x kubeconform-linux-amd64/kubeconform
+          sudo mv kubeconform-linux-amd64/kubeconform /usr/local/bin/kubeconform
+
+          kubeconform --version
+
+      - name: Kubeconform check
+        run: |
+          set -euo pipefail
+          
+          for test_dir in ${{ env.TESTS_PATH }}/*; do
+            if [[ -f "$test_dir/Chart.yaml" && -f "$test_dir/values.yaml" ]]; then
+              echo "Running test in $test_dir"
+
+              # Render the template using the test case's values.yaml
+              helm template mychart ${{ env.CHART_PATH }} -f "$test_dir/values.yaml" --debug > "$test_dir/rendered.yaml"
+
+              # or Execute the validate.sh script
+              #bash "$test_dir/validate.sh" > "$test_dir/rendered.yaml"
+
+              # YAML Lint on the rendered template
+              #yamllint "$test_dir/rendered.yaml"
+
+              # Schema validation with kubeval
+              #kubeval "$test_dir/rendered.yaml"
+              # alt: kubectl senza context + apply --dry-run=client --validate=true -> no, tenta comunque di contattare api server (usare kind per creare cluster temporaneo?)
+              # alt2: generare k8s file statico e fare diff dopo template
+
+              # Cleanup
+              # rm -f "$test_dir/rendered.yaml"
+            else
+              echo "Skipping $test_dir as it doesn't contain required files (Chart.yaml, values.yaml, or validate.sh)"
+            fi
+          done
+
+          kubeconform -summary -verbose -strict tests/*/rendered.yaml
