@@ -50,8 +50,8 @@ jobs:
 
           curl -sSLO https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
           tar -xzf kubeconform-linux-amd64.tar.gz
-          chmod +x kubeconform
-          sudo mv kubeconform /usr/local/bin/kubeconform
+          chmod +x kubeconform-linux-amd64/kubeconform
+          sudo mv kubeconform-linux-amd64/kubeconform /usr/local/bin/kubeconform
 
           kubeconform --version
 
