@@ -78,7 +78,7 @@ jobs:
               # alt2: generare k8s file statico e fare diff dopo template
 
               # Cleanup
-              rm -f "$test_dir/rendered.yaml"
+              # rm -f "$test_dir/rendered.yaml"
             else
               echo "Skipping $test_dir as it doesn't contain required files (Chart.yaml, values.yaml, or validate.sh)"
             fi
