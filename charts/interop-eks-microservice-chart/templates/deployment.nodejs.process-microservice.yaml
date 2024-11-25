@@ -53,7 +53,7 @@ spec:
             {{- end }}
             {{- end }}
             {{- if .Values.deployment.flywayInitContainer.env }}
-            {{- range $key, $val := .Values.flywayInitContainer.env }}
+            {{- range $key, $val := .Values.deployment.flywayInitContainer.env }}
             {{- $preprocessedEnvValue := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
             - name: "{{ $key }}"
               value: "{{ $preprocessedEnvValue }}"
