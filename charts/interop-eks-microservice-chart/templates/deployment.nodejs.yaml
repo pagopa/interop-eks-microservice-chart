@@ -83,10 +83,10 @@ spec:
           image: "{{ .Values.deployment.image.repositoryPrefix }}/{{ .Values.deployment.image.repositoryName | default .Values.name }}{{ $imageTag }}{{ $digestSuffix }}"
           imagePullPolicy: {{ .Values.deployment.image.imagePullPolicy }}
           {{- if and .Values.deployment .Values.deployment.command }}
-          command: {{ .Values.deployment.command }}
+          command: {{ toJson .Values.deployment.command }}
           {{- end }}
           {{- if and .Values.deployment .Values.deployment.args }}
-          args: {{ .Values.deployment.args }}
+          args: {{ toJson .Values.deployment.args }}
           {{- end }}
           {{- if and .Values.deployment .Values.deployment.livenessProbe }}
           livenessProbe:
