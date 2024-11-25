@@ -29,7 +29,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.resources | object | `{"limits":{"cpu":null,"memory":null},"requests":{"cpu":null,"memory":null}}` | K8s container resources requests and limits |
 | deployment.securityContext | object | `{"allowPrivilegeEscalation":false,"runAsUser":1001}` | Pod securityContext, applied to main container |
 | ingress.className | string | `"alb"` |  |
-| ingress.enable | bool | `false` | Enable K8s Ingress deployment generation |
+| ingress.create | bool | `false` | Enable K8s Ingress deployment generation |
 | ingress.groupName | string | `"interop-be"` |  |
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
 | namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
@@ -292,7 +292,7 @@ Per installare ed abilitare l'Ingress per un dato microservizio, ad esempio agre
 # /microservices/agreement-management/qa/values.yaml
 
 ingress:
-  enable: true
+  create: true
 ```
 
 Al fine di aggiungere una regola di instradamento specifica per il microservizio in esame, è necessario anche specificare il parametro "ingress.applicationPath" come segue:
