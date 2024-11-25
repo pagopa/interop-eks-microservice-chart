@@ -1,4 +1,4 @@
-{{- if and .Values.autoscaling .Values.autoscaling.enabled }}
+{{- if and .Values.autoscaling.horizontal.create .Values.autoscaling.horizontal.config }}
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
@@ -7,11 +7,5 @@ metadata:
   labels:
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
 spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: {{ .Values.name }}
-  minReplicas: {{ .Values.autoscaling.minReplicas }}
-  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
-  targetCPUUtilizationPercentage: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+  {{- toYaml .Values.autoscaling.horizontal.config | nindent 2 }}
 {{- end }}
