@@ -44,7 +44,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | service.type | enum | `"ClusterIP"` | K8s Service type, allowed values: [ "ClusterIP", "NodePort" ] |
 | serviceAccount.roleArn | string | `nil` | ServiceAccount roleARN |
 | techStack | enum | `nil` | Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"] |
-| autoscaling.horizontal.create | bool | `false` | Abilita o disabilita l'Autoscaling Orizzontale per il Deployment. |
+| autoscaling.horizontal.create | bool | `false` | Enable or disable Horizontal Autoscaling for the Deployment. |
 
 ## 1. Configurazione del Deployment di un MicroServizio
 
