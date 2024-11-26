@@ -631,7 +631,7 @@ deployment:
   autoscaling:
     horizontal:
       create: true  # Imposta se vuoi creare l'HPA o meno
-      config:  # I dati effettivi da utilizzare per la spec dell'HPA
+      config:  # I dati effettivi da utilizzare per la config dell'HPA
         minReplicas: 1
         maxReplicas: 10
         targetCPUUtilizationPercentage: 80
