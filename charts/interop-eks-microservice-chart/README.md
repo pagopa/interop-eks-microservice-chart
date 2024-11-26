@@ -45,6 +45,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | serviceAccount.roleArn | string | `nil` | ServiceAccount roleARN |
 | techStack | enum | `nil` | Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"] |
 | autoscaling.horizontal.create | bool | `false` | Enable or disable Horizontal Autoscaling for the Deployment. |
+| autoscaling.horizontal.config | object | `{}` | Configuration for Horizontal Autoscaling. |
 
 ## 1. Configurazione del Deployment di un MicroServizio
 
@@ -312,6 +313,7 @@ In automatico sarà generato un Ingress template con annotazione "alb.ingress.ku
 ingress:
   groupName: "custom-group-name"
 ```
+*Nota*: create e groupName devono essere mutuamente esclusivi. Se create è impostato su true, groupName deve essere null o non definito. Se groupName ha un valore, create deve essere false.
 
 Opzionalmente,
 
@@ -597,37 +599,19 @@ autoscaling:
   horizontal:
     create: true
 ```  
-Determina se l'Autoscaling Orizzontale è abilitato per il Deployment del microservizio. Quando impostato a true, crea un oggetto HorizontalPodAutoscaler (HPA) associato al Deployment. 
-Se disabilitato (false), l'HPA non viene generato.
+Determina se l'Autoscaling Orizzontale è abilitato per il Deployment del microservizio. 
+Quando impostato a true, crea un oggetto HorizontalPodAutoscaler (HPA). Se disabilitato (false), l'HPA non viene generato.
 
-```
-config:
-  minReplicas: 1
-```
-Specifica il numero minimo di repliche del Deployment. 
-L'HPA garantirà che il numero di repliche non scenda mai sotto questa soglia, indipendentemente dal carico di lavoro.
+Per ulteriori informazioni e tutte le possibili configurazioni del Horizontal Pod Autoscaler, consulta la documentazione di Kubernetes:
 
-```
-config:
-  maxReplicas: 5
-```
-Specifica il numero massimo di repliche del Deployment configurabili e sostenibili dall'infrastruttura. 
-L'HPA garantirà che il numero di repliche non superi mai questo limite, anche in condizioni di carico molto elevato.
+https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
 
-```
-config:
-  targetCPUUtilizationPercentage: 80
-```
-Definisce la percentuale di utilizzo della CPU che il sistema considera come "ideale" per i pod in esecuzione. 
-Quando l'utilizzo della CPU di un pod supera questa soglia, l'HPA attiva il meccanismo di scaling orizzontale, ossia aumenta il numero di repliche per cercare di ridurre il carico su ciascun pod. 
-Se l'utilizzo della CPU scende sotto la soglia, l'HPA potrebbe ridurre il numero di repliche per risparmiare risorse.
 
 #### 6.1.2 <ins>Esempio di configurazione</ins>
 
 Per configurare l'Autoscaling Orizzontale, è possibile aggiungere la seguente configurazione al file _values.yaml_ del microservizio che si sta sviluppando, ad esempio "agreement-management" in ambiente "qa":
 
 ```
-deployment:
   autoscaling:
     horizontal:
       create: true  # Imposta se vuoi creare l'HPA o meno
@@ -635,4 +619,5 @@ deployment:
         minReplicas: 1
         maxReplicas: 10
         targetCPUUtilizationPercentage: 80
+        targetMemoryUtilizationPercentage: 70
 ```

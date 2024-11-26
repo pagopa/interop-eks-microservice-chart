@@ -1,4 +1,4 @@
-{{- if and .Values.autoscaling.horizontal.create .Values.autoscaling.horizontal.config }}
+{{- if and .Values.autoscaling .Values.autoscaling.horizontal .Values.autoscaling.horizontal.create .Values.autoscaling.horizontal.config }}
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
