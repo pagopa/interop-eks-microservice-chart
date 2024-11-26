@@ -98,7 +98,7 @@ spec:
           {{- end }} # End readinessProbe
           ports:
             {{- if and .Values.service .Values.service.create .Values.service.containerPort }}
-            - name: {{ .Values.service.portName | default "http" }}
+            - name: {{ .Values.service.portName }}
               containerPort: {{ .Values.service.containerPort }}
               protocol: {{ .Values.service.containerProtocol | default "TCP" }}
             {{- end }}

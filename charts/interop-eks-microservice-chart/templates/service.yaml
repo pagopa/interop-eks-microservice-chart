@@ -35,9 +35,9 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     {{- if and .Values.service .Values.service.containerPort }}
-    - name: {{ .Values.service.portName | default "http" }}
+    - name: {{ .Values.service.portName }}
       port: {{ .Values.service.servicePort | default .Values.service.containerPort }}
-      targetPort: {{ .Values.service.targetPort | default "http" }}
+      targetPort: {{ .Values.service.targetPort | default .Values.service.containerPort }}
       protocol: {{ .Values.service.containerProtocol | default "TCP" }}
     {{- end }}
     {{- if and .Values.service .Values.service.additionalPorts }}
