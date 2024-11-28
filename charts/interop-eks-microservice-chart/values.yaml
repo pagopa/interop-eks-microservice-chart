@@ -26,9 +26,10 @@ service:
   type: "ClusterIP"
   monitoringPort: 9095
   managementPort: 8558
+  # -- (string) Service port name 
+  portName: 
   containerPort:
-  
-  targetPort: "http"
+  targetPort: 
   # -- Enable container monitoring port
   enableMonitoring: true
   # -- Enable container management port
