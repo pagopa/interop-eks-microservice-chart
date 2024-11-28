@@ -45,7 +45,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | serviceAccount.roleArn | string | `nil` | ServiceAccount roleARN |
 | techStack | enum | `nil` | Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"] |
 | autoscaling.horizontal.create | bool | `false` | Enable or disable Horizontal Autoscaling for the Deployment. |
-| autoscaling.horizontal.config | object | `{}` | Configuration for Horizontal Autoscaling. |
+| autoscaling.horizontal.config | object | `nil` | Configuration for Horizontal Autoscaling. |
 
 ## 1. Configurazione del Deployment di un MicroServizio
 
