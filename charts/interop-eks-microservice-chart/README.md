@@ -313,7 +313,7 @@ In automatico sarà generato un Ingress template con annotazione "alb.ingress.ku
 ingress:
   groupName: "custom-group-name"
 ```
-*Nota*: create e groupName devono essere mutuamente esclusivi. Se create è impostato su true, groupName deve essere null o non definito. Se groupName ha un valore, create deve essere false.
+*Nota*: ingress.create e service.targetGroupArn devono essere mutuamente esclusivi. Se create è impostato su true, service.targetGroupArn deve essere null o non definito. Se service.targetGroupArn ha un valore, create deve essere false.
 
 Opzionalmente,
 

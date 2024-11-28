@@ -36,9 +36,11 @@ service:
 
 ingress:
   # -- Enable K8s Ingress deployment generation
-  create: false  # Must be mutually exclusive with groupName
+  create: false
+  # -- ingress.create and service.targetGroupArn must be mutually exclusive.
   className: alb
-  groupName: "interop-be"  # Must be mutually exclusive with create
+  groupName: "interop-be"
+ 
 
 deployment:
   # -- (int) Number of desired replicas for the service being deployed
