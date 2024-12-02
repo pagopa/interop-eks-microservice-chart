@@ -93,11 +93,11 @@ spec:
           {{- if and .Values.deployment .Values.deployment.livenessProbe }}
           livenessProbe:
             {{- toYaml .Values.deployment.livenessProbe | nindent 12 }}
-          {{- end }} # End livenessProbe
+          {{- end }} {{/* End of livenessProbe section */}}
           {{- if and .Values.deployment .Values.deployment.readinessProbe }}
           readinessProbe:
             {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
-          {{- end }} # End readinessProbe
+          {{- end }} {{/* End of readinessProbe section */}}
           ports:
             {{- if and .Values.service .Values.service.containerPort }}
             - name: {{ .Values.service.portName }}
