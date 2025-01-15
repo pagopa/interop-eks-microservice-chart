@@ -85,22 +85,22 @@ spec:
           image: "{{ .Values.deployment.image.repositoryPrefix }}/{{ .Values.deployment.image.repositoryName | default .Values.name }}{{ $imageTag }}{{ $digestSuffix }}"
           imagePullPolicy: {{ .Values.deployment.image.imagePullPolicy }}
           {{- if and .Values.deployment .Values.deployment.command }}
-          command: {{ .Values.deployment.command }}
+          command: {{ toJson .Values.deployment.command }}
           {{- end }}
           {{- if and .Values.deployment .Values.deployment.args }}
-          args: {{ .Values.deployment.args }}
+          args: {{ toJson .Values.deployment.args }}
           {{- end }}
           {{- if and .Values.deployment .Values.deployment.livenessProbe }}
           livenessProbe:
             {{- toYaml .Values.deployment.livenessProbe | nindent 12 }}
-          {{- end }} # End livenessProbe
+          {{- end }} {{/* End of livenessProbe section */}}
           {{- if and .Values.deployment .Values.deployment.readinessProbe }}
           readinessProbe:
             {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
-          {{- end }} # End readinessProbe
+          {{- end }} {{/* End of readinessProbe section */}}
           ports:
             {{- if and .Values.service .Values.service.containerPort }}
-            - name: {{ .Values.service.portName | default "http" }}
+            - name: {{ .Values.service.portName }}
               containerPort: {{ .Values.service.containerPort }}
               protocol: {{ .Values.service.containerProtocol | default "TCP" }}
             {{- end }}

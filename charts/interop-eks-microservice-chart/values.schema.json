@@ -63,12 +63,18 @@
     "service": {
       "description": "Service properties",
       "properties": {
+        "create": {
+          "description": "Enable service creation",
+          "type": "boolean",
+          "default": false
+        },
         "type": {
           "description": "Service Type",
           "type": "string",
           "enum": [ "ClusterIP", "NodePort" ],
           "default": "ClusterIP"
         },
+        
         "containerPort": {
           "$comment": "This property shouldn't have a default value",
           "description": "Port",
@@ -88,7 +94,21 @@
           "default": 8558
         }
       },
-      "type": "object"
+      "type": "object",
+      "if": {
+        "properties": {
+          "create": { "const": true }
+        }
+      },
+      "then": {
+        "properties": {
+          "portName": {
+            "$comment": "This property shouldn't have a default value",
+            "description": "Port Name",
+            "type": ["string"]
+          }
+        }
+      }
     },
     "name": {
       "description": "Service name",
