@@ -49,7 +49,6 @@ deployment:
   replicas: 
   # -- (object) Pod securityContext, applied to main container
   securityContext:
-    runAsUser:
     allowPrivilegeEscalation: false
   image:
     imagePullPolicy: Always
