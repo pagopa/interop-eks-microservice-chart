@@ -20,6 +20,7 @@ service:
     path:
     port:
     successCodes:
+    protocol:
   # -- Enable K8s Service deployment generation
   create: false
   # -- (enum) K8s Service type, allowed values: [ "ClusterIP", "NodePort" ]
@@ -48,7 +49,7 @@ deployment:
   replicas: 
   # -- (object) Pod securityContext, applied to main container
   securityContext:
-    runAsUser: 1001
+    runAsUser: 1001 #TODO rimuovere - verificare default k8s
     allowPrivilegeEscalation: false
   image:
     imagePullPolicy: Always
