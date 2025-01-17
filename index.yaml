@@ -3,6 +3,15 @@ entries:
   interop-eks-microservice-chart:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2025-01-17T09:24:18.972708715Z"
+    description: A Helm chart for PagoPa Interop Microservices
+    digest: 2485c3a39fdb5a36a6742dbd05fe79b8104474e71141be3dc9ef1200e0a39050
+    name: interop-eks-microservice-chart
+    urls:
+    - https://github.com/pagopa/interop-eks-microservice-chart/releases/download/interop-eks-microservice-chart-1.11.0/interop-eks-microservice-chart-1.11.0.tgz
+    version: 1.11.0
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2024-12-02T10:13:58.0021904Z"
     description: A Helm chart for PagoPa Interop Microservices
     digest: 968f9e6f7447cb0cd9f2a4a36770ee1f5fd86a49dc0a00fafdbc2caf111dea2a
@@ -231,4 +240,4 @@ entries:
     urls:
     - https://github.com/pagopa/interop-helm-charts/releases/download/interop-eks-microservice-chart-1.0.0/interop-eks-microservice-chart-1.0.0.tgz
     version: 1.0.0
-generated: "2024-12-02T10:13:58.002368552Z"
+generated: "2025-01-17T09:24:18.972868246Z"
