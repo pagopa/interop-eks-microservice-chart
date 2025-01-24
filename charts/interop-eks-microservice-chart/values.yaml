@@ -50,10 +50,17 @@ deployment:
   # -- (object) Pod securityContext, applied to main container
   securityContext:
     allowPrivilegeEscalation: false
+  # -- (object) Microservice image configuration
   image:
+    # -- (string) Image pull policy
     imagePullPolicy: Always
+    # -- (string) Image repository
     repositoryPrefix:
+    # -- (string) Alternative image name
+    repositoryName:
+    # -- (string) Image tag
     tag:
+    # -- (string) Image digest
     digest:
   # -- (object)  K8s container resources requests and limits
   resources:

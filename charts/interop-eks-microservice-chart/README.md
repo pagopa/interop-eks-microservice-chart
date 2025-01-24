@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.9.1](https://img.shields.io/badge/Version-1.9.1-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.10.1](https://img.shields.io/badge/Version-1.10.1-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -11,6 +11,8 @@ The following table lists the configurable parameters of the Interop-eks-microse
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| autoscaling | object | `{"horizontal":{"create":false}}` | Horizontal Pod Autoscaling configuration |
+| autoscaling.horizontal.create | bool | `false` | Enable horizontal pod autoscaling |
 | deployment.env | object | `nil` | List of environment variables for a container, specifying a value directly for each named variable |
 | deployment.envFromConfigmaps | object | `nil` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
 | deployment.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
@@ -21,14 +23,16 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.flywayInitContainer.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
 | deployment.flywayInitContainer.envFromSecrets | object | `nil` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
 | deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
-| deployment.image.digest | string | `nil` |  |
-| deployment.image.imagePullPolicy | string | `"Always"` |  |
-| deployment.image.repositoryPrefix | string | `nil` |  |
-| deployment.image.tag | string | `nil` |  |
+| deployment.image | object | `{"digest":null,"imagePullPolicy":"Always","repositoryName":null,"repositoryPrefix":null,"tag":null}` | Microservice image configuration |
+| deployment.image.digest | string | `nil` | Image digest |
+| deployment.image.imagePullPolicy | string | `"Always"` | Image pull policy |
+| deployment.image.repositoryName | string | `nil` | Alternative image name |
+| deployment.image.repositoryPrefix | string | `nil` | Image repository |
+| deployment.image.tag | string | `nil` | Image tag |
 | deployment.replicas | int | `nil` | Number of desired replicas for the service being deployed |
 | deployment.resources | object | `{"limits":{"cpu":null,"memory":null},"requests":{"cpu":null,"memory":null}}` | K8s container resources requests and limits |
-| deployment.securityContext | object | `{"allowPrivilegeEscalation":false,"runAsUser":1001}` | Pod securityContext, applied to main container |
-| ingress.className | string | `"alb"` |  |
+| deployment.securityContext | object | `{"allowPrivilegeEscalation":false}` | Pod securityContext, applied to main container |
+| ingress.className | string | `"alb"` | ingress.create and service.targetGroupArn must be mutually exclusive. |
 | ingress.create | bool | `false` | Enable K8s Ingress deployment generation |
 | ingress.groupName | string | `"interop-be"` |  |
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
@@ -37,7 +41,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | service.create | bool | `false` | Enable K8s Service deployment generation |
 | service.enableManagement | bool | `true` | Enable container management port |
 | service.enableMonitoring | bool | `true` | Enable container monitoring port |
-| service.healthcheck | object | `{"path":null,"port":null,"successCodes":null}` | Service annotations |
+| service.healthcheck | object | `{"path":null,"port":null,"protocol":null,"successCodes":null}` | Service annotations |
 | service.managementPort | int | `8558` |  |
 | service.monitoringPort | int | `9095` |  |
 | service.portName | string | `nil` | Service port name  |
@@ -46,8 +50,6 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | serviceAccount | object | `{"roleArn":null}` | ServiceAccount roleARN |
 | serviceAccount.roleArn | string | `nil` | ServiceAccount roleARN |
 | techStack | enum | `nil` | Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"] |
-| autoscaling.horizontal.create | bool | `false` | Enable or disable Horizontal Autoscaling for the Deployment. |
-| autoscaling.horizontal.config | object | `nil` | Configuration for Horizontal Autoscaling. |
 
 ## 1. Configurazione del Deployment di un MicroServizio
 
@@ -295,7 +297,7 @@ Per installare ed abilitare l'Ingress per un dato microservizio, ad esempio agre
 # /microservices/agreement-management/qa/values.yaml
 
 ingress:
-  create: true
+  enable: true
 ```
 
 Al fine di aggiungere una regola di instradamento specifica per il microservizio in esame, è necessario anche specificare il parametro "ingress.applicationPath" come segue:
@@ -315,7 +317,6 @@ In automatico sarà generato un Ingress template con annotazione "alb.ingress.ku
 ingress:
   groupName: "custom-group-name"
 ```
-*Nota*: ingress.create e service.targetGroupArn devono essere mutuamente esclusivi. Se create è impostato su true, service.targetGroupArn deve essere null o non definito. Se service.targetGroupArn ha un valore, create deve essere false.
 
 Opzionalmente,
 
@@ -584,42 +585,3 @@ A differenza del Deployment di default, sono definite le seguenti variabili d'am
   * READMODEL_DB_PASSWORD: mappato con la chiave _PROJECTION_PSW_ del Secret comune "read-model"
 
 Per questo Deployment non è previsto l'utilizzo del FlyWay InitContainer.
-
-## 6. Autoscaling
-
-### 6.1 Configurazione dell'Autoscaling Orizzontale
-
-L'Autoscaling Orizzontale consente di scalare automaticamente il numero di repliche di un servizio Kubernetes in base al carico di lavoro. 
-È possibile configurare questa funzionalità nel file _values.yaml_ specifico per ogni microservizio.
-
-#### 6.1.1 <ins>Parametri configurabili</ins>
-
-Di seguito la descrizione dettagliata dei parametri configurabili per l'Autoscaling Orizzontale:
-
-```
-autoscaling:
-  horizontal:
-    create: true
-```  
-Determina se l'Autoscaling Orizzontale è abilitato per il Deployment del microservizio. 
-Quando impostato a true, crea un oggetto HorizontalPodAutoscaler (HPA). Se disabilitato (false), l'HPA non viene generato.
-
-Per ulteriori informazioni e tutte le possibili configurazioni del Horizontal Pod Autoscaler, consulta la documentazione di Kubernetes:
-
-https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
-
-
-#### 6.1.2 <ins>Esempio di configurazione</ins>
-
-Per configurare l'Autoscaling Orizzontale, è possibile aggiungere la seguente configurazione al file _values.yaml_ del microservizio che si sta sviluppando, ad esempio "agreement-management" in ambiente "qa":
-
-```
-  autoscaling:
-    horizontal:
-      create: true  # Imposta se vuoi creare l'HPA o meno
-      config:  # I dati effettivi da utilizzare per la config dell'HPA
-        minReplicas: 1
-        maxReplicas: 10
-        targetCPUUtilizationPercentage: 80
-        targetMemoryUtilizationPercentage: 70
-```
