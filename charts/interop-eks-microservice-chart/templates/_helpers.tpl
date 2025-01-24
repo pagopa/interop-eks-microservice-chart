@@ -45,8 +45,6 @@ app.kubernetes.io/version: {{ $imageTag }}
 {{- $digestSuffix := "" }}
 {{- $digestSuffix = (nospace .Values.deployment.image.digest) }}
 app.kubernetes.io/version: {{ $digestSuffix }}
-{{ else if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
