@@ -12,6 +12,10 @@
 {{- $imageTag = (nospace (cat ":" .Values.deployment.image.tag)) }}
 {{- end }}
 
+{{- if and (not $imageTag) (not $digestSuffix)}}
+{{ fail "One of deployment.image.tag and deployment.image.digest must be defined." }}
+{{- end }}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
