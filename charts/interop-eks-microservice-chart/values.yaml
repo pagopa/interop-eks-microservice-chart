@@ -100,3 +100,33 @@ autoscaling:
   horizontal:
     # -- Enable horizontal pod autoscaling
     create: false
+    # -- Enable KEDA
+  keda:
+    create: true
+    scaledObject:
+      minReplicaCount: 1
+      maxReplicaCount: 4
+      pollingInterval: 30
+      scaleDownStabilizationWindowSeconds: 120
+      scaleUpStabilizationWindowSeconds: 60
+      triggers:
+        - type: aws-cloudwatch
+          metadata:
+            awsRegion: eu-south-1
+            dimensionName: LoadBalancer
+            dimensionValue: app/keda-dev-experimental/89887a6403eb9cb3
+            identityOwner: operator
+            ignoreNullValues: 'true'
+            metricCollectionTime: '120'
+            metricName: HTTP_Fixed_Response_Count
+            metricStat: Sum
+            metricStatPeriod: '60'
+            metricType: AverageValue
+            minMetricValue: '0'
+            namespace: AWS/ApplicationELB
+            targetMetricValue: '20'
+          useCachedMetrics: true
+        - type: cpu
+          metadata:
+            type: Utilization
+            value: "50"
