@@ -80,6 +80,8 @@ deployment:
   envFromFieldRef: 
   flywayInitContainer:
     create: false
+    # -- (string) Flyway container image version
+    version: 
     # -- Configmap with migrations
     migrationsConfigmap:
     # -- (object) List of environment variables for a container, specifying a value directly for each named variable
