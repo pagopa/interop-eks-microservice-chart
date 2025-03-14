@@ -45,9 +45,9 @@ spec:
             - /bin/sh
             - -c
             - |
-              echo "Downloading Redshift JDBC driver..."
-              curl -L -o /flyway/drivers/RedshiftJDBC.jar https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/2.1.0.32/redshift-jdbc42-2.1.0.32.jar
-              echo "Starting Flyway migration..."
+              echo "Downloading Redshift JDBC driver..." && \
+              curl -L -o /flyway/drivers/RedshiftJDBC.jar https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/2.1.0.32/redshift-jdbc42-2.1.0.32.jar && \
+              echo "Starting Flyway migration..." && \
               flyway migrate
           {{- else }}
           args:

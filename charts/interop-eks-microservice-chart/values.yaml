@@ -82,7 +82,7 @@ deployment:
     create: false
     # -- (string) Flyway container image version
     version: "8.2.3"
-    # -- (bool) Enable Flyway to download Redshidt jdbc driver
+    # -- (bool) Enable Flyway to download Redshift jdbc driver
     downloadRedshiftDriver: false
     # -- Configmap with migrations
     migrationsConfigmap:
