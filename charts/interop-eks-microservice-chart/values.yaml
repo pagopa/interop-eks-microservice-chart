@@ -82,6 +82,8 @@ deployment:
     create: false
     # -- (string) Flyway container image version
     version: "8.2.3"
+    # -- (bool) Enable Flyway to download Redshidt jdbc driver
+    downloadRedshiftDriver: false
     # -- Configmap with migrations
     migrationsConfigmap:
     # -- (object) List of environment variables for a container, specifying a value directly for each named variable
