@@ -81,7 +81,7 @@ deployment:
   flywayInitContainer:
     create: false
     # -- (string) Flyway container image version
-    version: 
+    version: "8.2.3"
     # -- Configmap with migrations
     migrationsConfigmap:
     # -- (object) List of environment variables for a container, specifying a value directly for each named variable
