@@ -127,6 +127,6 @@ autoscaling:
             targetMetricValue: '20'
           useCachedMetrics: true
         - type: cpu
+          metricType: Utilization
           metadata:
-            type: Utilization
             value: "50"
