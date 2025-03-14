@@ -42,7 +42,7 @@ spec:
       {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
       initContainers:
         - name: migrate-db
-          image: flyway/flyway:{{ .Values.flywayInitContainer.version}}
+          image: flyway/flyway:{{ .Values.deployment.flywayInitContainer.version}}
           args:
             - migrate
           env:
