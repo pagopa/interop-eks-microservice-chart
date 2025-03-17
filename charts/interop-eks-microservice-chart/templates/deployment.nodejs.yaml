@@ -43,7 +43,7 @@ spec:
       initContainers:
         - name: migrate-db
           image: flyway/flyway:{{ .Values.deployment.flywayInitContainer.version}}
-          {{- if eq .Values.deployment.flywayInitContainer.downloadRedshiftDriver "true" }}
+          {{- if .Values.deployment.flywayInitContainer.downloadRedshiftDriver }}
           command:
             - /bin/sh
             - -c
