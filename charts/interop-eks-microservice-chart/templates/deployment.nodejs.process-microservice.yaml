@@ -40,8 +40,19 @@ spec:
       initContainers:
         - name: migrate-db
           image: flyway/flyway:{{ .Values.deployment.flywayInitContainer.version}}
+          {{- if eq .Values.deployment.flywayInitContainer.downloadRedshiftDriver "true" }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Downloading Redshift JDBC driver..." && \
+              curl -L -o /flyway/drivers/RedshiftJDBC.jar https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/2.1.0.32/redshift-jdbc42-2.1.0.32.jar && \
+              echo "Starting Flyway migration..." && \
+              flyway migrate
+          {{- else }}
           args:
             - migrate
+          {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ .Values.name | quote }}
