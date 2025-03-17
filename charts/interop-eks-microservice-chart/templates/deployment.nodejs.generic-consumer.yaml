@@ -12,7 +12,7 @@
 {{- $imageTag = (nospace (cat ":" .Values.deployment.image.tag)) }}
 {{- end }}
 
-{- if and (not $imageTag) (not $digestSuffix)}}
+{{- if and (not $imageTag) (not $digestSuffix)}}
 {{ fail "One of deployment.image.tag and deployment.image.digest must be defined." }}
 {{- end }}
 
