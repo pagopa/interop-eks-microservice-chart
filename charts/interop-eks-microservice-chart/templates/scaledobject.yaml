@@ -20,5 +20,11 @@ spec:
   scaleTargetRef:
     name: {{ .Values.name }}
   triggers:
-    {{- toYaml .Values.autoscaling.keda.scaledObject.triggers | nindent 4 }}
+    {{- range .Values.autoscaling.keda.scaledObject.triggers }}
+    {{- if .create }}
+    - type: {{ .type }}
+      metadata:
+        {{- toYaml .metadata | nindent 8 }}
+    {{- end }}
+    {{- end }}
 {{- end }}

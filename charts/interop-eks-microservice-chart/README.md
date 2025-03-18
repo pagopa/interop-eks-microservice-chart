@@ -13,6 +13,14 @@ The following table lists the configurable parameters of the Interop-eks-microse
 |-----|------|---------|-------------|
 | autoscaling | object | `{"horizontal":{"create":false}}` | Horizontal Pod Autoscaling configuration |
 | autoscaling.horizontal.create | bool | `false` | Enable horizontal pod autoscaling |
+| autoscaling.keda.create | bool | `true` | Enable Keda autoscaling |
+| autoscaling.keda.scaledObject | object | `nil` | KEDA ScaledObject configuration |
+| autoscaling.keda.scaledObject.minReplicaCount | int | `nil` | Minimum number of replicas for the service |
+| autoscaling.keda.scaledObject.maxReplicaCount | int | `nil` | Maximum number of replicas for the service |
+| autoscaling.keda.scaledObject.pollingInterval | int | `nil` | Polling interval (in seconds) for checking metrics |
+| autoscaling.keda.scaledObject.scaleDownStabilizationWindowSeconds | int | `nil` | Stabilization window (in seconds) for scaling down |
+| autoscaling.keda.scaledObject.scaleUpStabilizationWindowSeconds | int | `nil` | Stabilization window (in seconds) for scaling up |
+| autoscaling.keda.scaledObject.triggers | list | `nil` | List of triggers for configuring autoscaling |
 | deployment.env | object | `nil` | List of environment variables for a container, specifying a value directly for each named variable |
 | deployment.envFromConfigmaps | object | `nil` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
 | deployment.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |

@@ -104,29 +104,64 @@ autoscaling:
   keda:
     create: true
     scaledObject:
-      minReplicaCount: 1
-      maxReplicaCount: 4
-      pollingInterval: 30
-      scaleDownStabilizationWindowSeconds: 120
-      scaleUpStabilizationWindowSeconds: 60
+      # -- (int) Minimum number of replicas for the service. Replace with the desired minimum value.
+      minReplicaCount:
+      # -- (int) Maximum number of replicas for the service. Replace with the desired maximum value.
+      maxReplicaCount:
+      # -- (int) Polling interval (in seconds) for checking metrics.
+      pollingInterval:
+      # -- (int) Stabilization window (in seconds) for scaling down to avoid rapid reductions.
+      scaleDownStabilizationWindowSeconds:
+      # -- (int) Stabilization window (in seconds) for scaling up to avoid rapid increases.
+      scaleUpStabilizationWindowSeconds:
+      # -- (list) List of triggers for configuring autoscaling.
       triggers:
+          # -- (string) Type of trigger, e.g. "aws-cloudwatch".
         - type: aws-cloudwatch
+          create: false
           metadata:
-            awsRegion: eu-south-1
-            dimensionName: LoadBalancer
-            dimensionValue: app/keda-dev-experimental/89887a6403eb9cb3
-            identityOwner: operator
-            ignoreNullValues: 'true'
-            metricCollectionTime: '120'
-            metricName: HTTP_Fixed_Response_Count
-            metricStat: Sum
-            metricStatPeriod: '60'
-            metricType: AverageValue
-            minMetricValue: '0'
-            namespace: AWS/ApplicationELB
-            targetMetricValue: '20'
-          useCachedMetrics: true
-        - type: cpu
-          metricType: Utilization
+            # -- (string) AWS region from which to collect metrics.
+            awsRegion:
+            # -- (string) Name of the metric dimension.
+            dimensionName:
+            # -- (string) Value of the metric dimension.
+            dimensionValue:
+            # -- (string) Identifier of the operator owner, typically "operator".
+            identityOwner:
+            # -- (string) Set to 'true' to ignore null metric values.
+            ignoreNullValues:
+            # -- (string) Metric collection time (in seconds).
+            metricCollectionTime:
+            # -- (string) CloudWatch metric name.
+            metricName:
+            # -- (string) Metric statistic, e.g. "Sum".
+            metricStat:
+            # -- (string) Statistic period (in seconds) for the metric.
+            metricStatPeriod:
+            # -- (string) Metric type, e.g. "AverageValue".
+            metricType:
+            # -- (string) Minimum metric value for the trigger.
+            minMetricValue:
+            # -- (string) AWS namespace for the metric.
+            namespace:
+            # -- (string) Target metric value for triggering scaling.
+            targetMetricValue:
+          # -- (bool) Enable cached metrics if set to true.
+          useCachedMetrics:
+        # -- (string) Trigger type, "cpu" for CPU usage.
+        - type: cpu 
+          create: false  
+          # -- (string) Specifies the CPU metric type, e.g. "Utilization" or "AverageValue".
+          metricType:
           metadata:
-            value: "50"
+            # -- (string) Target CPU utilization value (percentage).
+            value:
+        # -- (string) Trigger type, "memory" for memory usage.    
+        - type: memory
+          create: false 
+          # -- (string) Specifies the memory metric type, "Utilization" or "AverageValue".
+          metricType:
+          metadata:
+            # -- (string) Target memory utilization value (percentage).
+            value:
+  
