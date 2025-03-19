@@ -39,6 +39,9 @@ spec:
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.name | quote }}
+      {{- if and .Values.deployment .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
+      terminationGracePeriodSeconds: {{add1 .Values.deployment.preStopHookGracefulTermination.durationSeconds }}
+      {{- end }}
       {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
       initContainers:
         - name: migrate-db
@@ -113,6 +116,12 @@ spec:
           readinessProbe:
             {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
           {{- end }} {{/* End of readinessProbe section */}}
+          {{- if and .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 30; exit 0;"]
+          {{- end }}
           ports:
             {{- if and .Values.service .Values.service.create .Values.service.containerPort }}
             - name: {{ .Values.service.portName }}
