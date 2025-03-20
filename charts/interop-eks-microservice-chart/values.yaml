@@ -97,71 +97,11 @@ deployment:
 
 # -- Horizontal Pod Autoscaling configuration
 autoscaling:
+  # -- HPA Standard as per official documentation 
   horizontal:
     # -- Enable horizontal pod autoscaling
     create: false
     # -- Enable KEDA
   keda:
-    create: true
+    create: false
     scaledObject:
-      # -- (int) Minimum number of replicas for the service. Replace with the desired minimum value.
-      minReplicaCount:
-      # -- (int) Maximum number of replicas for the service. Replace with the desired maximum value.
-      maxReplicaCount:
-      # -- (int) Polling interval (in seconds) for checking metrics.
-      pollingInterval:
-      # -- (int) Stabilization window (in seconds) for scaling down to avoid rapid reductions.
-      scaleDownStabilizationWindowSeconds:
-      # -- (int) Stabilization window (in seconds) for scaling up to avoid rapid increases.
-      scaleUpStabilizationWindowSeconds:
-      # -- (list) List of triggers for configuring autoscaling.
-      triggers:
-          # -- (string) Type of trigger, e.g. "aws-cloudwatch".
-        - type: aws-cloudwatch
-          create: false
-          metadata:
-            # -- (string) AWS region from which to collect metrics.
-            awsRegion:
-            # -- (string) Name of the metric dimension.
-            dimensionName:
-            # -- (string) Value of the metric dimension.
-            dimensionValue:
-            # -- (string) Identifier of the operator owner, typically "operator".
-            identityOwner:
-            # -- (string) Set to 'true' to ignore null metric values.
-            ignoreNullValues:
-            # -- (string) Metric collection time (in seconds).
-            metricCollectionTime:
-            # -- (string) CloudWatch metric name.
-            metricName:
-            # -- (string) Metric statistic, e.g. "Sum".
-            metricStat:
-            # -- (string) Statistic period (in seconds) for the metric.
-            metricStatPeriod:
-            # -- (string) Metric type, e.g. "AverageValue".
-            metricType:
-            # -- (string) Minimum metric value for the trigger.
-            minMetricValue:
-            # -- (string) AWS namespace for the metric.
-            namespace:
-            # -- (string) Target metric value for triggering scaling.
-            targetMetricValue:
-          # -- (bool) Enable cached metrics if set to true.
-          useCachedMetrics:
-        # -- (string) Trigger type, "cpu" for CPU usage.
-        - type: cpu 
-          create: false  
-          # -- (string) Specifies the CPU metric type, e.g. "Utilization" or "AverageValue".
-          metricType:
-          metadata:
-            # -- (string) Target CPU utilization value (percentage).
-            value:
-        # -- (string) Trigger type, "memory" for memory usage.    
-        - type: memory
-          create: false 
-          # -- (string) Specifies the memory metric type, "Utilization" or "AverageValue".
-          metricType:
-          metadata:
-            # -- (string) Target memory utilization value (percentage).
-            value:
-  

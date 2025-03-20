@@ -21,7 +21,6 @@ spec:
     name: {{ .Values.name }}
   triggers:
     {{- range .Values.autoscaling.keda.scaledObject.triggers }}
-    {{- if .create }}
     - type: {{ .type }}
       metadata:
         {{- toYaml .metadata | nindent 8 }}
