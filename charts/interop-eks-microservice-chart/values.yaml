@@ -95,13 +95,17 @@ deployment:
     # -- (object) List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath)
     envFromFieldRef: 
 
-# -- Horizontal Pod Autoscaling configuration
+# -- Horizontal Pod Autoscaling (HPA) configuration
 autoscaling:
-  # -- HPA Standard as per official documentation 
+  # -- (object) HPA standard configuration as per official kubernetes documentation (https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
   horizontal:
-    # -- Enable horizontal pod autoscaling
+    # -- (bool) Enable horizontal pod autoscaling
     create: false
-    # -- Enable KEDA
+  # -- (object) KEDA configuration
   keda:
+    # -- (bool) Enable KEDA
     create: false
+    # -- (map) Configuration for the KEDA ScaledObject triggers
+    #    Refer to the following link for detailed configurations:
+    #    https://keda.sh/docs/2.16/scalers/
     scaledObject:
