@@ -53,7 +53,10 @@ spec:
           lifecycle:
             preStop:
               exec:
-                command: ["/bin/sh", "-c", "sleep 30; exit 0;"]
+                command:
+                  - /bin/sh
+                  - -c
+                  - {{ printf "sleep %d; exit 0;" (int .Values.deployment.preStopHookGracefulTermination.durationSeconds)  }}
           {{- end }}
           {{- if .Values.deployment.securityContext }}
           securityContext:
