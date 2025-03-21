@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.12.0](https://img.shields.io/badge/Version-1.12.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.13.2](https://img.shields.io/badge/Version-1.13.2-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -31,6 +31,8 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.image.repositoryName | string | `nil` | Alternative image name |
 | deployment.image.repositoryPrefix | string | `nil` | Image repository |
 | deployment.image.tag | string | `nil` | Image tag |
+| deployment.preStopHookGracefulTermination.create | bool | `true` | Enable preStop hook for graceful termination |
+| deployment.preStopHookGracefulTermination.durationSeconds | int | `30` | Duration in seconds for the preStop hook to complete |
 | deployment.replicas | int | `nil` | Number of desired replicas for the service being deployed |
 | deployment.resources | object | `{"limits":{"cpu":null,"memory":null},"requests":{"cpu":null,"memory":null}}` | K8s container resources requests and limits |
 | deployment.securityContext | object | `{"allowPrivilegeEscalation":false}` | Pod securityContext, applied to main container |
