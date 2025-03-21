@@ -1,0 +1,32 @@
+name: 'pr-helm-docs-validation'
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+jobs:
+  helm-docs-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Install Helm Docs
+        run: |
+          wget https://github.com/norwoodj/helm-docs/releases/download/v1.14.2/helm-docs_1.14.2_Linux_x86_64.tar.gz
+          tar xzf helm-docs_1.14.2_Linux_x86_64.tar.gz
+          sudo mv helm-docs /usr/local/bin
+
+      - name: Run Helm Docs
+        run: |
+          helm-docs --chart-search-root=charts --template-files=README.md.gotmpl
+
+      - name: Check if docs changed
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "Docs are not up to date. Please run 'helm-docs' locally and commit the changes."
+            exit 1
+          fi
