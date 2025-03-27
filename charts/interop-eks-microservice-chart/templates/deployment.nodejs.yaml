@@ -37,6 +37,31 @@ spec:
         {{- if .Values.deployment.image.digest }}
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
         {{- end }}
+        
+        # For each configmap and secret referenced by the deployment, execute a lookup to get the resourceVersion and store it in the annotation
+        # Lookup reference: https://helm.sh/docs/chart_template_guide/functions_and_pipelines/#using-the-lookup-function
+        {{- if .Values.deployment.envFromConfigmaps }}
+          {{- range $key, $val := .Values.deployment.envFromConfigmaps }}
+            {{- $configmapAddress := mustRegexSplit "\\." $val 2 }}
+            {{- $configmapName := index $configmapAddress 0 }}
+            {{- $configmap := lookup "v1" "ConfigMap" $.Values.namespace $configmapName }}
+            {{- if $configmap }}
+            configmap/resourceVersion: "{{ $configmapName }}/{{ $configmap.metadata.resourceVersion }}"
+            {{- end }}
+          {{- end }}
+        {{- end }}
+
+        {{- if .Values.deployment.envFromSecrets }}
+          {{- range $key, $val := .Values.deployment.envFromSecrets }}
+            {{- $secretAddress := mustRegexSplit "\\." $val 2 }}
+            {{- $secretName := index $secretAddress 0 }}
+            {{- $secret := lookup "v1" "Secret" $.Values.namespace $secretName }}
+            {{- if $secret }}
+            secret/resourceVersion: "{{ $secretName }}/{{ $secret.metadata.resourceVersion }}"
+            {{- end }}
+          {{- end }}
+        {{- end }}
+
     spec:
       serviceAccountName: {{ .Values.name | quote }}
       {{- if and .Values.deployment .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
