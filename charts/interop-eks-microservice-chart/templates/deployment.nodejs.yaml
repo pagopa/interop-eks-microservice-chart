@@ -54,6 +54,7 @@ spec:
         {{- end }}
         {{- end }}
         {{- end }}
+        
         {{- $processedSecrets := dict }} # Map to store the processed secrets
         {{- if .Values.deployment.envFromSecrets }}  
         {{- range $key, $val := .Values.deployment.envFromSecrets }}
