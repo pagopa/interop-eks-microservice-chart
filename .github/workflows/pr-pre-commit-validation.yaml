@@ -1,12 +1,12 @@
-name: 'pr-helm-docs-validation'
-
+name: 'pr-pre-commit-validation'
+ 
 on:
   pull_request_target:
     types:
       - opened
       - edited
       - synchronize
-
+ 
 jobs:
   helm-docs-validation:
     runs-on: ubuntu-latest
@@ -18,15 +18,12 @@ jobs:
         run: |
           wget https://github.com/norwoodj/helm-docs/releases/download/v1.14.2/helm-docs_1.14.2_Linux_x86_64.tar.gz
           tar xzf helm-docs_1.14.2_Linux_x86_64.tar.gz
-          sudo mv helm-docs /usr/local/bin
-
-      - name: Run Helm Docs
+          sudo mv helm-docs /usr/local/bin   
+ 
+      - name: Install pre-commit
         run: |
-          helm-docs --chart-search-root=charts --template-files=README.md.gotmpl
-
-      - name: Check if docs changed
+          pip install pre-commit
+ 
+      - name: Run pre-commit
         run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            echo "Docs are not up to date. Please run 'helm-docs' locally and commit the changes."
-            exit 1
-          fi
+          pre-commit run --all-files

@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.12.0](https://img.shields.io/badge/Version-1.12.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.13.2](https://img.shields.io/badge/Version-1.13.2-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -46,7 +46,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | service.healthcheck | object | `{"path":null,"port":null,"protocol":null,"successCodes":null}` | Service annotations |
 | service.managementPort | int | `8558` |  |
 | service.monitoringPort | int | `9095` |  |
-| service.portName | string | `nil` | Service port name  |
+| service.portName | string | `nil` | Service port name |
 | service.targetPort | string | `nil` |  |
 | service.type | enum | `"ClusterIP"` | K8s Service type, allowed values: [ "ClusterIP", "NodePort" ] |
 | serviceAccount | object | `{"roleArn":null}` | ServiceAccount roleARN |

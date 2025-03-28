@@ -1,1 +1,0 @@
-# interop-eks-microservice-chart

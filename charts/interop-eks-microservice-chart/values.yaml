@@ -7,7 +7,7 @@ name:
 namespace:
 
 # -- (enum) Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"]
-techStack: 
+techStack:
 
 # -- ServiceAccount roleARN
 serviceAccount:
@@ -27,10 +27,10 @@ service:
   type: "ClusterIP"
   monitoringPort: 9095
   managementPort: 8558
-  # -- (string) Service port name 
-  portName: 
+  # -- (string) Service port name
+  portName:
   containerPort:
-  targetPort: 
+  targetPort:
   # -- Enable container monitoring port
   enableMonitoring: true
   # -- Enable container management port
@@ -42,11 +42,11 @@ ingress:
   # -- ingress.create and service.targetGroupArn must be mutually exclusive.
   className: alb
   groupName: "interop-be"
- 
+
 
 deployment:
   # -- (int) Number of desired replicas for the service being deployed
-  replicas: 
+  replicas:
   # -- (object) Pod securityContext, applied to main container
   securityContext:
     allowPrivilegeEscalation: false
@@ -71,13 +71,13 @@ deployment:
       cpu:
       memory:
   # -- (object) List of environment variables for a container, specifying a value directly for each named variable
-  env: 
+  env:
   # -- (object) List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef)
-  envFromConfigmaps: 
+  envFromConfigmaps:
   # -- (object) List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef)
-  envFromSecrets: 
+  envFromSecrets:
   # -- (object) List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath)
-  envFromFieldRef: 
+  envFromFieldRef:
   flywayInitContainer:
     create: false
     # -- (string) Flyway container image version
@@ -87,13 +87,13 @@ deployment:
     # -- Configmap with migrations
     migrationsConfigmap:
     # -- (object) List of environment variables for a container, specifying a value directly for each named variable
-    env: 
+    env:
     # -- (object) List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef)
-    envFromConfigmaps: 
+    envFromConfigmaps:
     # -- (object) List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef)
-    envFromSecrets: 
+    envFromSecrets:
     # -- (object) List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath)
-    envFromFieldRef: 
+    envFromFieldRef:
 
 # -- Horizontal Pod Autoscaling configuration
 autoscaling:

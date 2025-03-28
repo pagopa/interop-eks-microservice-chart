@@ -82,7 +82,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: read-model
-                  key: PROJECTION_PSW 
+                  key: PROJECTION_PSW
             {{- if .Values.configmap }}
             {{- range $key, $val := .Values.configmap }}
             - name: {{ $key }}
