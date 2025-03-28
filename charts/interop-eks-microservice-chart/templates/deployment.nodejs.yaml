@@ -38,7 +38,7 @@ spec:
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
         {{- end }}
 
-        {{- if .Values.deployment.envFromConfigmaps }}  
+        {{- if and .Values.deployment .Values.deployment.envFromConfigmaps }}  
         {{- $processedConfigmaps := dict }}
         {{- range $key, $val := .Values.deployment.envFromConfigmaps }}
         {{- $configmapAddress := mustRegexSplit "\\." $val 2 }}
@@ -53,7 +53,7 @@ spec:
         {{- end }}
         {{- end }}
         
-        {{- if .Values.deployment.envFromSecrets }}  
+        {{- if and .Values.deployment .Values.deployment.envFromSecrets }}  
         {{- $processedSecrets := dict }}
         {{- range $key, $val := .Values.deployment.envFromSecrets }}
         {{- $secretAddress := mustRegexSplit "\\." $val 2 }}
