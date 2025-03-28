@@ -1,12 +1,12 @@
 name: 'pr-pre-commit-validation'
- 
+
 on:
   pull_request_target:
     types:
       - opened
       - edited
       - synchronize
- 
+
 jobs:
   helm-docs-validation:
     runs-on: ubuntu-latest
@@ -18,12 +18,12 @@ jobs:
         run: |
           wget https://github.com/norwoodj/helm-docs/releases/download/v1.14.2/helm-docs_1.14.2_Linux_x86_64.tar.gz
           tar xzf helm-docs_1.14.2_Linux_x86_64.tar.gz
-          sudo mv helm-docs /usr/local/bin   
- 
+          sudo mv helm-docs /usr/local/bin
+
       - name: Install pre-commit
         run: |
           pip install pre-commit
- 
+
       - name: Run pre-commit
         run: |
           pre-commit run --all-files
