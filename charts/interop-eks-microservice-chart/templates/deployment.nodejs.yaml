@@ -44,7 +44,7 @@ spec:
         {{- $configmapAddress := mustRegexSplit "\\." $val 2 }}
         {{- $configmapName := index $configmapAddress 0 }}
         {{- if not (hasKey $processedConfigmaps $configmapName) }}
-        {{- $configmap := lookup "v1" "ConfigMap" $.Values.namespace $secretName }}
+        {{- $configmap := lookup "v1" "ConfigMap" $.Values.namespace $configmapName }}
         {{- if $configmap }}
         configmap/{{ $configmapName }}/resourceVersion: {{ $configmapName }}/{{ $configmap.metadata.resourceVersion }}
         {{- $_ := set $processedConfigmaps $configmapName "" }}
