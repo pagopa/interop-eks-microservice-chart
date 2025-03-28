@@ -37,34 +37,32 @@ spec:
         {{- if .Values.deployment.image.digest }}
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
         {{- end }}
-        
-        # For each configmap and secret referenced by the deployment, execute a lookup to get the .metadata.resourceVersion field and store it in an annotation
-        # Lookup reference: https://helm.sh/docs/chart_template_guide/functions_and_pipelines/#using-the-lookup-function
-        {{- $processedConfigmaps := dict }} # Map to store the processed configmaps
+
         {{- if .Values.deployment.envFromConfigmaps }}  
+        {{- $processedConfigmaps := dict }}
         {{- range $key, $val := .Values.deployment.envFromConfigmaps }}
         {{- $configmapAddress := mustRegexSplit "\\." $val 2 }}
         {{- $configmapName := index $configmapAddress 0 }}
-        {{- if not (hasKey $processedConfigmaps $configmapName) }}  # Check if the configmap has been processed yet
-        {{- $configmap := lookup "v1" "ConfigMap" $.Values.namespace $configmapName }}
+        {{- if not (hasKey $processedConfigmaps $configmapName) }}
+        {{- $configmap := lookup "v1" "ConfigMap" "dev-analytics" "common-redshift" }}
         {{- if $configmap }}
-        configmap/{{ $configmapName }}/resourceVersion: "{{ $configmapName }}/{{ $configmap.metadata.resourceVersion }}"
-        {{- $_ := set $processedConfigmaps $configmapName "" }}  # Set the configmap as processed
+        configmap/{{ $configmapName }}/resourceVersion: {{ $configmapName }}/{{ $configmap.metadata.resourceVersion }}
+        {{- $_ := set $processedConfigmaps $configmapName "" }}
         {{- end }}
         {{- end }}
         {{- end }}
         {{- end }}
         
-        {{- $processedSecrets := dict }} # Map to store the processed secrets
         {{- if .Values.deployment.envFromSecrets }}  
+        {{- $processedSecrets := dict }}
         {{- range $key, $val := .Values.deployment.envFromSecrets }}
         {{- $secretAddress := mustRegexSplit "\\." $val 2 }}
         {{- $secretName := index $secretAddress 0 }}
-        {{- if not (hasKey $processedSecrets $secretName) }}  # Check if the secret has been processed yet
+        {{- if not (hasKey $processedSecrets $secretName) }}
         {{- $secret := lookup "v1" "Secret" $.Values.namespace $secretName }}
         {{- if $secret }}
-        secret/{{ $secretName }}/resourceVersion: "{{ $secretName }}/{{ $secret.metadata.resourceVersion }}"
-        {{- $_ := set $processedSecrets $secretName "" }}  # Set the secret as processed
+        secret/{{ $secretName }}/resourceVersion: {{ $secretName }}/{{ $secret.metadata.resourceVersion }}
+        {{- $_ := set $processedSecrets $secretName "" }}
         {{- end }}
         {{- end }}
         {{- end }}
