@@ -41,7 +41,7 @@ helm.sh/chart: {{ include "interop-eks-microservice-chart.chart" . }}
 {{- $imageTag := "" }}
 {{- $imageTag = (nospace .Values.deployment.image.tag) }}
 app.kubernetes.io/version: {{ $imageTag }}
-{{ else if .Values.deployment.image.digest }}
+{{- else if .Values.deployment.image.digest }}
 {{- $digestSuffix := "" }}
 {{- $digestSuffix = (nospace .Values.deployment.image.digest) }}
 app.kubernetes.io/version: {{ $digestSuffix }}
