@@ -1,12 +1,12 @@
 {{- if .Values.service.create }}
 
-{{- if and (or .Values.service.albHealthCheck.port .Values.service.albHealthCheck.path .Values.service.albHealthCheck.successCodes ) .Values.service.targetGroupArn }}
-  {{ fail "healthcheck and service.targetGroupArn cannot both be configured; please define just one." }}
+{{- if and .Values.service.albHealthCheck .Values.service.targetGroupArn }}
+  {{ fail "service.albHealthCheck and service.targetGroupArn cannot both be configured; please define just one." }}
 {{- end }}
 
 {{- $healthcheckPort := "" }}
-{{- if  and .Values.service.healthcheck .Values.service.healthcheck.port }}
-{{- $healthcheckPort = .Values.service.healthcheck.port }}
+{{- if  and .Values.service.albHealthCheck .Values.service.albHealthCheck.port }}
+{{- $healthcheckPort = .Values.service.albHealthCheck.port }}
 {{- else if .Values.service.servicePort -}}
 {{- $healthcheckPort = .Values.service.servicePort }}
 {{- else -}}
