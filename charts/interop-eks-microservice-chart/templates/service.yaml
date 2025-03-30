@@ -1,6 +1,6 @@
 {{- if .Values.service.create }}
 
-{{- if and (or .Values.service.healthcheck.port .Values.service.healthcheck.path .Values.service.healthcheck.successCodes ) .Values.service.targetGroupArn }}
+{{- if and (or .Values.service.albHealthCheck.port .Values.service.albHealthCheck.path .Values.service.albHealthCheck.successCodes ) .Values.service.targetGroupArn }}
   {{ fail "healthcheck and service.targetGroupArn cannot both be configured; please define just one." }}
 {{- end }}
 
