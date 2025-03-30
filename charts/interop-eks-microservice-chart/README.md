@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.13.2](https://img.shields.io/badge/Version-1.13.2-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.15.0](https://img.shields.io/badge/Version-1.15.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -41,11 +41,11 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | ingress.groupName | string | `"interop-be"` |  |
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
 | namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
+| service.albHealthcheck | object | `{"path":null,"port":null,"protocol":null,"successCodes":null}` | ALB healthcheck config |
 | service.containerPort | string | `nil` |  |
 | service.create | bool | `false` | Enable K8s Service deployment generation |
 | service.enableManagement | bool | `true` | Enable container management port |
 | service.enableMonitoring | bool | `true` | Enable container monitoring port |
-| service.healthcheck | object | `{"path":null,"port":null,"protocol":null,"successCodes":null}` | Service annotations |
 | service.managementPort | int | `8558` |  |
 | service.monitoringPort | int | `9095` |  |
 | service.portName | string | `nil` | Service port name  |

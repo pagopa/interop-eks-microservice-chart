@@ -9,14 +9,13 @@ namespace:
 # -- (enum) Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"]
 techStack: 
 
-# -- ServiceAccount roleARN
 serviceAccount:
   # -- (string) ServiceAccount roleARN
   roleArn:
 
 service:
-  # -- Service annotations
-  healthcheck:
+  # -- (object) ALB healthcheck config
+  albHealthcheck:
     path:
     port:
     successCodes:
