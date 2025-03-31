@@ -46,7 +46,7 @@ spec:
         {{- if not (hasKey $processedConfigmaps $configmapName) }}
         {{- $configmap := lookup "v1" "ConfigMap" $.Values.namespace $configmapName }}
         {{- if $configmap }}
-        configmap/{{ $configmapName }}/resourceVersion: {{ $configmapName }}/{{ $configmap.metadata.resourceVersion }}
+        {{ $configmapName }}/configmap.resourceVersion: {{ $configmap.metadata.resourceVersion }}
         {{- $_ := set $processedConfigmaps $configmapName "" }}
         {{- end }}
         {{- end }}
@@ -61,7 +61,7 @@ spec:
         {{- if not (hasKey $processedSecrets $secretName) }}
         {{- $secret := lookup "v1" "Secret" $.Values.namespace $secretName }}
         {{- if $secret }}
-        secret/{{ $secretName }}/resourceVersion: {{ $secretName }}/{{ $secret.metadata.resourceVersion }}
+        {{ $secretName }}/secret.resourceVersion: {{ $secret.metadata.resourceVersion }}
         {{- $_ := set $processedSecrets $secretName "" }}
         {{- end }}
         {{- end }}
