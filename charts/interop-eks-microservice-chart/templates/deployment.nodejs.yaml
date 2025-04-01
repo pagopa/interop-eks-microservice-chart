@@ -91,13 +91,13 @@ spec:
           volumeMounts:
             - name: migrations-files
               mountPath: "/flyway/sql"
-          resources:
-            requests:
-              memory: "64Mi"
-              cpu: "10m"
-            limits:
-              memory: "1Gi"
-              cpu: "500m"
+          {{- if .Values.deployment.flywayInitContainer.resources }}
+          resources: 
+            {{- toYaml .Values.deployment.flywayInitContainer.resources | nindent 12 }}
+          {{- else }}
+          resources: 
+            {{- toYaml .Values.deployment.resources | nindent 12 }}
+          {{- end}}
       {{- end }}
       containers:
         - name: {{ .Values.name }}
