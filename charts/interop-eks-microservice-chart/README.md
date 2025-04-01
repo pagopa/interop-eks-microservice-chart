@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.15.0](https://img.shields.io/badge/Version-1.15.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.16.3](https://img.shields.io/badge/Version-1.16.3-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -24,6 +24,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.flywayInitContainer.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
 | deployment.flywayInitContainer.envFromSecrets | object | `nil` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
 | deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
+| deployment.flywayInitContainer.resources | object | null | K8s Flyway init container resources requests and limits |
 | deployment.flywayInitContainer.version | string | `"8.2.3"` | Flyway container image version |
 | deployment.image | object | `{"digest":null,"imagePullPolicy":"Always","repositoryName":null,"repositoryPrefix":null,"tag":null}` | Microservice image configuration |
 | deployment.image.digest | string | `nil` | Image digest |
@@ -51,7 +52,6 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | service.portName | string | `nil` | Service port name  |
 | service.targetPort | string | `nil` |  |
 | service.type | enum | `"ClusterIP"` | K8s Service type, allowed values: [ "ClusterIP", "NodePort" ] |
-| serviceAccount | object | `{"roleArn":null}` | ServiceAccount roleARN |
 | serviceAccount.roleArn | string | `nil` | ServiceAccount roleARN |
 | techStack | enum | `nil` | Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"] |
 

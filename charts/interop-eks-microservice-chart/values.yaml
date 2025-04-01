@@ -62,7 +62,7 @@ deployment:
     # -- (string) Image digest
     digest:
   # -- (object)  K8s container resources requests and limits
-  resources:
+  resources: 
     requests:
       cpu:
       memory:
@@ -97,7 +97,10 @@ deployment:
     # -- (object) List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef)
     envFromSecrets: 
     # -- (object) List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath)
-    envFromFieldRef: 
+    envFromFieldRef:
+    # -- (object)  K8s Flyway init container resources requests and limits. If empty uses the same resources as main container
+    # @default -- null
+    resources: 
 
 # -- Horizontal Pod Autoscaling configuration
 autoscaling:
