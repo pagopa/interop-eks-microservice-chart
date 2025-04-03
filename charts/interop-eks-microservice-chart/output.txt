@@ -1,0 +1,191 @@
+---
+# Source: interop-eks-microservice-chart/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nodejs-service
+  namespace: test-namespace
+  labels:
+    app.kubernetes.io/name: nodejs-service
+    helm.sh/chart: interop-eks-microservice-chart-1.13.2
+    app: nodejs-service
+    app.kubernetes.io/version: $IMAGE_TAG_PLACEHOLDER
+    
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::000000000:role/interop-iam-service-dev-nodejs-service"
+---
+# Source: interop-eks-microservice-chart/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodejs-service
+  namespace: test-namespace
+  labels:
+    prometheus: "true"
+    app.kubernetes.io/name: nodejs-service
+    helm.sh/chart: interop-eks-microservice-chart-1.13.2
+    app: nodejs-service
+    app.kubernetes.io/version: $IMAGE_TAG_PLACEHOLDER
+    
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - name: myPort
+      port: 8807
+      targetPort: 8807
+      protocol: TCP
+    - name: monitoring
+      port: 9095
+      targetPort: 9095
+      protocol: TCP
+    - name: management
+      port: 8558
+      targetPort: 8558
+      protocol: TCP
+  selector:
+    app: nodejs-service
+---
+# Source: interop-eks-microservice-chart/templates/deployment.nodejs.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs-service
+  namespace: test-namespace
+  labels:
+    app.kubernetes.io/name: nodejs-service
+    helm.sh/chart: interop-eks-microservice-chart-1.13.2
+    app: nodejs-service
+    app.kubernetes.io/version: $IMAGE_TAG_PLACEHOLDER
+    
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nodejs-service
+  template:
+    metadata:
+      labels:
+        actorSystemName: "nodejs-service"
+        app.kubernetes.io/name: nodejs-service
+        helm.sh/chart: interop-eks-microservice-chart-1.13.2
+        app: nodejs-service
+        app.kubernetes.io/version: $IMAGE_TAG_PLACEHOLDER
+        
+        app.kubernetes.io/managed-by: Helm
+      annotations:
+        digest: "$IMAGE_DIGEST_PLACEHOLDER" # Used to force deployment on same image version but different content
+    spec:
+      serviceAccountName: "nodejs-service"
+      containers:
+        - name: nodejs-service
+          image: "000000000000.dkr.ecr.eu-central-1.amazonaws.com/nodejs-service:$IMAGE_TAG_PLACEHOLDER@$IMAGE_DIGEST_PLACEHOLDER"
+          imagePullPolicy: Always
+          command: ["bin/nodejs-service"]
+          args: ["-Dconfig.override_with_env_vars=true","","-Dconfig.override_with_env_vars=true2222"]
+          livenessProbe:
+            httpGet:
+              path: /service/0.0/status
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 5 
+          readinessProbe:
+            httpGet:
+              path: /service/0.0/status
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 5 
+          ports:
+            - name: myPort
+              containerPort: 8807
+              protocol: TCP
+            - name: monitoring
+              containerPort: 9095
+              protocol: TCP
+            - name: management
+              containerPort: 8558
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: AGREEMENT_MANAGEMENT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: common-services-urls
+                  key: AGREEMENT_MANAGEMENT_URL
+            - name: ATTRIBUTE_REGISTRY_MANAGEMENT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: common-services-urls
+                  key: ATTRIBUTE_REGISTRY_MANAGEMENT_URL
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: interop-be-db-commons
+                  key: POSTGRES_DB
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: interop-be-db-commons
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: interop-be-db-commons
+                  key: POSTGRES_PORT
+            - name: WELL_KNOWN_URLS
+              valueFrom:
+                configMapKeyRef:
+                  name: common-jwt
+                  key: WELL_KNOWN_URLS
+            - name: POSTGRES_PSW
+              valueFrom:
+                secretKeyRef:
+                  name: postgres
+                  key: POSTGRES_PSW
+            - name: POSTGRES_USR
+              valueFrom:
+                secretKeyRef:
+                  name: postgres
+                  key: POSTGRES_USR
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi
+---
+# Source: interop-eks-microservice-chart/templates/scaledobject.yaml
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: nodejs-service-scaledobject
+  namespace: test-namespace
+  labels:
+    app.kubernetes.io/name: nodejs-service
+    helm.sh/chart: interop-eks-microservice-chart-1.13.2
+    app: nodejs-service
+    app.kubernetes.io/version: $IMAGE_TAG_PLACEHOLDER
+    
+    app.kubernetes.io/managed-by: Helm
+spec:
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300
+        scaleUp:
+          stabilizationWindowSeconds: 60
+  maxReplicaCount: 5
+  minReplicaCount: 1
+  pollingInterval: 30
+  scaleTargetRef:
+    name: ""
+  triggers: []

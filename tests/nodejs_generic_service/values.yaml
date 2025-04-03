@@ -1,7 +1,7 @@
 name: "nodejs-service"
 namespace: "test-namespace"
 techStack: "nodejs"
-
+moduleType: ""
 externalValue: "some_value"
 
 service:
@@ -19,10 +19,10 @@ service:
 serviceAccount:
   roleArn: "arn:aws:iam::000000000:role/interop-iam-service-dev-nodejs-service"
 
-configmap:
-  POSTGRES_DB_CM: "postgres_db"
-  POSTGRES_SCHEMA: "test-namespace_myschema"
-  EXTERNAL: "{{.Values.externalValue}}"
+configmap: {}
+  #POSTGRES_DB_CM: "postgres_db"
+  #POSTGRES_SCHEMA: "test-namespace_myschema"
+  #EXTERNAL: "{{.Values.externalValue}}"
 
 deployment:
   replicas: 2
@@ -51,7 +51,7 @@ deployment:
     initialDelaySeconds: 15
     periodSeconds: 5
   flywayInitContainer:
-    create: true
+    create: false
     migrationsConfigmap: "common-db-migrations"
     env:
       FLYWAY_URL: jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)
@@ -78,9 +78,9 @@ deployment:
     - "-Dconfig.override_with_env_vars=true2222"
   envFromFieldRef:
     NAMESPACE: "metadata.name"
-  env:
-    REQUIRED_CONTACT_POINT_NR: "{{.Values.deployment.replicas}}"
-    NAMES_WELL_KNOWN_URLS: "{{.Values.name}}.WELL_KNOWN_URLS"
+  env: {}
+    #REQUIRED_CONTACT_POINT_NR: "{{.Values.deployment.replicas}}"
+    #NAMES_WELL_KNOWN_URLS: "{{.Values.name}}.WELL_KNOWN_URLS"
   envFromConfigmaps:
     WELL_KNOWN_URLS: "common-jwt.WELL_KNOWN_URLS"
     AGREEMENT_MANAGEMENT_URL: "common-services-urls.AGREEMENT_MANAGEMENT_URL"
@@ -91,3 +91,23 @@ deployment:
   envFromSecrets:
     POSTGRES_USR: "postgres.POSTGRES_USR"
     POSTGRES_PSW: "postgres.POSTGRES_PSW"
+autoscaling:
+  horizontal:
+    create: false
+  keda:
+    create: true
+    scaledObjectSpec:
+          advanced:
+            horizontalPodAutoscalerConfig:
+              behavior:
+                scaleDown:
+                  stabilizationWindowSeconds: 300
+                scaleUp:
+                  stabilizationWindowSeconds: 60
+          minReplicaCount: 1
+          maxReplicaCount: 5
+          pollingInterval: 30
+          scaleTargetRef:
+            name: "" # It will be populated with the .Values.name value.
+          triggers: []
+    #scaledObjectSpec: {}
