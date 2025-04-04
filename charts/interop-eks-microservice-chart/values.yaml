@@ -45,6 +45,8 @@ ingress:
  
 
 deployment:
+  # -- (bool) Enable annotation generation for referenced configmaps and secrets 
+  enableRolloutAnnotations: false
   # -- (int) Number of desired replicas for the service being deployed
   replicas: 
   # -- (object) Pod securityContext, applied to main container

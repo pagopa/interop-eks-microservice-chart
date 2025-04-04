@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.13.2](https://img.shields.io/badge/Version-1.13.2-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.15.0](https://img.shields.io/badge/Version-1.15.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -13,6 +13,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 |-----|------|---------|-------------|
 | autoscaling | object | `{"horizontal":{"create":false}}` | Horizontal Pod Autoscaling configuration |
 | autoscaling.horizontal.create | bool | `false` | Enable horizontal pod autoscaling |
+| deployment.enableRolloutAnnotations | bool | `false` | Enable annotation generation for referenced configmaps and secrets  |
 | deployment.env | object | `nil` | List of environment variables for a container, specifying a value directly for each named variable |
 | deployment.envFromConfigmaps | object | `nil` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
 | deployment.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
