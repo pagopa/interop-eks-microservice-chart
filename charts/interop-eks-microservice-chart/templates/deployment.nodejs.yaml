@@ -31,7 +31,6 @@ spec:
   template:
     metadata:
       labels:
-        actorSystemName: {{ .Values.name | quote }}
         {{- include "interop-eks-microservice-chart.labels" . | nindent 8 }}
       annotations:
         {{- if .Values.deployment.image.digest }}
@@ -93,7 +92,8 @@ spec:
           env:
             {{- if .Values.deployment.flywayInitContainer.envFromConfigmaps }}
             {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromConfigmaps -}}
-            {{ $configmapAddress := mustRegexSplit "\\." $val 2 }}
+            {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+            {{- $configmapAddress := mustRegexSplit "\\." $renderedVal 2 }}
             - name: {{ $key }}
               valueFrom:
                 configMapKeyRef:
@@ -110,7 +110,8 @@ spec:
             {{- end }}
             {{- if .Values.deployment.flywayInitContainer.envFromSecrets }}
             {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromSecrets -}}
-            {{ $secretAddress := mustRegexSplit "\\." $val 2 }}
+            {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+            {{- $secretAddress := mustRegexSplit "\\." $renderedVal 2 }}
             - name: {{ $key }}
               valueFrom:
                 secretKeyRef:
@@ -121,13 +122,13 @@ spec:
           volumeMounts:
             - name: migrations-files
               mountPath: "/flyway/sql"
-          resources:
-            requests:
-              memory: "64Mi"
-              cpu: "10m"
-            limits:
-              memory: "1Gi"
-              cpu: "500m"
+          {{- if .Values.deployment.flywayInitContainer.resources }}
+          resources: 
+            {{- toYaml .Values.deployment.flywayInitContainer.resources | nindent 12 }}
+          {{- else }}
+          resources: 
+            {{- toYaml .Values.deployment.resources | nindent 12 }}
+          {{- end}}
       {{- end }}
       containers:
         - name: {{ .Values.name }}
@@ -200,7 +201,8 @@ spec:
             {{- end }}
             {{- if and .Values.deployment .Values.deployment.envFromConfigmaps }}
             {{- range $key, $val := .Values.deployment.envFromConfigmaps -}}
-            {{ $configmapAddress := mustRegexSplit "\\." $val 2 }}
+            {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+            {{- $configmapAddress := mustRegexSplit "\\." $renderedVal 2 }}
             - name: {{ $key }}
               valueFrom:
                 configMapKeyRef:
@@ -210,7 +212,8 @@ spec:
             {{- end }}
             {{- if and .Values.deployment .Values.deployment.envFromSecrets }}
             {{- range $key, $val := .Values.deployment.envFromSecrets -}}
-            {{ $secretAddress := mustRegexSplit "\\." $val 2 }}
+            {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+            {{- $secretAddress := mustRegexSplit "\\." $renderedVal 2 }}
             - name: {{ $key }}
               valueFrom:
                 secretKeyRef:
