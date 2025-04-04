@@ -1,53 +1,221 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
   "properties": {
+    "local": {
+      "description": "Local properties",
+      "type": ["object", "null"]
+    },
+    "configmap": {
+      "description": "Configmap properties",
+      "type": ["object", "null"],
+      "additionalProperties": {
+          "type": "string"
+      }
+    },
+    "serviceAccount": {
+      "additionalProperties": false,
+      "properties": {
+        "roleArn" : {
+          "description": "IAM Role ARN",
+          "type": "string"
+        }
+      },
+      "type": ["object", "null"]
+    },
     "deployment": {
-      "image": {
-        "description": "Container Image",
-        "properties": {
-          "repositoryPrefix": {
-            "type": "string"
-          },
-          "imagePullPolicy": {
-            "type": "string"
-          }
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "additionalProperties": false,
+          "description": "Container Image",
+          "type": ["object", "null" ],
+          "required": [
+            "repositoryPrefix"
+          ],
+          "properties": {
+            "repositoryPrefix": {
+              "type": "string"
+            },
+            "imagePullPolicy": {
+              "type": "string",
+              "default": "Allow"
+            },
+            "repositoryName": {
+              "type": ["string", "null"]
+            },
+            "tag": {
+              "type": ["string", "null"]
+            },
+            "digest": {
+              "type": ["string", "null"]
+            }
+          }          
         },
-        "type": "object",
-        "required": [
-          "repositoryPrefix"
-        ]
-      },
-      "replicas": {
-        "description": "Deployment replicas",
-        "type": "integer"
-      },
-      "resources": {
-        "description": "Container Resources consumption",
-        "properties": {
-          "requests": {
-            "properties": {
-              "cpu": {
-                "type": "string"
-              },
-              "memory": {
-                "type": "string"
+        "replicas": {
+          "description": "Deployment replicas",
+          "type": "integer"
+        },
+        "securityContext": {
+          "description": "Container Security Context",
+          "additionalProperties": false,
+          "type": ["object", "null"],
+          "properties": {
+            "allowPrivilegeEscalation": {
+              "type": "boolean",
+              "default": false
+            },
+            "runAsUser": {
+              "type": ["integer" , "null"]
+            },
+            "runAsGroup": {
+              "type": ["integer" , "null"]
+            },
+            "fsGroup": {
+              "type": ["integer" , "null"]
+            }
+          }          
+        },
+        "resources": {
+          "description": "Container Resources consumption",
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "requests": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "memory": {
+                  "type": "string"
+                }
               }
             },
-            "type": "object"
-          },
-          "limits": {
-            "properties": {
-              "cpu": {
-                "type": "string"
-              },
-              "memory": {
-                "type": "string"
+            "limits": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "memory": {
+                  "type": "string"
+                }
               }
-            },
-            "type": "object"
-          }
+            }
+          }          
         },
-        "type": "object"
+        "env": {
+          "description": "Environment variables",
+          "type": ["object", "null"]       
+        },
+        "envFromConfigmaps": {
+          "description": "Environment variables from configmaps",
+          "type": ["object", "null"]
+        },
+        "envFromSecrets": {
+          "description": "Environment variables from secrets",
+          "type": ["object", "null"]
+        },
+        "envFromFieldRef": {
+          "description": "Environment variables from fieldRef",
+          "type": ["object", "null"]
+        },
+        "livenessProbe": {
+          "description": "Liveness probe properties",
+          "type": ["object", "null"]
+        },
+        "readinessProbe": {
+          "description": "Readiness probe properties",
+          "type": ["object", "null"]
+        },
+        "preStopHookGracefulTermination": {
+          "description": "PreStop hook for graceful termination",
+          "additionalProperties": false,
+          "type": ["object", "null"],
+          "properties": {
+            "create": {
+              "type": "boolean",
+              "default": true
+            },
+            "durationSeconds": {
+              "type": "integer",
+              "default": 30
+            }
+          }
+        }, 
+        "flywayInitContainer": {
+          "description": "Flyway init container properties",
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "create": {
+              "type": "boolean",
+              "default": false
+            },
+            "version" : {
+              "description": "Flyway version",
+              "type": "string",
+              "default": "8.2.3"
+            },
+            "downloadRedshiftDriver" : {
+              "description": "Download Redshift JDBC driver",
+              "type": "boolean",
+              "default": false
+            },
+            "migrationsConfigmap" : {
+              "description": "Configmap with migrations",
+              "type": ["string", "null"]
+            },
+            "env": {
+              "description": "Environment variables",
+              "type": ["object", "null"]
+            },
+            "envFromConfigmaps": {
+              "description": "Environment variables from configmaps",
+              "type": ["object", "null"]
+            },
+            "envFromSecrets": {
+              "description": "Environment variables from secrets",
+              "type": ["object", "null"]
+            },
+            "envFromFieldRef": {
+              "description": "Environment variables from fieldRef",
+              "type": ["object", "null"]
+            },
+            "resources": {
+              "description": "Init container resources consumption",
+              "additionalProperties": false,
+              "type": ["object", "null"],
+              "properties": {
+                "requests": {
+                  "properties": {
+                    "cpu": {
+                      "type": "string"
+                    },
+                    "memory": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "limits": {
+                  "properties": {
+                    "cpu": {
+                      "type": "string"
+                    },
+                    "memory": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }              
+            }
+          }
+        }
       },
       "type": "object",
       "required": [
@@ -62,6 +230,8 @@
     },
     "service": {
       "description": "Service properties",
+      "additionalProperties": false,
+      "type": ["object", "null"],
       "properties": {
         "create": {
           "description": "Enable service creation",
@@ -74,7 +244,28 @@
           "enum": [ "ClusterIP", "NodePort" ],
           "default": "ClusterIP"
         },
-        
+        "albHealthCheck": {
+          "description": "Enable ALB healthcheck",
+          "type": ["object", "null"],
+          "properties": {
+            "path": {
+              "description": "Path",
+              "type": ["string","null"]
+            },
+            "port": {
+              "description": "Port",
+              "type": ["integer","string","null"]
+            },
+            "successCodes": {
+              "description": "Success Codes",
+              "type": ["string","null"]
+            },
+            "protocol": {
+              "description": "Protocol",
+              "type": ["string","null"]
+            }
+          }
+        },
         "containerPort": {
           "$comment": "This property shouldn't have a default value",
           "description": "Port",
@@ -92,9 +283,27 @@
           "minimum": 0,
           "type": "integer",
           "default": 8558
+        },
+        "portName": {
+          "description": "Port Name",
+          "type": ["string", "null"]
+        },
+        "targetPort": {
+          "description": "Target Port",
+          "minimum": 0,
+          "type": ["integer", "null"]
+        },
+        "enableMonitoring": {
+          "description": "Enable monitoring",
+          "type": "boolean",
+          "default": false
+        },
+        "enableManagement": {
+          "description": "Enable management",
+          "type": "boolean",
+          "default": false
         }
       },
-      "type": "object",
       "if": {
         "properties": {
           "create": { "const": true }
@@ -103,9 +312,8 @@
       "then": {
         "properties": {
           "portName": {
-            "$comment": "This property shouldn't have a default value",
             "description": "Port Name",
-            "type": ["string"]
+            "type": ["string", "null"]
           }
         }
       }
@@ -117,7 +325,45 @@
     "namespace": {
       "description": "Kubernetes namespace",
       "type": "string"
-    }    
+    },
+    "ingress": {
+      "description": "Ingress properties",
+      "properties": {
+        "create": {
+          "description": "Enable ingress",
+          "type": "boolean",
+          "default": false
+        },
+        "className": {
+          "description": "Ingress class name",
+          "type": "string",
+          "default": "alb"
+        },
+        "groupName": {
+          "description": "Ingress group name",
+          "type": "string",
+          "default": "interop-be"
+        }
+      },
+      "type": ["object", "null"]
+    },
+    "autoscaling": {
+      "description": "Autoscaling properties",
+      "properties": {
+        "horizontal": {
+          "description": "Horizontal pod autoscaling configuration",
+          "type": ["object", "null"],
+          "properties": {
+            "create": {
+              "description": "Enable horizontal pod autoscaling",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      },
+      "type": ["object", "null"]
+    }  
   },
   "required": [
     "name",
