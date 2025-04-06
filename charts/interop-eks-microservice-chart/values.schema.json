@@ -58,7 +58,7 @@
     "techStack": {
       "description": "Technology used to develop the service",
       "type": "string",
-      "enum": [ "nodejs", "frontend"]
+      "enum": [ "nodejs", "frontend", "scala"]
     },
     "service": {
       "description": "Service properties",
