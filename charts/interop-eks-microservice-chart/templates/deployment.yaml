@@ -21,6 +21,13 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
+    {{- with .Values.deployment.metadata.labels }}
+    {{- toYaml . | nident 4 }}
+    {{- end }}
+  annotations:
+    {{- with .Values.deployment.metadata.annotations }}
+    {{- toYaml . | nident 4 }}
+    {{- end }}
 spec:
   replicas: {{ .Values.deployment.replicas }}
   selector:
@@ -30,14 +37,14 @@ spec:
     metadata:
       labels:
         {{- include "interop-eks-microservice-chart.labels" . | nindent 8 }}
-        {{- with .Values.deployment.metadata.labels }}
+        {{- with .Values.deployment.podTemplateMetadata.labels }}
         {{- toYaml . | nident 8 }}
         {{- end }}
       annotations:
         {{- if .Values.deployment.image.digest }}
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
         {{- end }}
-        {{- with .Values.deployment.metadata.annotations }}
+        {{- with .Values.deployment.podTemplateMetadata.annotations }}
         {{- toYaml . | nident 8 }}
         {{- end }}
     spec:

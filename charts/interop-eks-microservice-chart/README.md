@@ -32,8 +32,10 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.image.repositoryName | string | `nil` | Alternative image name |
 | deployment.image.repositoryPrefix | string | `nil` | Image repository |
 | deployment.image.tag | string | `nil` | Image tag |
-| deployment.metadata.annotations | object | `nil` | Additional annotations to apply to deployment |
-| deployment.metadata.labels | object | `nil` | Additional labels to apply to deployment |
+| deployment.metadata.annotations | object | `nil` | Additional annotations to apply to Deployment metadata |
+| deployment.metadata.labels | object | `nil` | Additional labels to apply to Deployment metadata |
+| deployment.podTemplateMetadata.annotations | object | `nil` | Additional annotations to apply to Pod `spec.template.metadata` |
+| deployment.podTemplateMetadata.labels | object | `nil` | Additional labels to apply to Pod `spec.template.metadata` |
 | deployment.preStopHookGracefulTermination.create | bool | `true` | Enable preStop hook for graceful termination |
 | deployment.preStopHookGracefulTermination.durationSeconds | int | `30` | Duration in seconds for the preStop hook to complete |
 | deployment.replicas | int | `nil` | Number of desired replicas for the service being deployed |

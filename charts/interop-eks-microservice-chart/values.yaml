@@ -44,10 +44,15 @@ ingress:
  
 
 deployment:
-  metadata:
-    # -- (object) Additional annotations to apply to deployment
+  metadata:   
+    # -- (object) Additional annotations to apply to Deployment metadata
     annotations:
-    # -- (object) Additional labels to apply to deployment
+    # -- (object) Additional labels to apply to Deployment metadata
+    labels:
+  podTemplateMetadata:
+    # -- (object) Additional annotations to apply to Pod `spec.template.metadata`
+    annotations:
+    # -- (object) Additional labels to apply to Pod `spec.template.metadata`
     labels:
   # -- (int) Number of desired replicas for the service being deployed
   replicas: 
