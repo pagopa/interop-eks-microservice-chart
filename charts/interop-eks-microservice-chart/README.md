@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.16.3](https://img.shields.io/badge/Version-1.16.3-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.17.0](https://img.shields.io/badge/Version-1.17.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -24,7 +24,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.flywayInitContainer.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
 | deployment.flywayInitContainer.envFromSecrets | object | `nil` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
 | deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
-| deployment.flywayInitContainer.resources | object | null | K8s Flyway init container resources requests and limits |
+| deployment.flywayInitContainer.resources | object | null | K8s Flyway init container resources requests and limits. If empty uses the same resources as main container |
 | deployment.flywayInitContainer.version | string | `"8.2.3"` | Flyway container image version |
 | deployment.image | object | `{"digest":null,"imagePullPolicy":"Always","repositoryName":null,"repositoryPrefix":null,"tag":null}` | Microservice image configuration |
 | deployment.image.digest | string | `nil` | Image digest |
@@ -32,6 +32,8 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.image.repositoryName | string | `nil` | Alternative image name |
 | deployment.image.repositoryPrefix | string | `nil` | Image repository |
 | deployment.image.tag | string | `nil` | Image tag |
+| deployment.metadata.annotations | object | `nil` | Additional annotations to apply to deployment |
+| deployment.metadata.labels | object | `nil` | Additional labels to apply to deployment |
 | deployment.preStopHookGracefulTermination.create | bool | `true` | Enable preStop hook for graceful termination |
 | deployment.preStopHookGracefulTermination.durationSeconds | int | `30` | Duration in seconds for the preStop hook to complete |
 | deployment.replicas | int | `nil` | Number of desired replicas for the service being deployed |

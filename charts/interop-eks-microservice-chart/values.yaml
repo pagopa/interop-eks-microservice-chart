@@ -44,6 +44,11 @@ ingress:
  
 
 deployment:
+  metadata:
+    # -- (object) Additional annotations to apply to deployment
+    annotations:
+    # -- (object) Additional labels to apply to deployment
+    labels:
   # -- (int) Number of desired replicas for the service being deployed
   replicas: 
   # -- (object) Pod securityContext, applied to main container
