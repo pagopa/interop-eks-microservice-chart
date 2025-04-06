@@ -22,11 +22,17 @@ metadata:
   labels:
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
     {{- with .Values.deployment.metadata.labels }}
-    {{- toYaml . | nident 4 }}
+    {{- range $key, $val := . -}}
+    {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+    {{ $key }}: {{ $renderedVal }}
+    {{- end }}
     {{- end }}
   annotations:
     {{- with .Values.deployment.metadata.annotations }}
-    {{- toYaml . | nident 4 }}
+    {{- range $key, $val := . -}}
+    {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+    {{ $key }}: {{ $renderedVal }}
+    {{- end }}
     {{- end }}
 spec:
   replicas: {{ .Values.deployment.replicas }}
@@ -38,14 +44,20 @@ spec:
       labels:
         {{- include "interop-eks-microservice-chart.labels" . | nindent 8 }}
         {{- with .Values.deployment.podTemplateMetadata.labels }}
-        {{- toYaml . | nident 8 }}
+        {{- range $key, $val := . -}}
+        {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+        {{ $key }}: {{ $renderedVal }}
+        {{- end }}
         {{- end }}
       annotations:
         {{- if .Values.deployment.image.digest }}
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
         {{- end }}
         {{- with .Values.deployment.podTemplateMetadata.annotations }}
-        {{- toYaml . | nident 8 }}
+        {{- range $key, $val := . -}}
+        {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+        {{ $key }}: {{ $renderedVal }}
+        {{- end }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.name | quote }}
