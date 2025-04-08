@@ -78,7 +78,7 @@ deployment:
     - "-Dconfig.override_with_env_vars=true2222"
   envFromFieldRef:
     NAMESPACE: "metadata.name"
-  env: {}
+  env:
     #REQUIRED_CONTACT_POINT_NR: "{{.Values.deployment.replicas}}"
     #NAMES_WELL_KNOWN_URLS: "{{.Values.name}}.WELL_KNOWN_URLS"
   envFromConfigmaps:
