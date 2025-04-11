@@ -72,7 +72,7 @@ deployment:
       FLYWAY_USER: "postgres.POSTGRES_USR"
       FLYWAY_PASSWORD: "postgres.POSTGRES_PSW"
   command: ["bin/nodejs-service"]
-  args: 
+  args:
     - "-Dconfig.override_with_env_vars=true"
     - ""
     - "-Dconfig.override_with_env_vars=true2222"
