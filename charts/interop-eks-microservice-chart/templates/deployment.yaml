@@ -117,10 +117,10 @@ spec:
             - name: migrations-files
               mountPath: "/flyway/sql"
           {{- if .Values.deployment.flywayInitContainer.resources }}
-          resources: 
+          resources:
             {{- toYaml .Values.deployment.flywayInitContainer.resources | nindent 12 }}
           {{- else }}
-          resources: 
+          resources:
             {{- toYaml .Values.deployment.resources | nindent 12 }}
           {{- end}}
       {{- end }}

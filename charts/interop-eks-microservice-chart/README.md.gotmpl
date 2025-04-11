@@ -282,7 +282,7 @@ ingress:
   groupName: "custom-group-name"
 ```
 
-Opzionalmente, 
+Opzionalmente,
 
 * è possibile definire un host con cui eseguire l'override del default "*":
 
@@ -422,8 +422,8 @@ Per questo Deployment è previsto l'utilizzo del FlyWay InitContainer; di seguit
   * FLYWAY_URL: valore composto dinamicamente in base ai valori di POSTGRES_HOST, POSTGRES_PORT e POSTGRES_DB recuperati dalla ConfigMap _interop-be-db-commons_
   * FLYWAY_CREATE_SCHEMAS: valorizzato con _true_
   * FLYWAY_PLACEHOLDER_REPLACEMENT: valorizzato con _true_
-  * FLYWAY_SCHEMAS: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio 
-  * FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio 
+  * FLYWAY_SCHEMAS: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio
+  * FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio
   * FLYWAY_USER: mappato con la chiave _POSTGRES_USR_ del Secret comune "postgres"
   * FLYWAY_PASSWORD: mappato con la chiave _POSTGRES_PSW_ del Secret comune "postgres"
 

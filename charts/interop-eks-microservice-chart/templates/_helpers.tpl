@@ -75,7 +75,7 @@ Create the name of the service account to use
 
   {{- $pattern := `{{\.Values[^}]+}}` }}
   {{- $valuesMatches := (regexFindAll $pattern $givenValue -1) }}
-  
+
   {{- /* For every match check if the rendered template is valid, i.e. not empty/null */}}
   {{- range $index, $match := $valuesMatches }}
     {{- $renderedValue := include "interop-eks-microservice-chart.render-tpl-value" (dict "value" $match "context" $givenContext "scope" $givenScope) }}
@@ -91,8 +91,8 @@ Create the name of the service account to use
   {{- $givenContext := .context }}
   {{- $givenScope := .scope }}
   {{- $renderedValue := "" }}
-  
-  {{- if and (ne $givenScope nil) (ne $givenScope "") }}  
+
+  {{- if and (ne $givenScope nil) (ne $givenScope "") }}
     {{- $renderedValue = tpl (cat "{{- with $.RelativeScope -}}" $givenValue "{{- end }}") (merge (dict "RelativeScope" $givenScope) $givenContext) }}
   {{- else }}
     {{- $renderedValue = tpl $givenValue $givenContext -}}
