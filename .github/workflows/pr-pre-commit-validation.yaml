@@ -1,4 +1,4 @@
-name: 'pr-pre-commit-validation'
+name: 'PR pre-commit validation'
 on:
   pull_request_target:
     types:
