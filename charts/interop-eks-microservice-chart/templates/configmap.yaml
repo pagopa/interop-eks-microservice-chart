@@ -7,18 +7,18 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
   {{- if and .Values.frontend.nginx (index .Values.frontend.nginx "default.conf") }}
-    default.conf: 
+    default.conf:
       {{- toYaml (index .Values.frontend.nginx "default.conf")  | nindent 4 }}
   {{- end }}
   {{- if and .Values.frontend .Values.frontend.additionalAssets }}
   {{- range $key, $val := .Values.frontend.additionalAssets }}
-    {{ $key }}:      
+    {{ $key }}:
       {{- toYaml $val | nindent 4 }}
   {{- end }}
   {{- end }}
   {{- if .Values.configmap -}}
     {{- range $key, $val := .Values.configmap }}
-    {{ $key }}: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) | quote }} 
+    {{ $key }}: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) | quote }}
     {{- end }}
   {{- end }}
 {{- end }}
@@ -30,6 +30,6 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
   {{- range $key, $val := .Values.configmap }}
-  {{ $key }}: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) | quote }} 
+  {{ $key }}: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) | quote }}
   {{- end }}
 {{- end }}

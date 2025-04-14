@@ -58,7 +58,7 @@
     "techStack": {
       "description": "Technology used to develop the service",
       "type": "string",
-      "enum": [ "nodejs", "frontend"]
+      "enum": [ "nodejs", "frontend", "scala"]
     },
     "service": {
       "description": "Service properties",
@@ -74,7 +74,7 @@
           "enum": [ "ClusterIP", "NodePort" ],
           "default": "ClusterIP"
         },
-        
+
         "containerPort": {
           "$comment": "This property shouldn't have a default value",
           "description": "Port",
@@ -117,7 +117,7 @@
     "namespace": {
       "description": "Kubernetes namespace",
       "type": "string"
-    }    
+    }
   },
   "required": [
     "name",

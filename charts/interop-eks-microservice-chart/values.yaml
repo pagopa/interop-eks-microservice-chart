@@ -7,16 +7,15 @@ name:
 namespace:
 
 # -- (enum) Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"]
-techStack: 
+techStack:
 
-# -- ServiceAccount roleARN
 serviceAccount:
   # -- (string) ServiceAccount roleARN
   roleArn:
 
 service:
-  # -- Service annotations
-  healthcheck:
+  # -- (object) ALB healthcheck config
+  albHealthcheck:
     path:
     port:
     successCodes:
@@ -27,10 +26,10 @@ service:
   type: "ClusterIP"
   monitoringPort: 9095
   managementPort: 8558
-  # -- (string) Service port name 
-  portName: 
+  # -- (string) Service port name
+  portName:
   containerPort:
-  targetPort: 
+  targetPort:
   # -- Enable container monitoring port
   enableMonitoring: true
   # -- Enable container management port
@@ -44,8 +43,18 @@ ingress:
   groupName: "interop-be"
 
 deployment:
+  metadata:
+    # -- (object) Additional annotations to apply to Deployment metadata
+    annotations:
+    # -- (object) Additional labels to apply to Deployment metadata
+    labels:
+  podTemplateMetadata:
+    # -- (object) Additional annotations to apply to Pod `spec.template.metadata`
+    annotations:
+    # -- (object) Additional labels to apply to Pod `spec.template.metadata`
+    labels:
   # -- (int) Number of desired replicas for the service being deployed
-  replicas: 
+  replicas:
   # -- (object) Pod securityContext, applied to main container
   securityContext:
     allowPrivilegeEscalation: false
@@ -77,6 +86,11 @@ deployment:
   envFromSecrets: {}
   # -- (object) List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath)
   envFromFieldRef: {}
+  preStopHookGracefulTermination:
+    # -- (bool) Enable preStop hook for graceful termination
+    create: true
+    # -- (int) Duration in seconds for the preStop hook to complete
+    durationSeconds: 30
   flywayInitContainer:
     create: false
     # -- (string) Flyway container image version
@@ -121,5 +135,4 @@ autoscaling:
     #      scaleTargetRef:
     #        name: "" # It will be populated with the .Values.name value.
     #      triggers: []
-    scaledObjectSpec: {}
-  
+    scaledObjectSpec: {}  

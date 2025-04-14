@@ -36,6 +36,9 @@ spec:
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
     spec:
       serviceAccountName: {{ .Values.name | quote }}
+      {{- if and .Values.deployment .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
+      terminationGracePeriodSeconds: {{add1 .Values.deployment.preStopHookGracefulTermination.durationSeconds }}
+      {{- end }}
       containers:
         - name: {{ .Values.name }}
           image: "{{ .Values.deployment.image.repositoryPrefix }}/{{ .Values.deployment.image.repositoryName | default .Values.name }}{{ $imageTag }}{{ $digestSuffix }}"
@@ -45,6 +48,15 @@ spec:
           {{- end }}
           {{- if and .Values.deployment .Values.deployment.args }}
           args: {{ toJson .Values.deployment.args }}
+          {{- end }}
+          {{- if and .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - {{ printf "sleep %d; exit 0;" (int .Values.deployment.preStopHookGracefulTermination.durationSeconds)  }}
           {{- end }}
           {{- if .Values.deployment.securityContext }}
           securityContext:
@@ -82,7 +94,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: read-model
-                  key: PROJECTION_PSW 
+                  key: PROJECTION_PSW
             {{- if .Values.configmap }}
             {{- range $key, $val := .Values.configmap }}
             - name: {{ $key }}
