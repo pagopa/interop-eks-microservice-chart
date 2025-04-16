@@ -102,7 +102,7 @@ deployment:
     # -- (object) List of environment variables for a container, specifying a value directly for each named variable
     env: {}
     # -- (object) List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef)
-    envFromConfigmaps: {} 
+    envFromConfigmaps: {}
     # -- (object) List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef)
     envFromSecrets: {}
     # -- (object) List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath)
@@ -120,4 +120,4 @@ autoscaling:
     # -- (map) Configuration for the KEDA ScaledObjectSpec triggers
     #    Refer to the following link for detailed configurations:
     #    https://keda.sh/docs/2.16/scalers/
-    scaledObjectSpec: {}  
+    scaledObjectSpec: {}
