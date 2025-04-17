@@ -13,7 +13,8 @@ The following table lists the configurable parameters of the Interop-eks-microse
 |-----|------|---------|-------------|
 | autoscaling | object | `{"horizontal":{"create":false}}` | Horizontal Pod Autoscaling configuration |
 | autoscaling.horizontal.create | bool | `false` | Enable horizontal pod autoscaling |
-| deployment.enableRolloutAnnotations | bool | `false` | Enable annotation generation for referenced configmaps and secrets |
+| deployment.configmapHash | string | `nil` | Hash of the related ConfigMap |
+| deployment.enableRolloutAnnotations | bool | `false` | Enable annotation generation for referenced configmaps and secrets  |
 | deployment.env | object | `nil` | List of environment variables for a container, specifying a value directly for each named variable |
 | deployment.envFromConfigmaps | object | `nil` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
 | deployment.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
@@ -25,7 +26,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.flywayInitContainer.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
 | deployment.flywayInitContainer.envFromSecrets | object | `nil` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
 | deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
-| deployment.flywayInitContainer.resources | object | null | K8s Flyway init container resources requests and limits |
+| deployment.flywayInitContainer.resources | object | null | K8s Flyway init container resources requests and limits. If empty uses the same resources as main container |
 | deployment.flywayInitContainer.version | string | `"8.2.3"` | Flyway container image version |
 | deployment.image | object | `{"digest":null,"imagePullPolicy":"Always","repositoryName":null,"repositoryPrefix":null,"tag":null}` | Microservice image configuration |
 | deployment.image.digest | string | `nil` | Image digest |

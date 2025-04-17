@@ -37,6 +37,10 @@ spec:
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
         {{- end }}
 
+        {{- if and .Values.deployment .Values.deployment.configmapHash .Values.deployment.enableRolloutAnnotations }}
+        {{ .Values.name }}/configmap.hash: {{ .Values.deployment.configmapHash }} # This configmap has the same name as the deployment, while its hash value is stored in deployment.configmapHash
+        {{- end }}
+        
         {{- if and .Values.deployment .Values.deployment.envFromConfigmaps .Values.deployment.enableRolloutAnnotations }}  
         {{- $processedConfigmaps := dict }}
         {{- range $key, $val := .Values.deployment.envFromConfigmaps }}
