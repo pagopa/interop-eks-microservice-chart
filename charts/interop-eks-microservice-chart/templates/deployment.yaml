@@ -62,7 +62,7 @@ spec:
         {{- end }}
         {{- end }}
 
-        {{- if and .Values.deployment .Values.deployment.configmapHash .Values.deployment.enableRolloutAnnotations }}
+        {{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations }}
         {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- end }}
 
