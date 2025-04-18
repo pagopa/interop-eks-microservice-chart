@@ -595,4 +595,3 @@ A differenza del Deployment di default, sono definite le seguenti variabili d'am
   * READMODEL_DB_PASSWORD: mappato con la chiave _PROJECTION_PSW_ del Secret comune "read-model"
 
 Per questo Deployment non è previsto l'utilizzo del FlyWay InitContainer.
-TEST
