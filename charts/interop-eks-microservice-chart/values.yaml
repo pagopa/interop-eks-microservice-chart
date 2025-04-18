@@ -121,4 +121,3 @@ autoscaling:
     #    Refer to the following link for detailed configurations:
     #    https://keda.sh/docs/2.16/scalers/
     scaledObjectSpec: {}
-    pippo: {}
