@@ -1,4 +1,4 @@
-{{- if and (eq .Values.techStack "nodejs") (not .Values.moduleType) }}
+{{- if and (or (eq .Values.techStack "nodejs") (eq .Values.techStack "scala")) (not .Values.moduleType) }}
 
 {{ $root := . }}
 
@@ -23,6 +23,19 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
+    {{- with .Values.deployment.metadata.labels }}
+    {{- range $key, $val := . -}}
+    {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+    {{ $key }}: {{ $renderedVal }}
+    {{- end }}
+    {{- end }}
+  annotations:
+    {{- with .Values.deployment.metadata.annotations }}
+    {{- range $key, $val := . -}}
+    {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+    {{ $key }}: {{ $renderedVal }}
+    {{- end }}
+    {{- end }}
 spec:
   replicas: {{ .Values.deployment.replicas }}
   selector:
@@ -32,16 +45,28 @@ spec:
     metadata:
       labels:
         {{- include "interop-eks-microservice-chart.labels" . | nindent 8 }}
+        {{- with .Values.deployment.podTemplateMetadata.labels }}
+        {{- range $key, $val := . -}}
+        {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+        {{ $key }}: {{ $renderedVal }}
+        {{- end }}
+        {{- end }}
       annotations:
         {{- if .Values.deployment.image.digest }}
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
         {{- end }}
+        {{- with .Values.deployment.podTemplateMetadata.annotations }}
+        {{- range $key, $val := . -}}
+        {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+        {{ $key }}: {{ $renderedVal }}
+        {{- end }}
+        {{- end }}
 
         {{- if and .Values.deployment .Values.deployment.configmapHash .Values.deployment.enableRolloutAnnotations }}
-        {{ .Values.name }}/configmap.hash: {{ .Values.deployment.configmapHash }} # This configmap has the same name as the deployment, while its hash value is stored in deployment.configmapHash
+        {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- end }}
-        
-        {{- if and .Values.deployment .Values.deployment.envFromConfigmaps .Values.deployment.enableRolloutAnnotations }}  
+
+        {{- if and .Values.deployment .Values.deployment.envFromConfigmaps .Values.deployment.enableRolloutAnnotations }}
         {{- $processedConfigmaps := dict }}
         {{- range $key, $val := .Values.deployment.envFromConfigmaps }}
         {{- $configmapAddress := mustRegexSplit "\\." $val 2 }}
@@ -55,8 +80,8 @@ spec:
         {{- end }}
         {{- end }}
         {{- end }}
-        
-        {{- if and .Values.deployment .Values.deployment.envFromSecrets .Values.deployment.enableRolloutAnnotations }}  
+
+        {{- if and .Values.deployment .Values.deployment.envFromSecrets .Values.deployment.enableRolloutAnnotations }}
         {{- $processedSecrets := dict }}
         {{- range $key, $val := .Values.deployment.envFromSecrets }}
         {{- $secretAddress := mustRegexSplit "\\." $val 2 }}
@@ -127,10 +152,10 @@ spec:
             - name: migrations-files
               mountPath: "/flyway/sql"
           {{- if .Values.deployment.flywayInitContainer.resources }}
-          resources: 
+          resources:
             {{- toYaml .Values.deployment.flywayInitContainer.resources | nindent 12 }}
           {{- else }}
-          resources: 
+          resources:
             {{- toYaml .Values.deployment.resources | nindent 12 }}
           {{- end}}
       {{- end }}
