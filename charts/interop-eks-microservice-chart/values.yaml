@@ -44,6 +44,8 @@ ingress:
 
 
 deployment:
+  enableRolloutAnnotations: false
+  # -- (bool) Enable annotation generation for referenced configmaps and secrets
   metadata:
     # -- (object) Additional annotations to apply to Deployment metadata
     annotations:
