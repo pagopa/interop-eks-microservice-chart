@@ -63,7 +63,7 @@ spec:
         {{- end }}
 
         {{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations }}
-        {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum | quote }}
         {{- end }}
 
         {{- if and .Values.deployment .Values.deployment.envFromConfigmaps .Values.deployment.enableRolloutAnnotations }}
@@ -74,7 +74,7 @@ spec:
         {{- if not (hasKey $processedConfigmaps $configmapName) }}
         {{- $configmap := lookup "v1" "ConfigMap" $.Values.namespace $configmapName }}
         {{- if $configmap }}
-        {{ $configmapName }}/configmap.resourceVersion: {{ $configmap.metadata.resourceVersion }}
+        {{ $configmapName }}/configmap.resourceVersion: {{ $configmap.metadata.resourceVersion | quote }}
         {{- $_ := set $processedConfigmaps $configmapName "" }}
         {{- end }}
         {{- end }}
@@ -89,7 +89,7 @@ spec:
         {{- if not (hasKey $processedSecrets $secretName) }}
         {{- $secret := lookup "v1" "Secret" $.Values.namespace $secretName }}
         {{- if $secret }}
-        {{ $secretName }}/secret.resourceVersion: {{ $secret.metadata.resourceVersion }}
+        {{ $secretName }}/secret.resourceVersion: {{ $secret.metadata.resourceVersion | quote }}
         {{- $_ := set $processedSecrets $secretName "" }}
         {{- end }}
         {{- end }}
