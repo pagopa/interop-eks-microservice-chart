@@ -1,0 +1,13 @@
+{{- if and .Values.autoscaling .Values.autoscaling.keda.create .Values.autoscaling.keda.scaledObjectSpec }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ .Values.name }}-scaledobject
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
+spec:
+  {{- with .Values.autoscaling.keda.scaledObjectSpec }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- end }}
