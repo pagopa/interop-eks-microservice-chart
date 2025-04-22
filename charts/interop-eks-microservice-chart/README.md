@@ -13,7 +13,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 |-----|------|---------|-------------|
 | autoscaling | object | `{"horizontal":{"create":false}}` | Horizontal Pod Autoscaling configuration |
 | autoscaling.horizontal.create | bool | `false` | Enable horizontal pod autoscaling |
-| deployment.enableRolloutAnnotations | bool | `false` |  |
+| deployment.enableRolloutAnnotations | bool | `false` | Enable annotation generation for referenced configmaps and secrets |
 | deployment.env | object | `nil` | List of environment variables for a container, specifying a value directly for each named variable |
 | deployment.envFromConfigmaps | object | `nil` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
 | deployment.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
@@ -33,7 +33,6 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.image.repositoryName | string | `nil` | Alternative image name |
 | deployment.image.repositoryPrefix | string | `nil` | Image repository |
 | deployment.image.tag | string | `nil` | Image tag |
-| deployment.metadata | bool | `{"annotations":null,"labels":null}` | Enable annotation generation for referenced configmaps and secrets |
 | deployment.metadata.annotations | object | `nil` | Additional annotations to apply to Deployment metadata |
 | deployment.metadata.labels | object | `nil` | Additional labels to apply to Deployment metadata |
 | deployment.podTemplateMetadata.annotations | object | `nil` | Additional annotations to apply to Pod `spec.template.metadata` |
