@@ -61,6 +61,41 @@ spec:
         {{ $key }}: {{ $renderedVal }}
         {{- end }}
         {{- end }}
+
+        {{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations }}
+        {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- end }}
+
+        {{- if and .Values.deployment .Values.deployment.envFromConfigmaps .Values.deployment.enableRolloutAnnotations }}
+        {{- $processedConfigmaps := dict }}
+        {{- range $key, $val := .Values.deployment.envFromConfigmaps }}
+        {{- $configmapAddress := mustRegexSplit "\\." $val 2 }}
+        {{- $configmapName := index $configmapAddress 0 }}
+        {{- if not (hasKey $processedConfigmaps $configmapName) }}
+        {{- $configmap := lookup "v1" "ConfigMap" $.Values.namespace $configmapName }}
+        {{- if $configmap }}
+        {{ $configmapName }}/configmap.resourceVersion: {{ $configmap.metadata.resourceVersion }}
+        {{- $_ := set $processedConfigmaps $configmapName "" }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+
+        {{- if and .Values.deployment .Values.deployment.envFromSecrets .Values.deployment.enableRolloutAnnotations }}
+        {{- $processedSecrets := dict }}
+        {{- range $key, $val := .Values.deployment.envFromSecrets }}
+        {{- $secretAddress := mustRegexSplit "\\." $val 2 }}
+        {{- $secretName := index $secretAddress 0 }}
+        {{- if not (hasKey $processedSecrets $secretName) }}
+        {{- $secret := lookup "v1" "Secret" $.Values.namespace $secretName }}
+        {{- if $secret }}
+        {{ $secretName }}/secret.resourceVersion: {{ $secret.metadata.resourceVersion }}
+        {{- $_ := set $processedSecrets $secretName "" }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+
     spec:
       serviceAccountName: {{ .Values.name | quote }}
       {{- if and .Values.deployment .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}

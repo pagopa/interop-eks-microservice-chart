@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.18.5](https://img.shields.io/badge/Version-1.18.5-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.19.0](https://img.shields.io/badge/Version-1.19.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -16,6 +16,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | autoscaling.keda | object | `{"create":false,"scaledObjectSpec":{}}` | KEDA autoscaling configuration |
 | autoscaling.keda.create | bool | `false` | Enable KEDA autoscaling |
 | autoscaling.keda.scaledObjectSpec | map | `{}` | Configuration for the KEDA ScaledObjectSpec triggers    Refer to the following link for detailed configurations:    https://keda.sh/docs/2.16/scalers/ |
+| deployment.enableRolloutAnnotations | bool | `false` | Enable annotation generation for referenced configmaps and secrets |
 | deployment.env | object | `nil` | List of environment variables for a container, specifying a value directly for each named variable |
 | deployment.envFromConfigmaps | object | `{}` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
 | deployment.envFromFieldRef | object | `{}` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
