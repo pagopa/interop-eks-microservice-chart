@@ -81,6 +81,14 @@ spec:
         {{- end }}
         {{- end }}
 
+        {{- if and .Values.deployment .Values.deployment.flywayInitContainer.migrationsConfigmap .Values.deployment.enableRolloutAnnotations }}
+        {{- $configmapName := .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+        {{- $configmap := lookup "v1" "ConfigMap" $.Values.namespace $configmapName }}
+        {{- if $configmap }}
+        {{ $configmapName }}/flywayConfigmap.resourceVersion: {{ $configmap.metadata.resourceVersion | quote }}
+        {{- end }}
+        {{- end }}
+
         {{- if and .Values.deployment .Values.deployment.envFromSecrets .Values.deployment.enableRolloutAnnotations }}
         {{- $processedSecrets := dict }}
         {{- range $key, $val := .Values.deployment.envFromSecrets }}
@@ -90,6 +98,22 @@ spec:
         {{- $secret := lookup "v1" "Secret" $.Values.namespace $secretName }}
         {{- if $secret }}
         {{ $secretName }}/secret.resourceVersion: {{ $secret.metadata.resourceVersion | quote }}
+        {{- $_ := set $processedSecrets $secretName "" }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+
+        {{- if and .Values.deployment .Values.deployment.flywayInitContainer.envFromSecrets .Values.deployment.enableRolloutAnnotations}}
+        {{- $processedSecrets := dict }}
+        {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromSecrets -}}
+        {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+        {{- $secretAddress := mustRegexSplit "\\." $renderedVal 2 }}
+        {{- $secretName := index $secretAddress 0 }}
+        {{- if not (hasKey $processedSecrets $secretName) }}
+        {{- $secret := lookup "v1" "Secret" $.Values.namespace $secretName }}
+        {{- if $secret }}
+        {{ $secretName }}/flywaySecret.resourceVersion: {{ $secret.metadata.resourceVersion | quote }}
         {{- $_ := set $processedSecrets $secretName "" }}
         {{- end }}
         {{- end }}
