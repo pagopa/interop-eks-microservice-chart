@@ -57,12 +57,8 @@ deployment:
     labels:
   # -- (int) Number of desired replicas for the service being deployed
   replicas:
-  # -- (object) Rollout strategy
+  # -- (object) Rollout strategy (default set to type: RollingUpdate, maxSurge: 25%, maxUnavailable: 0%)
   strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 0%
-    type: RollingUpdate
   # -- (object) Pod securityContext, applied to main container
   securityContext:
     allowPrivilegeEscalation: false

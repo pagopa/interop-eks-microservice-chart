@@ -41,6 +41,12 @@ spec:
   {{- if and .Values.deployment .Values.deployment.strategy }}
   strategy:
     {{- toYaml .Values.deployment.strategy | nindent 4 }}
+  {{- else }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0%
   {{- end }}
   selector:
     matchLabels:
