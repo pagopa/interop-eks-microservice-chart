@@ -59,6 +59,10 @@ deployment:
   replicas:
   # -- (object) Rollout strategy (default type: RollingUpdate, maxSurge: 25%, maxUnavailable: 0%)
   strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0%
+    type: RollingUpdate
   # -- (object) Pod securityContext, applied to main container
   securityContext:
     allowPrivilegeEscalation: false
