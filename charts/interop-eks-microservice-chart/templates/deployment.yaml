@@ -40,13 +40,11 @@ spec:
   replicas: {{ .Values.deployment.replicas }}
   {{- if and .Values.deployment .Values.deployment.strategy }}
   strategy:
-    {{- toYaml .Values.deployment.strategy | nindent 4 }}
-  {{- else }}
-  strategy:
-    type: RollingUpdate
+    type: {{ .Values.deployment.strategy.type }}
+    {{- if eq .Values.deployment.strategy.type "RollingUpdate"}}
     rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 0%
+      {{- toYaml .Values.deployment.strategy.rollingUpdate | nindent 6 }}
+    {{- end }}
   {{- end }}
   selector:
     matchLabels:

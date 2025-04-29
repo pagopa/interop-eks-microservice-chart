@@ -44,7 +44,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.replicas | int | `nil` | Number of desired replicas for the service being deployed |
 | deployment.resources | object | `{"limits":{"cpu":null,"memory":null},"requests":{"cpu":null,"memory":null}}` | K8s container resources requests and limits |
 | deployment.securityContext | object | `{"allowPrivilegeEscalation":false}` | Pod securityContext, applied to main container |
-| deployment.strategy | object | `nil` | Rollout strategy (default set to type: RollingUpdate, maxSurge: 25%, maxUnavailable: 0%) |
+| deployment.strategy | object | `{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"0%"},"type":"RollingUpdate"}` | Rollout strategy |
 | ingress.className | string | `"alb"` | ingress.create and service.targetGroupArn must be mutually exclusive. |
 | ingress.create | bool | `false` | Enable K8s Ingress deployment generation |
 | ingress.groupName | string | `"interop-be"` |  |
