@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.21.0](https://img.shields.io/badge/Version-1.21.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.21.1](https://img.shields.io/badge/Version-1.21.1-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -44,6 +44,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.replicas | int | `nil` | Number of desired replicas for the service being deployed |
 | deployment.resources | object | `{"limits":{"cpu":null,"memory":null},"requests":{"cpu":null,"memory":null}}` | K8s container resources requests and limits |
 | deployment.securityContext | object | `{"allowPrivilegeEscalation":false}` | Pod securityContext, applied to main container |
+| deployment.strategy | object | `nil` | Rollout strategy (default type: RollingUpdate, maxSurge: 25%, maxUnavailable: 0%) |
 | ingress.className | string | `"alb"` | ingress.create and service.targetGroupArn must be mutually exclusive. |
 | ingress.create | bool | `false` | Enable K8s Ingress deployment generation |
 | ingress.groupName | string | `"interop-be"` |  |
