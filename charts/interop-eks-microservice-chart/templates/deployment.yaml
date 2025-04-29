@@ -38,7 +38,7 @@ metadata:
     {{- end }}
 spec:
   replicas: {{ .Values.deployment.replicas }}
-  {{- if .Values.deployment.strategy }}
+  {{- if and .Values.deployment .Values.deployment.strategy }}
   strategy:
     {{- toYaml .Values.deployment.strategy | nindent 4 }}
   {{- else }}
