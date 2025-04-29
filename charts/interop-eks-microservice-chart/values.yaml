@@ -57,7 +57,7 @@ deployment:
     labels:
   # -- (int) Number of desired replicas for the service being deployed
   replicas:
-  # -- (object) Rollout strategy (default type: RollingUpdate, maxSurge: 25%, maxUnavailable: 0%)
+  # -- (object) Rollout strategy
   strategy:
     rollingUpdate:
       maxSurge: 25%
