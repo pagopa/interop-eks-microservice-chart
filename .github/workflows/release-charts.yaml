@@ -56,10 +56,12 @@ jobs:
         run: |
           echo "Bumping chart version ${{ steps.semantic.outputs.new_release_version }}"
           yq -i ".version = \"${{ steps.semantic.outputs.new_release_version }}\"" "charts/interop-eks-microservice-chart/Chart.yaml"
-          sed -i "s/![Version:.*]/![Version: ${{ steps.semantic.outputs.new_release_version }}]/" charts/interop-eks-microservice-chart/README.md
-          sed -i "s/badge\/Version-.*-informational/badge\/Version-${{ steps.semantic.outputs.new_release_version }}-informational/" charts/interop-eks-microservice-chart/README.md
-          git add "charts/interop-eks-microservice-chart/Chart.yaml"
 
+          NEW_VERSION="${{ steps.semantic.outputs.new_release_version }}"
+          sed -i 's/^\!\[Version: [0-9.]*\]/![Version: ${NEW_VERSION}]/g' charts/interop-eks-microservice-chart/README.md
+          sed -i 's/badge\/Version-[0-9.]*-informational/badge\/Version-${NEW_VERSION}-informational/g' charts/interop-eks-microservice-chart/README.md
+
+          git add "charts/interop-eks-microservice-chart/Chart.yaml"
           git commit -m "Bump chart version ${{ steps.semantic.outputs.new_release_version }}"
           git push -u origin ${{ github.ref_name }}
 
