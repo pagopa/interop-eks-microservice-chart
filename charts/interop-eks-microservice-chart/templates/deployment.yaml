@@ -38,6 +38,14 @@ metadata:
     {{- end }}
 spec:
   replicas: {{ .Values.deployment.replicas }}
+  {{- if and .Values.deployment .Values.deployment.strategy }}
+  strategy:
+    type: {{ .Values.deployment.strategy.type }}
+    {{- if eq .Values.deployment.strategy.type "RollingUpdate"}}
+    rollingUpdate:
+      {{- toYaml .Values.deployment.strategy.rollingUpdate | nindent 6 }}
+    {{- end }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "interop-eks-microservice-chart.selectorLabels" . | nindent 6 }}
