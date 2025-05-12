@@ -122,7 +122,7 @@ Usage:
 {{- end -}}
 
 {{/*
-Generate annotations (in deployment.spec.template.metadata) for each configmap and secret referenced by the deployment.
+Generate annotations (in deployment.spec.template.metadata) for each configmap, secret and service account referenced by the deployment.
 Usage:
 {{ include "interop-eks-microservice-chart.generateRolloutAnnotations" }}
 */}}
@@ -186,4 +186,7 @@ Usage:
 {{- end }}
 {{- end }}
 
+{{- if .Values.deployment }}
+{{ $.Values.name }}/serviceAccount.resourceVersion: {{ include "interop-eks-microservice-chart.serviceAccount" . | sha256sum | quote }}
 {{- end -}}
+{{- end }}
