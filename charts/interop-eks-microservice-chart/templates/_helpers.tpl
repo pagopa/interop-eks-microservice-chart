@@ -187,6 +187,6 @@ Usage:
 {{- end }}
 
 {{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations .Values.serviceAccount.create}}
-{{ $.Values.name }}/serviceAccount.resourceVersion: {{ include (print $.Template.BasePath "/serviceaccount.yaml") . | sha256sum | quote }}
+{{ $.Values.name }}/serviceAccount.sha256: {{ include (print $.Template.BasePath "/serviceaccount.yaml") . | sha256sum | quote }}
 {{- end -}}
 {{- end }}
