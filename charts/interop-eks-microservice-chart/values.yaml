@@ -10,6 +10,8 @@ namespace:
 techStack:
 
 serviceAccount:
+  # -- (bool) Enable ServiceAccount creation
+  create: true
   # -- (string) ServiceAccount roleARN
   roleArn:
 

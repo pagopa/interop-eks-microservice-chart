@@ -35,7 +35,9 @@ spec:
       annotations:
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
     spec:
+      {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ .Values.name | quote }}
+      {{- end }}
       {{- if and .Values.deployment .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
       terminationGracePeriodSeconds: {{add1 .Values.deployment.preStopHookGracefulTermination.durationSeconds }}
       {{- end }}

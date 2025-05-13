@@ -72,7 +72,9 @@ spec:
 
         {{- include "interop-eks-microservice-chart.generateRolloutAnnotations" . | nindent 8 }}
     spec:
+      {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ .Values.name | quote }}
+      {{- end }}
       {{- if and .Values.deployment .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
       terminationGracePeriodSeconds: {{add1 .Values.deployment.preStopHookGracefulTermination.durationSeconds }}
       {{- end }}
