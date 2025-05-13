@@ -34,6 +34,7 @@ spec:
         {{- include "interop-eks-microservice-chart.labels" . | nindent 8 }}
       annotations:
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
+        {{- include "interop-eks-microservice-chart.generateRolloutAnnotations" . | nindent 8 }}
     spec:
       {{- if and .Values.deployment .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
       terminationGracePeriodSeconds: {{add1 .Values.deployment.preStopHookGracefulTermination.durationSeconds }}
