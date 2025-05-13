@@ -186,7 +186,7 @@ Usage:
 {{- end }}
 {{- end }}
 
-{{- if .Values.deployment }}
-{{ $.Values.name }}/serviceAccount.resourceVersion: {{ include "interop-eks-microservice-chart.serviceAccount" . | sha256sum | quote }}
+{{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations .Values.serviceAccount.create}}
+{{ $.Values.name }}/serviceAccount.resourceVersion: {{ include (print $.Template.BasePath "/serviceaccount.yaml") . | sha256sum | quote }}
 {{- end -}}
 {{- end }}
