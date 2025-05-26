@@ -190,3 +190,47 @@ Usage:
 {{ $.Values.name }}/serviceAccount.sha256: {{ include (print $.Template.BasePath "/serviceaccount.yaml") . | sha256sum | quote }}
 {{- end -}}
 {{- end }}
+{{/* End of generateRolloutAnnotations */}}
+
+
+{{/* Generate frontend configmap dynamic data */}}
+{{- define "interop-eks-microservice-chart.generateFrontendConfigmapData" -}}
+{{- $givenContext := .context }}
+{{- if and $givenContext.Values.frontend $givenContext.Values.frontend.additionalAssets }}
+{{- range $key, $val := $givenContext.Values.frontend.additionalAssets }}
+{{/* $key is env.js */}}
+{{- $windowVar := dict }}
+{{ $key }}: |-
+{{- /* json_key = window.pagopa_env */ -}}
+{{- range $json_key, $json_val := $val }}
+{{- range $subKey, $subValue := $json_val }}
+{{- if eq $subKey "fromConfigmaps" }}
+{{- /* fromConfigmapsSubKey is a sub key in fromConfigmaps */ -}}
+{{- /* fromConfigmapsSubValue is a complex value in the format CONFIGMAP_NAME.CONFIGMAP_KEY */ -}}
+{{- range $fromConfigmapsSubKey, $fromConfigmapsSubValue := $subValue }}
+{{- if not (hasKey $windowVar $fromConfigmapsSubKey) }}
+{{- $configmapAddress := mustRegexSplit "\\." $fromConfigmapsSubValue 2 }}
+{{- $configmapName := index $configmapAddress 0 }}
+{{- $configmapKey := index $configmapAddress 1 }}
+{{- $configMapData := (lookup "v1" "ConfigMap" $givenContext.Values.namespace $configmapName) }}
+{{- if $configMapData }}
+{{- $configMapValue := (index (index $configMapData "data") $configmapKey) }}
+{{- if $configMapValue }}
+{{- $windowVar = merge $windowVar (dict $fromConfigmapsSubKey $configMapValue) }}
+{{- end }}
+{{- end -}}
+{{- end -}}
+{{- end }}
+{{- else }}
+{{- if not (hasKey $windowVar $subKey) }}
+{{- $windowVar = merge $windowVar (dict $subKey $subValue) -}}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- $json_key | nindent 2 }} = {{- $windowVar | toPrettyJson | nindent 4 }} 
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/* End of generateFrontendConfigmapData */}} 
