@@ -1,4 +1,4 @@
-{{- if eq .Values.techStack "frontendold" }}
+{{- if eq .Values.techStack "frontend" }}
 {{- if or .Values.frontend.nginx .Values.frontend.additionalAssets }}
 apiVersion: v1
 kind: ConfigMap
@@ -7,32 +7,8 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
   {{- if and .Values.frontend.nginx (index .Values.frontend.nginx "default.conf") }}
-    default.conf:
-      {{- toYaml (index .Values.frontend.nginx "default.conf")  | nindent 4 }}
-  {{- end }}
-  {{- if and .Values.frontend .Values.frontend.additionalAssets }}
-  {{- range $key, $val := .Values.frontend.additionalAssets }}
-    {{ $key }}:
-      {{- toYaml $val | nindent 4 }}
-  {{- end }}
-  {{- end }}
-  {{- if .Values.configmap -}}
-    {{- range $key, $val := .Values.configmap }}
-    {{ $key }}: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) | quote }}
-    {{- end }}
-  {{- end }}
-{{- end }}
-{{- else if eq .Values.techStack "frontend" }}
-{{- if or .Values.frontend.nginx .Values.frontend.additionalAssets }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.name }}
-  namespace: {{ .Values.namespace }}
-data:
-  {{- if and .Values.frontend.nginx (index .Values.frontend.nginx "default.conf") }}
-  default.conf: 
-  {{- toYaml (index .Values.frontend.nginx "default.conf")  | nindent 4 }}
+  default.conf:
+  {{- toYaml (index .Values.frontend.nginx "default.conf") | nindent 4 }}
   {{- end }}
   {{ include "interop-eks-microservice-chart.generateFrontendConfigmapData" (dict "context" $) | nindent 2 }}
   {{- if .Values.configmap -}}
