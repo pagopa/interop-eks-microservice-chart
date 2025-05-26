@@ -110,10 +110,9 @@ Usage:
 {{- define "interop-eks-microservice-chart.render-template" -}}
 {{- $value := typeIs "string" .value | ternary .value (.value | toYaml) }}
 
-{{- if contains "{{" (toJson $value) }}
+{{- if and (typeIs "string" $value) (contains "{{" (toJson $value)) }}
   {{- $givenScope := .scope }}
   {{- $givenContext := .context }}
-
   {{- include "interop-eks-microservice-chart.check-tpl-value" (dict "value" $value "context" $givenContext "scope" $givenScope) -}}
   {{- include "interop-eks-microservice-chart.render-tpl-value" (dict "value" $value "context" $givenContext "scope" $givenScope) -}}
 {{- else }}
@@ -142,6 +141,30 @@ Usage:
 {{- if $configmap }}
 {{ $configmapName }}/configmap.resourceVersion: {{ $configmap.metadata.resourceVersion | quote }}
 {{- $_ := set $processedConfigmaps $configmapName "" }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- /* Frontend configmap generateRolloutAnnotations */ -}}
+{{- if and $.Values.frontend $.Values.frontend.additionalAssets }}
+{{- $processedConfigmaps := list }}
+{{- range $key, $val := $.Values.frontend.additionalAssets }}
+{{- range $json_key, $json_val := $val }}
+{{- range $subKey, $subValue := $json_val }}
+{{- if eq $subKey "fromConfigmaps" }}
+{{- range $fromConfigmapsSubKey, $fromConfigmapsSubValue := $subValue }}
+{{- $configmapAddress := mustRegexSplit "\\." $fromConfigmapsSubValue 2 }}
+{{- $configmapName := index $configmapAddress 0 }}
+{{- if not (has $configmapName $processedConfigmaps) }}
+{{- $configMap := (lookup "v1" "ConfigMap" $.Values.namespace $configmapName) }}
+{{- if $configMap }}
+{{- $processedConfigmaps = append $processedConfigmaps $configmapName }}
+{{ $configmapName }}/configmap.resourceVersion: {{ $configMap.metadata.resourceVersion | quote }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -192,10 +215,9 @@ Usage:
 {{- end }}
 {{/* End of generateRolloutAnnotations */}}
 
-
 {{/* Generate frontend configmap dynamic data */}}
 {{- define "interop-eks-microservice-chart.generateFrontendConfigmapData" -}}
-{{- $givenContext := .context }}
+{{- $givenContext :=  .context }}
 {{- if and $givenContext.Values.frontend $givenContext.Values.frontend.additionalAssets }}
 {{- range $key, $val := $givenContext.Values.frontend.additionalAssets }}
 {{/* $key is env.js */}}
