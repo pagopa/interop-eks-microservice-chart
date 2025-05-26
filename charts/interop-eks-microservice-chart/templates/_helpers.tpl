@@ -227,10 +227,10 @@ Usage:
 {{- end }}
 {{- end }}
 {{- end }}
-{{- $json_key | nindent 2 }} = {{- $windowVar | toPrettyJson | nindent 4 }} 
+{{- $json_key | nindent 2 }} = {{- $windowVar | toPrettyJson | nindent 4 }}
 {{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
 
-{{/* End of generateFrontendConfigmapData */}} 
+{{/* End of generateFrontendConfigmapData */}}
