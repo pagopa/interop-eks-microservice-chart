@@ -132,10 +132,10 @@ spec:
               readOnly: true
             {{- end }}
             {{- if and .Values.frontend .Values.frontend.additionalAssets }}
-            {{- range  $key, $val  := .Values.frontend.additionalAssets }}
-            - name: {{ regexReplaceAll "\\." $key "-" }}
-              mountPath: /usr/share/nginx/html/ui/{{ $key }}
-              subPath: {{ $key }}
+            {{- range  .Values.frontend.additionalAssets }}
+            - name: {{ regexReplaceAll "\\." . "-" }}
+              mountPath: /usr/share/nginx/html/ui/{{ . }}
+              subPath: {{ . }}
               readOnly: true
             {{- end }}
             {{- end }}
@@ -150,14 +150,14 @@ spec:
                 path: default.conf
         {{- end }}
         {{- if and .Values.frontend .Values.frontend.additionalAssets }}
-        {{- range  $key, $val  := .Values.frontend.additionalAssets }}
-        - name: {{ regexReplaceAll "\\." $key "-" }}
+        {{- range .Values.frontend.additionalAssets }}
+        - name: {{ regexReplaceAll "\\." . "-" }}
           configMap:
             defaultMode: 420
             name: {{ $root.Values.name }}
             items:
-              - key: {{ $key }}
-                path: {{ $key }}
+              - key: {{ . }}
+                path: {{ . }}
         {{- end }}
         {{- end }}
 {{- end }}
