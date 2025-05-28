@@ -223,8 +223,8 @@ Usage:
 {{- if and $givenContext.Values.frontend (hasKey $givenContext.Values.frontend "env.js") }}
 {{- range $key, $val := $givenContext.Values.frontend }}
 {{/* $key is env.js */}}
-{{- $windowVar := dict }}
 {{- if eq $key "env.js" }}
+{{- $windowVar := dict }}
 {{ $key }}: |-
 {{- /* json_key = window.pagopa_env */ -}}
 {{- range $json_key, $json_val := $val }}
@@ -243,12 +243,14 @@ Usage:
 {{- if $configMapValue }}
 {{- $windowVar = merge $windowVar (dict $fromConfigmapsSubKey $configMapValue) }}
 {{- end }}
-{{- end -}}
-{{- end -}}
+{{- else }}
+{{ fail (printf "Error: ConfigMap %s not found, namespace %s" $configmapName $givenContext.Values.namespace) }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- else }}
 {{- if not (hasKey $windowVar $subKey) }}
-{{- $windowVar = merge $windowVar (dict $subKey $subValue) -}}
+{{- $windowVar = merge $windowVar (dict $subKey $subValue) }}
 {{- end }}
 {{- end }}
 {{- end }}
