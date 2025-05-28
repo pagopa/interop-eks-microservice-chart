@@ -147,9 +147,10 @@ Usage:
 {{- end }}
 
 {{- /* Frontend configmap generateRolloutAnnotations */ -}}
-{{- if and $.Values.frontend $.Values.frontend.additionalAssets }}
+{{- if and $.Values.frontend (hasKey $.Values.frontend "env.js") }}
 {{- $processedConfigmaps := list }}
-{{- range $key, $val := $.Values.frontend.additionalAssets }}
+{{- range $key, $val := $.Values.frontend }}
+{{- if eq $key "env.js" }}
 {{- range $json_key, $json_val := $val }}
 {{- range $subKey, $subValue := $json_val }}
 {{- if eq $subKey "fromConfigmaps" }}
@@ -161,6 +162,7 @@ Usage:
 {{- if $configMap }}
 {{- $processedConfigmaps = append $processedConfigmaps $configmapName }}
 {{ $configmapName }}/configmap.resourceVersion: {{ $configMap.metadata.resourceVersion | quote }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -218,10 +220,11 @@ Usage:
 {{/* Generate frontend configmap dynamic data */}}
 {{- define "interop-eks-microservice-chart.generateFrontendConfigmapData" -}}
 {{- $givenContext :=  .context }}
-{{- if and $givenContext.Values.frontend $givenContext.Values.frontend.additionalAssets }}
-{{- range $key, $val := $givenContext.Values.frontend.additionalAssets }}
+{{- if and $givenContext.Values.frontend (hasKey $givenContext.Values.frontend "env.js") }}
+{{- range $key, $val := $givenContext.Values.frontend }}
 {{/* $key is env.js */}}
 {{- $windowVar := dict }}
+{{- if eq $key "env.js" }}
 {{ $key }}: |-
 {{- /* json_key = window.pagopa_env */ -}}
 {{- range $json_key, $json_val := $val }}
@@ -250,6 +253,7 @@ Usage:
 {{- end }}
 {{- end }}
 {{- $json_key | nindent 2 }} = {{- $windowVar | toPrettyJson | nindent 4 }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
