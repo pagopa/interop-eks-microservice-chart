@@ -224,10 +224,10 @@ Usage:
 {{- range $key, $val := $givenContext.Values.frontend }}
 {{/* $key is env.js */}}
 {{- if eq $key "env.js" }}
-{{- $windowVar := dict }}
 {{ $key }}: |-
 {{- /* json_key = window.pagopa_env */ -}}
 {{- range $json_key, $json_val := $val }}
+{{- $windowVar := dict }}
 {{- range $subKey, $subValue := $json_val }}
 {{- if eq $subKey "fromConfigmaps" }}
 {{- /* fromConfigmapsSubKey is a sub key in fromConfigmaps */ -}}
@@ -250,7 +250,8 @@ Usage:
 {{- end }}
 {{- else }}
 {{- if not (hasKey $windowVar $subKey) }}
-{{- $windowVar = merge $windowVar (dict $subKey $subValue) }}
+{{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $subValue "context" $givenContext) }}
+{{- $windowVar = merge $windowVar (dict $subKey $renderedVal) }}
 {{- end }}
 {{- end }}
 {{- end }}
