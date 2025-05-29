@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.24.2](https://img.shields.io/badge/Version-1.24.2-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.25.0](https://img.shields.io/badge/Version-1.25.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
