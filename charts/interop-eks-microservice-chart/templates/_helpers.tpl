@@ -239,15 +239,21 @@ Usage:
 {{- $configmapName := index $configmapAddress 0 }}
 {{- $configmapKey := index $configmapAddress 1 }}
 {{- $configMapData := (lookup "v1" "ConfigMap" $givenContext.Values.namespace $configmapName) }}
-{{- if $configMapData }}
+{{- if not $configMapData }}
+{{- fail (printf "Error: ConfigMap %s not found in namespace %s" $configmapName $givenContext.Values.namespace) }}
+{{- end }} {{/* if not $configMapData */}}
+{{- $windowVar = merge $windowVar (dict $fromConfigmapsSubKey (dict)) }}
+{{- if hasKey (index $configMapData "data") $configmapKey }}
+{{- /* If the configmap key exists, we add it to the windowVar */ -}}
 {{- $configMapValue := (index (index $configMapData "data") $configmapKey) }}
-{{- if $configMapValue }}
+{{- if not $configMapValue }}
+{{ fail (printf "Error: ConfigMap value for key %s in %s not found, namespace %s" $configmapKey $configmapName $givenContext.Values.namespace) }}
+{{- end }} {{/* if not $configMapValue */}}
 {{- $windowVar = merge $windowVar (dict $fromConfigmapsSubKey $configMapValue) }}
-{{- end }}
-{{- end }}
-{{- end }}
-{{- end }}
-{{- end }}
+{{- end }} {{/* if hasKey (index $configMapData "data") $configmapKey */}}
+{{- end }} {{/* if not (hasKey $windowVar $fromConfigmapsSubKey) */}}
+{{- end }} {{/* range $fromConfigmapsSubKey, $fromConfigmapsSubValue := $subValue */}}
+{{- end }} {{/* if $givenContext.Values.enableLookup */}}
 {{- else }}
 {{- if not (hasKey $windowVar $subKey) }}
 {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $subValue "context" $givenContext) }}
