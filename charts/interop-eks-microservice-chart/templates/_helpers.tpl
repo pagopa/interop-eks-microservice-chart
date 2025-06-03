@@ -153,7 +153,7 @@ Usage:
 {{- if eq $key "env.js" }}
 {{- range $json_key, $json_val := $val }}
 {{- range $subKey, $subValue := $json_val }}
-{{- if eq $subKey "fromConfigmaps" }}
+{{- if and (eq $subKey "fromConfigmaps") $.Values.enableLookup }}
 {{- range $fromConfigmapsSubKey, $fromConfigmapsSubValue := $subValue }}
 {{- $configmapAddress := mustRegexSplit "\\." $fromConfigmapsSubValue 2 }}
 {{- $configmapName := index $configmapAddress 0 }}
@@ -229,7 +229,7 @@ Usage:
 {{- range $json_key, $json_val := $val }}
 {{- $windowVar := dict }}
 {{- range $subKey, $subValue := $json_val }}
-{{- if eq $subKey "fromConfigmaps" }}
+{{- if and (eq $subKey "fromConfigmaps") $givenContext.Values.enableLookup }}
 {{- /* fromConfigmapsSubKey is a sub key in fromConfigmaps */ -}}
 {{- /* fromConfigmapsSubValue is a complex value in the format CONFIGMAP_NAME.CONFIGMAP_KEY */ -}}
 {{- range $fromConfigmapsSubKey, $fromConfigmapsSubValue := $subValue }}
