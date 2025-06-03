@@ -243,8 +243,6 @@ Usage:
 {{- if $configMapValue }}
 {{- $windowVar = merge $windowVar (dict $fromConfigmapsSubKey $configMapValue) }}
 {{- end }}
-{{- else }}
-{{ fail (printf "Error: ConfigMap %s not found, namespace %s" $configmapName $givenContext.Values.namespace) }}
 {{- end }}
 {{- end }}
 {{- end }}
