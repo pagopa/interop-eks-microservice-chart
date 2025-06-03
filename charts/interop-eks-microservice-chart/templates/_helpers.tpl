@@ -229,7 +229,8 @@ Usage:
 {{- range $json_key, $json_val := $val }}
 {{- $windowVar := dict }}
 {{- range $subKey, $subValue := $json_val }}
-{{- if and (eq $subKey "fromConfigmaps") $givenContext.Values.enableLookup }}
+{{- if eq $subKey "fromConfigmaps" }}
+{{- if $givenContext.Values.enableLookup }}
 {{- /* fromConfigmapsSubKey is a sub key in fromConfigmaps */ -}}
 {{- /* fromConfigmapsSubValue is a complex value in the format CONFIGMAP_NAME.CONFIGMAP_KEY */ -}}
 {{- range $fromConfigmapsSubKey, $fromConfigmapsSubValue := $subValue }}
@@ -242,6 +243,7 @@ Usage:
 {{- $configMapValue := (index (index $configMapData "data") $configmapKey) }}
 {{- if $configMapValue }}
 {{- $windowVar = merge $windowVar (dict $fromConfigmapsSubKey $configMapValue) }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
