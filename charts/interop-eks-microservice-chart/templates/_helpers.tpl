@@ -131,7 +131,7 @@ Usage:
 {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum | quote }}
 {{- end }}
 
-{{- if and .Values.deployment .Values.deployment.envFromConfigmaps .Values.deployment.enableRolloutAnnotations }}
+{{- if and .Values.deployment .Values.deployment.envFromConfigmaps .Values.deployment.enableRolloutAnnotations .Values.enableLookup }}
 {{- $processedConfigmaps := dict }}
 {{- range $key, $val := .Values.deployment.envFromConfigmaps }}
 {{- $configmapAddress := mustRegexSplit "\\." $val 2 }}
@@ -172,7 +172,7 @@ Usage:
 {{- end }}
 {{- end }}
 
-{{- if and .Values.deployment .Values.deployment.flywayInitContainer.migrationsConfigmap .Values.deployment.enableRolloutAnnotations }}
+{{- if and .Values.deployment .Values.deployment.flywayInitContainer.migrationsConfigmap .Values.deployment.enableRolloutAnnotations  .Values.enableLookup }}
 {{- $configmapName := .Values.deployment.flywayInitContainer.migrationsConfigmap }}
 {{- $configmap := lookup "v1" "ConfigMap" $.Values.namespace $configmapName }}
 {{- if $configmap }}
@@ -180,7 +180,7 @@ Usage:
 {{- end }}
 {{- end }}
 
-{{- if and .Values.deployment .Values.deployment.envFromSecrets .Values.deployment.enableRolloutAnnotations }}
+{{- if and .Values.deployment .Values.deployment.envFromSecrets .Values.deployment.enableRolloutAnnotations .Values.enableLookup }}
 {{- $processedSecrets := dict }}
 {{- range $key, $val := .Values.deployment.envFromSecrets }}
 {{- $secretAddress := mustRegexSplit "\\." $val 2 }}
@@ -195,7 +195,7 @@ Usage:
 {{- end }}
 {{- end }}
 
-{{- if and .Values.deployment .Values.deployment.flywayInitContainer.envFromSecrets .Values.deployment.enableRolloutAnnotations}}
+{{- if and .Values.deployment .Values.deployment.flywayInitContainer.envFromSecrets .Values.deployment.enableRolloutAnnotations .Values.enableLookup }}
 {{- $processedSecrets := dict }}
 {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromSecrets -}}
 {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
