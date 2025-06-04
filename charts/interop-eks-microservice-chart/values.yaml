@@ -9,6 +9,9 @@ namespace:
 # -- (enum) Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"]
 techStack:
 
+# -- (bool) Enable Resources lookup on K8s cluster to resolve referenced values
+enableLookup: true
+
 serviceAccount:
   # -- (bool) Enable ServiceAccount creation
   create: true
