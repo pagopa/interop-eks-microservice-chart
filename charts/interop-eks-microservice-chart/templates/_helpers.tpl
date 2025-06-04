@@ -131,17 +131,21 @@ Usage:
 {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum | quote }}
 {{- end }}
 
-{{- if and .Values.deployment .Values.deployment.envFromConfigmaps .Values.deployment.enableRolloutAnnotations .Values.enableLookup }}
+{{- if and .Values.deployment .Values.deployment.envFromConfigmaps .Values.deployment.enableRolloutAnnotations }}
 {{- $processedConfigmaps := dict }}
 {{- range $key, $val := .Values.deployment.envFromConfigmaps }}
 {{- $configmapAddress := mustRegexSplit "\\." $val 2 }}
 {{- $configmapName := index $configmapAddress 0 }}
 {{- if not (hasKey $processedConfigmaps $configmapName) }}
+{{- if $.Values.enableLookup }}
 {{- $configmap := lookup "v1" "ConfigMap" $.Values.namespace $configmapName }}
 {{- if $configmap }}
 {{ $configmapName }}/configmap.resourceVersion: {{ $configmap.metadata.resourceVersion | quote }}
-{{- $_ := set $processedConfigmaps $configmapName "" }}
 {{- end }}
+{{- else }}
+{{ $configmapName }}/configmap.resourceVersion: "LOOKUP_PLACEHOLDER"
+{{- end }}
+{{- $_ := set $processedConfigmaps $configmapName "" }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -153,15 +157,19 @@ Usage:
 {{- if eq $key "env.js" }}
 {{- range $json_key, $json_val := $val }}
 {{- range $subKey, $subValue := $json_val }}
-{{- if and (eq $subKey "fromConfigmaps") $.Values.enableLookup }}
+{{- if eq $subKey "fromConfigmaps" }}
 {{- range $fromConfigmapsSubKey, $fromConfigmapsSubValue := $subValue }}
 {{- $configmapAddress := mustRegexSplit "\\." $fromConfigmapsSubValue 2 }}
 {{- $configmapName := index $configmapAddress 0 }}
 {{- if not (has $configmapName $processedConfigmaps) }}
+{{- $processedConfigmaps = append $processedConfigmaps $configmapName }}
+{{- if $.Values.enableLookup }}
 {{- $configMap := (lookup "v1" "ConfigMap" $.Values.namespace $configmapName) }}
 {{- if $configMap }}
-{{- $processedConfigmaps = append $processedConfigmaps $configmapName }}
 {{ $configmapName }}/configmap.resourceVersion: {{ $configMap.metadata.resourceVersion | quote }}
+{{- end }}
+{{- else }}
+{{ $configmapName }}/configmap.resourceVersion: "LOOKUP_PLACEHOLDER"
 {{- end }}
 {{- end }}
 {{- end }}
@@ -172,41 +180,53 @@ Usage:
 {{- end }}
 {{- end }}
 
-{{- if and .Values.deployment .Values.deployment.flywayInitContainer.migrationsConfigmap .Values.deployment.enableRolloutAnnotations  .Values.enableLookup }}
+{{- if and .Values.deployment .Values.deployment.flywayInitContainer.migrationsConfigmap .Values.deployment.enableRolloutAnnotations }}
 {{- $configmapName := .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+{{- if $.Values.enableLookup }}
 {{- $configmap := lookup "v1" "ConfigMap" $.Values.namespace $configmapName }}
 {{- if $configmap }}
 {{ $configmapName }}/flywayConfigmap.resourceVersion: {{ $configmap.metadata.resourceVersion | quote }}
 {{- end }}
+{{- else }}
+{{ $configmapName }}/flywayConfigmap.resourceVersion: "LOOKUP_PLACEHOLDER"
+{{- end }}
 {{- end }}
 
-{{- if and .Values.deployment .Values.deployment.envFromSecrets .Values.deployment.enableRolloutAnnotations .Values.enableLookup }}
+{{- if and .Values.deployment .Values.deployment.envFromSecrets .Values.deployment.enableRolloutAnnotations }}
 {{- $processedSecrets := dict }}
 {{- range $key, $val := .Values.deployment.envFromSecrets }}
 {{- $secretAddress := mustRegexSplit "\\." $val 2 }}
 {{- $secretName := index $secretAddress 0 }}
 {{- if not (hasKey $processedSecrets $secretName) }}
+{{- if $.Values.enableLookup }}
 {{- $secret := lookup "v1" "Secret" $.Values.namespace $secretName }}
 {{- if $secret }}
 {{ $secretName }}/secret.resourceVersion: {{ $secret.metadata.resourceVersion | quote }}
+{{- end }}
+{{- else }}
+{{ $secretName }}/secret.resourceVersion: "LOOKUP_PLACEHOLDER"
+{{- end }}
 {{- $_ := set $processedSecrets $secretName "" }}
 {{- end }}
 {{- end }}
 {{- end }}
-{{- end }}
 
-{{- if and .Values.deployment .Values.deployment.flywayInitContainer.envFromSecrets .Values.deployment.enableRolloutAnnotations .Values.enableLookup }}
+{{- if and .Values.deployment .Values.deployment.flywayInitContainer.envFromSecrets .Values.deployment.enableRolloutAnnotations }}
 {{- $processedSecrets := dict }}
 {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromSecrets -}}
 {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
 {{- $secretAddress := mustRegexSplit "\\." $renderedVal 2 }}
 {{- $secretName := index $secretAddress 0 }}
 {{- if not (hasKey $processedSecrets $secretName) }}
+{{- if $.Values.enableLookup }}
 {{- $secret := lookup "v1" "Secret" $.Values.namespace $secretName }}
 {{- if $secret }}
 {{ $secretName }}/flywaySecret.resourceVersion: {{ $secret.metadata.resourceVersion | quote }}
-{{- $_ := set $processedSecrets $secretName "" }}
 {{- end }}
+{{- else }}
+{{ $secretName }}/flywaySecret.resourceVersion: "LOOKUP_PLACEHOLDER"
+{{- end }}
+{{- $_ := set $processedSecrets $secretName "" }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -230,11 +250,11 @@ Usage:
 {{- $windowVar := dict }}
 {{- range $subKey, $subValue := $json_val }}
 {{- if eq $subKey "fromConfigmaps" }}
-{{- if $givenContext.Values.enableLookup }}
 {{- /* fromConfigmapsSubKey is a sub key in fromConfigmaps */ -}}
 {{- /* fromConfigmapsSubValue is a complex value in the format CONFIGMAP_NAME.CONFIGMAP_KEY */ -}}
 {{- range $fromConfigmapsSubKey, $fromConfigmapsSubValue := $subValue }}
 {{- if not (hasKey $windowVar $fromConfigmapsSubKey) }}
+{{- if $givenContext.Values.enableLookup }}
 {{- $configmapAddress := mustRegexSplit "\\." $fromConfigmapsSubValue 2 }}
 {{- $configmapName := index $configmapAddress 0 }}
 {{- $configmapKey := index $configmapAddress 1 }}
@@ -253,9 +273,11 @@ Usage:
 {{- else }}
 {{ fail (printf "Error: ConfigMap key %s not found in ConfigMap %s, namespace %s" $configmapKey $configmapName $givenContext.Values.namespace) }}
 {{- end }} {{/* if hasKey (index $configMapData "data") $configmapKey */}}
+{{- else }}
+{{- $windowVar = merge $windowVar (dict $fromConfigmapsSubKey "LOOKUP_PLACEHOLDER") }}
+{{- end }} {{/* if $givenContext.Values.enableLookup */}}
 {{- end }} {{/* if not (hasKey $windowVar $fromConfigmapsSubKey) */}}
 {{- end }} {{/* range $fromConfigmapsSubKey, $fromConfigmapsSubValue := $subValue */}}
-{{- end }} {{/* if $givenContext.Values.enableLookup */}}
 {{- else }}
 {{- if not (hasKey $windowVar $subKey) }}
 {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $subValue "context" $givenContext) }}
