@@ -91,13 +91,11 @@ Create the name of the service account to use
   {{- $givenContext := .context }}
   {{- $givenScope := .scope }}
   {{- $renderedValue := "" }}
-
   {{- if and (ne $givenScope nil) (ne $givenScope "") }}
     {{- $renderedValue = tpl (cat "{{- with $.RelativeScope -}}" $givenValue "{{- end }}") (merge (dict "RelativeScope" $givenScope) $givenContext) }}
   {{- else }}
     {{- $renderedValue = tpl $givenValue $givenContext -}}
   {{- end }}
-
   {{- $renderedValue -}}
 {{- end -}}
 
@@ -109,7 +107,6 @@ Usage:
 */}}
 {{- define "interop-eks-microservice-chart.render-template" -}}
 {{- $value := typeIs "string" .value | ternary .value (.value | toYaml) }}
-
 {{- if and (typeIs "string" $value) (contains "{{" (toJson $value)) }}
   {{- $givenScope := .scope }}
   {{- $givenContext := .context }}
@@ -134,7 +131,8 @@ Usage:
 {{- if and .Values.deployment .Values.deployment.envFromConfigmaps .Values.deployment.enableRolloutAnnotations }}
 {{- $processedConfigmaps := dict }}
 {{- range $key, $val := .Values.deployment.envFromConfigmaps }}
-{{- $configmapAddress := mustRegexSplit "\\." $val 2 }}
+{{- $renderedAddress := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+{{- $configmapAddress := mustRegexSplit "\\." $renderedAddress 2 }}
 {{- $configmapName := index $configmapAddress 0 }}
 {{- if not (hasKey $processedConfigmaps $configmapName) }}
 {{- if $.Values.enableLookup }}
@@ -159,7 +157,8 @@ Usage:
 {{- range $subKey, $subValue := $json_val }}
 {{- if eq $subKey "fromConfigmaps" }}
 {{- range $fromConfigmapsSubKey, $fromConfigmapsSubValue := $subValue }}
-{{- $configmapAddress := mustRegexSplit "\\." $fromConfigmapsSubValue 2 }}
+{{- $renderedAddress := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+{{- $configmapAddress := mustRegexSplit "\\." $renderedAddress 2 }}
 {{- $configmapName := index $configmapAddress 0 }}
 {{- if not (has $configmapName $processedConfigmaps) }}
 {{- $processedConfigmaps = append $processedConfigmaps $configmapName }}
@@ -255,7 +254,8 @@ Usage:
 {{- range $fromConfigmapsSubKey, $fromConfigmapsSubValue := $subValue }}
 {{- if not (hasKey $windowVar $fromConfigmapsSubKey) }}
 {{- if $givenContext.Values.enableLookup }}
-{{- $configmapAddress := mustRegexSplit "\\." $fromConfigmapsSubValue 2 }}
+{{- $renderedAddress := include "interop-eks-microservice-chart.render-template" (dict "value" $fromConfigmapsSubValue "context" $) }}
+{{- $configmapAddress := mustRegexSplit "\\." $renderedAddress 2 }}
 {{- $configmapName := index $configmapAddress 0 }}
 {{- $configmapKey := index $configmapAddress 1 }}
 {{- $configMapData := (lookup "v1" "ConfigMap" $givenContext.Values.namespace $configmapName) }}
