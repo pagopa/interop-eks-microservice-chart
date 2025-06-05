@@ -1,4 +1,4 @@
-{{- if .Values.configmap -}}
+{{- if and (ne .Values.techStack "frontend")  .Values.configmap -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
