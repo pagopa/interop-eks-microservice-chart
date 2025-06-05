@@ -103,7 +103,8 @@ spec:
             {{- end }}
             {{- if and .Values.deployment .Values.deployment.envFromConfigmaps }}
             {{- range $key, $val := .Values.deployment.envFromConfigmaps -}}
-            {{ $configmapAddress := mustRegexSplit "\\." $val 2 }}
+            {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+            {{ $configmapAddress := mustRegexSplit "\\." $renderedVal 2 }}
             - name: {{ $key }}
               valueFrom:
                 configMapKeyRef:
