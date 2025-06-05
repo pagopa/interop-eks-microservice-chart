@@ -157,7 +157,7 @@ Usage:
 {{- range $subKey, $subValue := $json_val }}
 {{- if eq $subKey "fromConfigmaps" }}
 {{- range $fromConfigmapsSubKey, $fromConfigmapsSubValue := $subValue }}
-{{- $renderedAddress := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+{{- $renderedAddress := include "interop-eks-microservice-chart.render-template" (dict "value" $fromConfigmapsSubValue "context" $) }}
 {{- $configmapAddress := mustRegexSplit "\\." $renderedAddress 2 }}
 {{- $configmapName := index $configmapAddress 0 }}
 {{- if not (has $configmapName $processedConfigmaps) }}
