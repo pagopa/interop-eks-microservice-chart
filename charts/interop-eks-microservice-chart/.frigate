@@ -584,7 +584,7 @@ ingress:
   groupName: "custom-group-name"
 ```
 
-Opzionalmente, 
+Opzionalmente,
 
 * è possibile definire un host con cui eseguire l'override del default "*":
 

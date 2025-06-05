@@ -12,6 +12,10 @@
 {{- $imageTag = (nospace (cat ":" .Values.deployment.image.tag)) }}
 {{- end }}
 
+{{- if and (not $imageTag) (not $digestSuffix)}}
+{{ fail "One of deployment.image.tag and deployment.image.digest must be defined." }}
+{{- end }}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,7 +35,12 @@ spec:
       annotations:
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
     spec:
+      {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ .Values.name | quote }}
+      {{- end }}
+      {{- if and .Values.deployment .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
+      terminationGracePeriodSeconds: {{add1 .Values.deployment.preStopHookGracefulTermination.durationSeconds }}
+      {{- end }}
       containers:
         - name: {{ .Values.name }}
           image: "{{ .Values.deployment.image.repositoryPrefix }}/{{ .Values.deployment.image.repositoryName | default .Values.name }}{{ $imageTag }}{{ $digestSuffix }}"
@@ -41,6 +50,15 @@ spec:
           {{- end }}
           {{- if and .Values.deployment .Values.deployment.args }}
           args: {{ toJson .Values.deployment.args }}
+          {{- end }}
+          {{- if and .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - {{ printf "sleep %d; exit 0;" (int .Values.deployment.preStopHookGracefulTermination.durationSeconds)  }}
           {{- end }}
           {{- if .Values.deployment.securityContext }}
           securityContext:

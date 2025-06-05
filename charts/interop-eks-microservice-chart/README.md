@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.9.1](https://img.shields.io/badge/Version-1.9.1-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.27.0](https://img.shields.io/badge/Version-1.27.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -11,43 +11,59 @@ The following table lists the configurable parameters of the Interop-eks-microse
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| autoscaling.horizontal | object | `{"create":false}` | Horizontal Pod Autoscaling (HPA) standard configuration as per official kubernetes documentation (https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) |
+| autoscaling.horizontal.create | bool | `false` | Enable horizontal pod autoscaling |
+| autoscaling.keda | object | `{"create":false,"scaledObjectSpec":{}}` | KEDA autoscaling configuration |
+| autoscaling.keda.create | bool | `false` | Enable KEDA autoscaling |
+| autoscaling.keda.scaledObjectSpec | map | `{}` | Configuration for the KEDA ScaledObjectSpec triggers    Refer to the following link for detailed configurations:    https://keda.sh/docs/2.16/scalers/ |
+| deployment.enableRolloutAnnotations | bool | `false` | Enable annotation generation for referenced configmaps and secrets |
 | deployment.env | object | `nil` | List of environment variables for a container, specifying a value directly for each named variable |
-| deployment.envFromConfigmaps | object | `nil` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
-| deployment.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
-| deployment.envFromSecrets | object | `nil` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
+| deployment.envFromConfigmaps | object | `{}` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
+| deployment.envFromFieldRef | object | `{}` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
+| deployment.envFromSecrets | object | `{}` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
 | deployment.flywayInitContainer.create | bool | `false` |  |
-| deployment.flywayInitContainer.env | object | `nil` | List of environment variables for a container, specifying a value directly for each named variable |
-| deployment.flywayInitContainer.envFromConfigmaps | object | `nil` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
-| deployment.flywayInitContainer.envFromFieldRef | object | `nil` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
-| deployment.flywayInitContainer.envFromSecrets | object | `nil` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
+| deployment.flywayInitContainer.downloadRedshiftDriver | bool | `false` | Enable Flyway to download Redshift jdbc driver |
+| deployment.flywayInitContainer.env | object | `{}` | List of environment variables for a container, specifying a value directly for each named variable |
+| deployment.flywayInitContainer.envFromConfigmaps | object | `{}` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
+| deployment.flywayInitContainer.envFromFieldRef | object | `{}` | List of pod fields used as values for environment variablesenvironment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of env.valueFrom.fieldRef.fieldPath) |
+| deployment.flywayInitContainer.envFromSecrets | object | `{}` | List of environment variables for a container, specifying a key from a Secret for each named variable (k8s equivalent of envFrom.secretRef) |
 | deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
-| deployment.image.digest | string | `nil` |  |
-| deployment.image.imagePullPolicy | string | `"Always"` |  |
-| deployment.image.repositoryPrefix | string | `nil` |  |
-| deployment.image.tag | string | `nil` |  |
+| deployment.flywayInitContainer.version | string | `"8.2.3"` | Flyway container image version |
+| deployment.image | object | `{"digest":null,"imagePullPolicy":"Always","repositoryName":null,"repositoryPrefix":null,"tag":null}` | Microservice image configuration |
+| deployment.image.digest | string | `nil` | Image digest |
+| deployment.image.imagePullPolicy | string | `"Always"` | Image pull policy |
+| deployment.image.repositoryName | string | `nil` | Alternative image name |
+| deployment.image.repositoryPrefix | string | `nil` | Image repository |
+| deployment.image.tag | string | `nil` | Image tag |
+| deployment.metadata.annotations | object | `nil` | Additional annotations to apply to Deployment metadata |
+| deployment.metadata.labels | object | `nil` | Additional labels to apply to Deployment metadata |
+| deployment.podTemplateMetadata.annotations | object | `nil` | Additional annotations to apply to Pod `spec.template.metadata` |
+| deployment.podTemplateMetadata.labels | object | `nil` | Additional labels to apply to Pod `spec.template.metadata` |
+| deployment.preStopHookGracefulTermination.create | bool | `true` | Enable preStop hook for graceful termination |
+| deployment.preStopHookGracefulTermination.durationSeconds | int | `30` | Duration in seconds for the preStop hook to complete |
 | deployment.replicas | int | `nil` | Number of desired replicas for the service being deployed |
 | deployment.resources | object | `{"limits":{"cpu":null,"memory":null},"requests":{"cpu":null,"memory":null}}` | K8s container resources requests and limits |
-| deployment.securityContext | object | `{"allowPrivilegeEscalation":false,"runAsUser":1001}` | Pod securityContext, applied to main container |
-| ingress.className | string | `"alb"` |  |
+| deployment.securityContext | object | `{"allowPrivilegeEscalation":false}` | Pod securityContext, applied to main container |
+| deployment.strategy | object | `{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"0%"},"type":"RollingUpdate"}` | Rollout strategy |
+| enableLookup | bool | `true` | Enable Resources lookup on K8s cluster to resolve referenced values |
+| ingress.className | string | `"alb"` | ingress.create and service.targetGroupArn must be mutually exclusive. |
 | ingress.create | bool | `false` | Enable K8s Ingress deployment generation |
 | ingress.groupName | string | `"interop-be"` |  |
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
 | namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
+| service.albHealthcheck | object | `{"path":null,"port":null,"protocol":null,"successCodes":null}` | ALB healthcheck config |
 | service.containerPort | string | `nil` |  |
 | service.create | bool | `false` | Enable K8s Service deployment generation |
 | service.enableManagement | bool | `true` | Enable container management port |
 | service.enableMonitoring | bool | `true` | Enable container monitoring port |
-| service.healthcheck | object | `{"path":null,"port":null,"successCodes":null}` | Service annotations |
 | service.managementPort | int | `8558` |  |
 | service.monitoringPort | int | `9095` |  |
-| service.portName | string | `nil` | Service port name  |
+| service.portName | string | `nil` | Service port name |
 | service.targetPort | string | `nil` |  |
 | service.type | enum | `"ClusterIP"` | K8s Service type, allowed values: [ "ClusterIP", "NodePort" ] |
-| serviceAccount | object | `{"roleArn":null}` | ServiceAccount roleARN |
+| serviceAccount.create | bool | `true` | Enable ServiceAccount creation |
 | serviceAccount.roleArn | string | `nil` | ServiceAccount roleARN |
 | techStack | enum | `nil` | Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"] |
-| autoscaling.horizontal.create | bool | `false` | Enable or disable Horizontal Autoscaling for the Deployment. |
-| autoscaling.horizontal.config | object | `nil` | Configuration for Horizontal Autoscaling. |
 
 ## 1. Configurazione del Deployment di un MicroServizio
 
@@ -315,7 +331,6 @@ In automatico sarà generato un Ingress template con annotazione "alb.ingress.ku
 ingress:
   groupName: "custom-group-name"
 ```
-*Nota*: ingress.create e service.targetGroupArn devono essere mutuamente esclusivi. Se create è impostato su true, service.targetGroupArn deve essere null o non definito. Se service.targetGroupArn ha un valore, create deve essere false.
 
 Opzionalmente,
 
@@ -585,41 +600,145 @@ A differenza del Deployment di default, sono definite le seguenti variabili d'am
 
 Per questo Deployment non è previsto l'utilizzo del FlyWay InitContainer.
 
-## 6. Autoscaling
+#### 5.1.5 Frontend Deployment
 
-### 6.1 Configurazione dell'Autoscaling Orizzontale
+Il deployment "deployment.frontend.yaml" è utilizzato dai servizi valorizzati con "techStack" a "frontend";
+oltre ai campi previsti da un generico deployment, come descritto in precedenza, è possibile specificare un ulteriore campo "frontend",
+in cui specificare le seguenti chiavi:
+  1. env.js
+  2. nginx
+  3. additionalAssets
 
-L'Autoscaling Orizzontale consente di scalare automaticamente il numero di repliche di un servizio Kubernetes in base al carico di lavoro. 
-È possibile configurare questa funzionalità nel file _values.yaml_ specifico per ogni microservizio.
+#### env.js
+Il campo "env.js" ha questo formato:
+```
+frontend:
+  env.js:
+    window.pagopa_env:
+      KEY: "VALUE1"
+      KEY2: "VALUE2" # Questo valore è sovrascritto dal successivo a causa della chiave duplicata
+      KEY2: "VALUE2.1"
+      fromConfigmaps:
+        EVENTSTORE_DB_HOST: "common-event-store.EVENTSTORE_DB_HOST"
+        EVENTSTORE_DB_NAME: "common-event-store.EVENTSTORE_DB_NAME"
+```
+dove:
+  - "window.pagopa_env": sarà utilizzato per valorizzare la configmap associata al deployment di frontend. E' possibile utilizzare un nome diverso da "window.pagopa_env"
+  - KEY: è un chiave generica con valore in chiaro utilizzato per valorizzare il contenuto di "window.pagopa_env". E' possibile definire più di una coppia chiave/valore, eventuali chiavi duplicate saranno ignorate dando la precedenza all'ultima definita
+  - fromConfigmaps: è una chiave speciale utilizzata per definire una lista di coppie chiave valore dove quest'ultimo è composto da un prefisso, che definisce una ConfigMap da referenziare, ed un suffisso, che definisce la chiave da cercare nella ConfigMap, separati da un punto; il valore referenziato dalla accoppiata prefisso/suffisso sarà ricercato nella ConfigMap dichiarata e il valore risultante inserito in "window.pagopa_env". Le stesse regole per le chiavi descritte in precedenza, valgono anche per quelle definite in "fromConfigmaps"
 
-#### 6.1.1 <ins>Parametri configurabili</ins>
+L'esito della computazione del precedente snippet di codice, all'interno della ConfigMap generata per il deployment di frontend, avrà questo formato:
+```
+env.js: |-
+  window.pagopa_env =
+    {
+      "KEY": "VALUE1",
+      "KEY2": "VALUE2.1",
+      "EVENTSTORE_DB_HOST": "xxxxxx.eu-south-1.rds.amazonaws.com",
+      "EVENTSTORE_DB_NAME": "dbname"
+    }
+```
 
-Di seguito la descrizione dettagliata dei parametri configurabili per l'Autoscaling Orizzontale:
+#### additionalAssets
+Il campo "eadditionalAssets" ha questo formato:
+```
+frontend:
+  additionalAssets:
+    - tool.js
+    - env.js
+```
+E' utilizzato per definire una lista di chiavi utilizzate nel deployment di Frontend.
+Tali valori sono gestiti nel deployment per generare automaticamente dei riferimenti a volumes e volumeMounts come segue:
 
 ```
-autoscaling:
-  horizontal:
-    create: true
-```  
-Determina se l'Autoscaling Orizzontale è abilitato per il Deployment del microservizio. 
-Quando impostato a true, crea un oggetto HorizontalPodAutoscaler (HPA). Se disabilitato (false), l'HPA non viene generato.
+# Source: interop-eks-microservice-chart/templates/deployment.frontend.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  ...
+spec:
 
-Per ulteriori informazioni e tutte le possibili configurazioni del Horizontal Pod Autoscaler, consulta la documentazione di Kubernetes:
-
-https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
-
-
-#### 6.1.2 <ins>Esempio di configurazione</ins>
-
-Per configurare l'Autoscaling Orizzontale, è possibile aggiungere la seguente configurazione al file _values.yaml_ del microservizio che si sta sviluppando, ad esempio "agreement-management" in ambiente "qa":
-
+  template:
+    ...
+    spec:
+      containers:
+        - name: test-frontend
+          image: "000000000000.dkr.ecr.eu-central-1.amazonaws.com/test-frontend:latest"
+          ...
+          volumeMounts:
+            - name: tool-js
+              mountPath: /usr/share/nginx/html/ui/tool.js
+              subPath: tool.js
+              readOnly: true
+            - name: env-js
+              mountPath: /usr/share/nginx/html/ui/env.js
+              subPath: env.js
+              readOnly: true
+      volumes:
+        - name: tool-js
+          configMap:
+            defaultMode: 420
+            name: test-frontend
+            items:
+              - key: tool.js
+                path: tool.js
+        - name: env-js
+          configMap:
+            defaultMode: 420
+            name: test-frontend
+            items:
+              - key: env.js
+                path: env.js
 ```
-  autoscaling:
-    horizontal:
-      create: true  # Imposta se vuoi creare l'HPA o meno
-      config:  # I dati effettivi da utilizzare per la config dell'HPA
-        minReplicas: 1
-        maxReplicas: 10
-        targetCPUUtilizationPercentage: 80
-        targetMemoryUtilizationPercentage: 70
-```
+
+Esempio di configurazione del values.yaml specifica solo per i deployment di Frontend:
+
+frontend:
+  env.js:
+    window.pagopa_env:
+      KEY: "VALUE1"
+      KEY_2: "VALUE2"
+      fromConfigmaps:
+        EVENTSTORE_DB_HOST: "common-event-store.EVENTSTORE_DB_HOST"
+        EVENTSTORE_DB_NAME: "common-event-store.EVENTSTORE_DB_NAME"
+  # tools.js è ignorato
+  tool.js:
+    window.pagopa_env:
+      KEY: "VALUE1"
+      KEY_2: "VALUE2"
+      KEY_2: "VALUE2"
+      fromConfigmaps:
+        EVENTSTORE_DB_HOST: "common-event-store.EVENTSTORE_DB_HOST"
+        EVENTSTORE_DB_NAME: "common-event-store.EVENTSTORE_DB_NAME"
+        AGREEMENT_OUTBOUND_TOPIC: "common-kafka.AGREEMENT_OUTBOUND_TOPIC"
+        READMODEL_DB_HOST: "common-read-model.READMODEL_DB_HOST"
+  nginx:
+    default.conf: |-
+      server {
+        listen       80;
+        listen  [::]:80;
+        server_name  localhost;
+        absolute_redirect off;
+
+        location /ui {
+            root   /usr/share/nginx/html;
+            sub_filter_once off;
+            sub_filter_types *;
+            sub_filter **CSP_NONCE** $request_id;
+            add_header Content-Security-Policy "default-src 'self'; object-src 'none'; connect-src 'self' https://test.s3.eu-central-1.amazonaws.com; script-src 'nonce-$request_id'; style-src 'self' 'unsafe-inline'; worker-src 'none'; font-src 'self'; img-src 'self' data:; base-uri 'self'";
+            add_header Strict-Transport-Security "max-age=31536000";
+            add_header X-Content-Type-Options "nosniff";
+            add_header X-Frame-Options "SAMEORIGIN";
+            add_header Referrer-Policy "no-referrer";
+            rewrite /ui/index.html /ui permanent;
+            try_files $uri /ui/index.html =404;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+      }
+  additionalAssets:
+    - tool.js
+    - env.js

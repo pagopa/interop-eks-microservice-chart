@@ -261,7 +261,7 @@ Per installare ed abilitare l'Ingress per un dato microservizio, ad esempio agre
 # /microservices/agreement-management/qa/values.yaml
 
 ingress:
-  enable: true
+  create: true
 ```
 
 Al fine di aggiungere una regola di instradamento specifica per il microservizio in esame, è necessario anche specificare il parametro "ingress.applicationPath" come segue:
@@ -282,7 +282,7 @@ ingress:
   groupName: "custom-group-name"
 ```
 
-Opzionalmente, 
+Opzionalmente,
 
 * è possibile definire un host con cui eseguire l'override del default "*":
 
@@ -422,8 +422,8 @@ Per questo Deployment è previsto l'utilizzo del FlyWay InitContainer; di seguit
   * FLYWAY_URL: valore composto dinamicamente in base ai valori di POSTGRES_HOST, POSTGRES_PORT e POSTGRES_DB recuperati dalla ConfigMap _interop-be-db-commons_
   * FLYWAY_CREATE_SCHEMAS: valorizzato con _true_
   * FLYWAY_PLACEHOLDER_REPLACEMENT: valorizzato con _true_
-  * FLYWAY_SCHEMAS: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio 
-  * FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio 
+  * FLYWAY_SCHEMAS: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio
+  * FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio
   * FLYWAY_USER: mappato con la chiave _POSTGRES_USR_ del Secret comune "postgres"
   * FLYWAY_PASSWORD: mappato con la chiave _POSTGRES_PSW_ del Secret comune "postgres"
 
@@ -553,3 +553,150 @@ A differenza del Deployment di default, sono definite le seguenti variabili d'am
   * READMODEL_DB_PASSWORD: mappato con la chiave _PROJECTION_PSW_ del Secret comune "read-model"
 
 Per questo Deployment non è previsto l'utilizzo del FlyWay InitContainer.
+
+
+#### 5.1.5 Frontend Deployment
+
+Il deployment "deployment.frontend.yaml" è utilizzato dai servizi valorizzati con "techStack" a "frontend";
+oltre ai campi previsti da un generico deployment, come descritto in precedenza, è possibile specificare un ulteriore campo "frontend",
+in cui specificare le seguenti chiavi:
+  1. env.js
+  2. nginx
+  3. additionalAssets
+
+
+#### env.js
+Il campo "env.js" ha questo formato:
+```
+frontend:
+  env.js:
+    window.pagopa_env:
+      KEY: "VALUE1"
+      KEY2: "VALUE2" # Questo valore è sovrascritto dal successivo a causa della chiave duplicata
+      KEY2: "VALUE2.1"
+      fromConfigmaps:
+        EVENTSTORE_DB_HOST: "common-event-store.EVENTSTORE_DB_HOST"
+        EVENTSTORE_DB_NAME: "common-event-store.EVENTSTORE_DB_NAME"
+```
+dove:
+  - "window.pagopa_env": sarà utilizzato per valorizzare la configmap associata al deployment di frontend. E' possibile utilizzare un nome diverso da "window.pagopa_env"
+  - KEY: è un chiave generica con valore in chiaro utilizzato per valorizzare il contenuto di "window.pagopa_env". E' possibile definire più di una coppia chiave/valore, eventuali chiavi duplicate saranno ignorate dando la precedenza all'ultima definita
+  - fromConfigmaps: è una chiave speciale utilizzata per definire una lista di coppie chiave valore dove quest'ultimo è composto da un prefisso, che definisce una ConfigMap da referenziare, ed un suffisso, che definisce la chiave da cercare nella ConfigMap, separati da un punto; il valore referenziato dalla accoppiata prefisso/suffisso sarà ricercato nella ConfigMap dichiarata e il valore risultante inserito in "window.pagopa_env". Le stesse regole per le chiavi descritte in precedenza, valgono anche per quelle definite in "fromConfigmaps"
+
+L'esito della computazione del precedente snippet di codice, all'interno della ConfigMap generata per il deployment di frontend, avrà questo formato:
+```
+env.js: |-
+  window.pagopa_env =
+    {
+      "KEY": "VALUE1",
+      "KEY2": "VALUE2.1",
+      "EVENTSTORE_DB_HOST": "xxxxxx.eu-south-1.rds.amazonaws.com",
+      "EVENTSTORE_DB_NAME": "dbname"
+    }
+```
+
+#### additionalAssets
+Il campo "eadditionalAssets" ha questo formato:
+```
+frontend:
+  additionalAssets:
+    - tool.js
+    - env.js
+```
+E' utilizzato per definire una lista di chiavi utilizzate nel deployment di Frontend.
+Tali valori sono gestiti nel deployment per generare automaticamente dei riferimenti a volumes e volumeMounts come segue:
+
+```
+# Source: interop-eks-microservice-chart/templates/deployment.frontend.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  ...
+spec:
+
+  template:
+    ...
+    spec:
+      containers:
+        - name: test-frontend
+          image: "000000000000.dkr.ecr.eu-central-1.amazonaws.com/test-frontend:latest"
+          ...
+          volumeMounts:
+            - name: tool-js
+              mountPath: /usr/share/nginx/html/ui/tool.js
+              subPath: tool.js
+              readOnly: true
+            - name: env-js
+              mountPath: /usr/share/nginx/html/ui/env.js
+              subPath: env.js
+              readOnly: true
+      volumes:
+        - name: tool-js
+          configMap:
+            defaultMode: 420
+            name: test-frontend
+            items:
+              - key: tool.js
+                path: tool.js
+        - name: env-js
+          configMap:
+            defaultMode: 420
+            name: test-frontend
+            items:
+              - key: env.js
+                path: env.js
+```
+
+
+Esempio di configurazione del values.yaml specifica solo per i deployment di Frontend:
+
+
+frontend:
+  env.js:
+    window.pagopa_env:
+      KEY: "VALUE1"
+      KEY_2: "VALUE2"
+      fromConfigmaps:
+        EVENTSTORE_DB_HOST: "common-event-store.EVENTSTORE_DB_HOST"
+        EVENTSTORE_DB_NAME: "common-event-store.EVENTSTORE_DB_NAME"
+  # tools.js è ignorato
+  tool.js:
+    window.pagopa_env:
+      KEY: "VALUE1"
+      KEY_2: "VALUE2"
+      KEY_2: "VALUE2"
+      fromConfigmaps:
+        EVENTSTORE_DB_HOST: "common-event-store.EVENTSTORE_DB_HOST"
+        EVENTSTORE_DB_NAME: "common-event-store.EVENTSTORE_DB_NAME"
+        AGREEMENT_OUTBOUND_TOPIC: "common-kafka.AGREEMENT_OUTBOUND_TOPIC"
+        READMODEL_DB_HOST: "common-read-model.READMODEL_DB_HOST"
+  nginx:
+    default.conf: |-
+      server {
+        listen       80;
+        listen  [::]:80;
+        server_name  localhost;
+        absolute_redirect off;
+
+        location /ui {
+            root   /usr/share/nginx/html;
+            sub_filter_once off;
+            sub_filter_types *;
+            sub_filter **CSP_NONCE** $request_id;
+            add_header Content-Security-Policy "default-src 'self'; object-src 'none'; connect-src 'self' https://test.s3.eu-central-1.amazonaws.com; script-src 'nonce-$request_id'; style-src 'self' 'unsafe-inline'; worker-src 'none'; font-src 'self'; img-src 'self' data:; base-uri 'self'";
+            add_header Strict-Transport-Security "max-age=31536000";
+            add_header X-Content-Type-Options "nosniff";
+            add_header X-Frame-Options "SAMEORIGIN";
+            add_header Referrer-Policy "no-referrer";
+            rewrite /ui/index.html /ui permanent;
+            try_files $uri /ui/index.html =404;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+      }
+  additionalAssets:
+    - tool.js
+    - env.js

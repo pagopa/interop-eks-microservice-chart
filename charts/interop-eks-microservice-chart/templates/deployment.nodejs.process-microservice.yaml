@@ -12,6 +12,10 @@
 {{- $imageTag = (nospace (cat ":" .Values.deployment.image.tag)) }}
 {{- end }}
 
+{{- if and (not $imageTag) (not $digestSuffix)}}
+{{ fail "One of deployment.image.tag and deployment.image.digest must be defined." }}
+{{- end }}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,13 +35,29 @@ spec:
       annotations:
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
     spec:
+      {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ .Values.name | quote }}
+      {{- end }}
+      {{- if and .Values.deployment .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
+      terminationGracePeriodSeconds: {{add1 .Values.deployment.preStopHookGracefulTermination.durationSeconds }}
+      {{- end }}
       {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
       initContainers:
         - name: migrate-db
-          image: flyway/flyway:8.2.3
+          image: flyway/flyway:{{ .Values.deployment.flywayInitContainer.version}}
+          {{- if .Values.deployment.flywayInitContainer.downloadRedshiftDriver }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Downloading Redshift JDBC driver..." && \
+              curl -L -o /flyway/drivers/RedshiftJDBC.jar https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/2.1.0.32/redshift-jdbc42-2.1.0.32.jar && \
+              echo "Starting Flyway migration..." && \
+              flyway migrate
+          {{- else }}
           args:
             - migrate
+          {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ .Values.name | quote }}
@@ -72,13 +92,13 @@ spec:
           volumeMounts:
             - name: migrations-files
               mountPath: "/flyway/sql"
+          {{- if .Values.deployment.flywayInitContainer.resources }}
           resources:
-            requests:
-              memory: "64Mi"
-              cpu: "10m"
-            limits:
-              memory: "1Gi"
-              cpu: "500m"
+            {{- toYaml .Values.deployment.flywayInitContainer.resources | nindent 12 }}
+          {{- else }}
+          resources:
+            {{- toYaml .Values.deployment.resources | nindent 12 }}
+          {{- end}}
       {{- end }}
       containers:
         - name: {{ .Values.name }}
@@ -98,6 +118,15 @@ spec:
           readinessProbe:
             {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
           {{- end }} {{/* End of readinessProbe section */}}
+          {{- if and .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - {{ printf "sleep %d; exit 0;" (int .Values.deployment.preStopHookGracefulTermination.durationSeconds)  }}
+          {{- end }}
           ports:
             {{- if and .Values.service .Values.service.containerPort }}
             - name: {{ .Values.service.portName }}
