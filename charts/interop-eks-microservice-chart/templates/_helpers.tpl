@@ -127,7 +127,7 @@ Usage:
 {{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations -}}
 {{- if eq .Values.techStack "frontend" }}
 {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.frontend.yaml") . | sha256sum | quote }}
-{{ - else }}
+{{- else }}
 {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum | quote }}
 {{- end }}
 {{- end }}
