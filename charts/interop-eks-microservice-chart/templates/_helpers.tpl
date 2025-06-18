@@ -269,11 +269,6 @@ Usage:
 {{- if hasKey (index $configMapData "data") $configmapKey }}
 {{- /* If the configmap key exists, we add it to the windowVar */ -}}
 {{- $configMapValue := (index (index $configMapData "data") $configmapKey) }}
-{{- if $configMapValue }}
-{{- $windowVar = merge $windowVar (dict $fromConfigmapsSubKey $configMapValue) }}
-{{- else }}
-{{ fail (printf "Error: ConfigMap value for key %s in %s not found, namespace %s" $configmapKey $configmapName $givenContext.Values.namespace) }}
-{{- end }} {{/* if not $configMapValue */}}
 {{- else }}
 {{ fail (printf "Error: ConfigMap key %s not found in ConfigMap %s, namespace %s" $configmapKey $configmapName $givenContext.Values.namespace) }}
 {{- end }} {{/* if hasKey (index $configMapData "data") $configmapKey */}}
