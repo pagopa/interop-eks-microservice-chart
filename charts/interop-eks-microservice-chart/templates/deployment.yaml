@@ -1,4 +1,4 @@
-{{- if and (eq .Values.techStack "nodejs") (not .Values.moduleType) }}
+{{- if and (or (eq .Values.techStack "nodejs") (eq .Values.techStack "scala")) (not .Values.moduleType) }}
 
 {{ $root := . }}
 
@@ -23,27 +23,66 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
+    {{- with .Values.deployment.metadata.labels }}
+    {{- range $key, $val := . -}}
+    {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+    {{ $key }}: {{ $renderedVal }}
+    {{- end }}
+    {{- end }}
+  annotations:
+    {{- with .Values.deployment.metadata.annotations }}
+    {{- range $key, $val := . -}}
+    {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+    {{ $key }}: {{ $renderedVal }}
+    {{- end }}
+    {{- end }}
 spec:
   replicas: {{ .Values.deployment.replicas }}
+  {{- if and .Values.deployment .Values.deployment.strategy }}
+  strategy:
+    type: {{ .Values.deployment.strategy.type }}
+    {{- if eq .Values.deployment.strategy.type "RollingUpdate"}}
+    rollingUpdate:
+      {{- toYaml .Values.deployment.strategy.rollingUpdate | nindent 6 }}
+    {{- end }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "interop-eks-microservice-chart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        actorSystemName: {{ .Values.name | quote }}
         {{- include "interop-eks-microservice-chart.labels" . | nindent 8 }}
+        {{- with .Values.deployment.podTemplateMetadata.labels }}
+        {{- range $key, $val := . -}}
+        {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+        {{ $key }}: {{ $renderedVal }}
+        {{- end }}
+        {{- end }}
       annotations:
         {{- if .Values.deployment.image.digest }}
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
         {{- end }}
+        {{- with .Values.deployment.podTemplateMetadata.annotations }}
+        {{- range $key, $val := . -}}
+        {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+        {{ $key }}: {{ $renderedVal }}
+        {{- end }}
+        {{- end }}
+
+        {{- include "interop-eks-microservice-chart.generateRolloutAnnotations" . | nindent 8 }}
     spec:
+      {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ .Values.name | quote }}
+      {{- end }}
+      {{- if and .Values.deployment .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
+      terminationGracePeriodSeconds: {{add1 .Values.deployment.preStopHookGracefulTermination.durationSeconds }}
+      {{- end }}
       {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
       initContainers:
         - name: migrate-db
           image: flyway/flyway:{{ .Values.deployment.flywayInitContainer.version}}
-          {{- if eq .Values.deployment.flywayInitContainer.downloadRedshiftDriver "true" }}
+          {{- if .Values.deployment.flywayInitContainer.downloadRedshiftDriver }}
           command:
             - /bin/sh
             - -c
@@ -59,7 +98,8 @@ spec:
           env:
             {{- if .Values.deployment.flywayInitContainer.envFromConfigmaps }}
             {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromConfigmaps -}}
-            {{ $configmapAddress := mustRegexSplit "\\." $val 2 }}
+            {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+            {{- $configmapAddress := mustRegexSplit "\\." $renderedVal 2 }}
             - name: {{ $key }}
               valueFrom:
                 configMapKeyRef:
@@ -76,7 +116,8 @@ spec:
             {{- end }}
             {{- if .Values.deployment.flywayInitContainer.envFromSecrets }}
             {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromSecrets -}}
-            {{ $secretAddress := mustRegexSplit "\\." $val 2 }}
+            {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+            {{- $secretAddress := mustRegexSplit "\\." $renderedVal 2 }}
             - name: {{ $key }}
               valueFrom:
                 secretKeyRef:
@@ -87,13 +128,13 @@ spec:
           volumeMounts:
             - name: migrations-files
               mountPath: "/flyway/sql"
+          {{- if .Values.deployment.flywayInitContainer.resources }}
           resources:
-            requests:
-              memory: "64Mi"
-              cpu: "10m"
-            limits:
-              memory: "1Gi"
-              cpu: "500m"
+            {{- toYaml .Values.deployment.flywayInitContainer.resources | nindent 12 }}
+          {{- else }}
+          resources:
+            {{- toYaml .Values.deployment.resources | nindent 12 }}
+          {{- end}}
       {{- end }}
       containers:
         - name: {{ .Values.name }}
@@ -113,6 +154,15 @@ spec:
           readinessProbe:
             {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
           {{- end }} {{/* End of readinessProbe section */}}
+          {{- if and .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - {{ printf "sleep %d; exit 0;" (int .Values.deployment.preStopHookGracefulTermination.durationSeconds)  }}
+          {{- end }}
           ports:
             {{- if and .Values.service .Values.service.create .Values.service.containerPort }}
             - name: {{ .Values.service.portName }}
@@ -157,7 +207,8 @@ spec:
             {{- end }}
             {{- if and .Values.deployment .Values.deployment.envFromConfigmaps }}
             {{- range $key, $val := .Values.deployment.envFromConfigmaps -}}
-            {{ $configmapAddress := mustRegexSplit "\\." $val 2 }}
+            {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+            {{- $configmapAddress := mustRegexSplit "\\." $renderedVal 2 }}
             - name: {{ $key }}
               valueFrom:
                 configMapKeyRef:
@@ -167,7 +218,8 @@ spec:
             {{- end }}
             {{- if and .Values.deployment .Values.deployment.envFromSecrets }}
             {{- range $key, $val := .Values.deployment.envFromSecrets -}}
-            {{ $secretAddress := mustRegexSplit "\\." $val 2 }}
+            {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+            {{- $secretAddress := mustRegexSplit "\\." $renderedVal 2 }}
             - name: {{ $key }}
               valueFrom:
                 secretKeyRef:

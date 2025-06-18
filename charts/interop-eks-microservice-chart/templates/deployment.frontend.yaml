@@ -34,7 +34,11 @@ spec:
         {{- include "interop-eks-microservice-chart.labels" . | nindent 8 }}
       annotations:
         digest: {{ .Values.deployment.image.digest | quote }} # Used to force deployment on same image version but different content
+        {{- include "interop-eks-microservice-chart.generateRolloutAnnotations" . | nindent 8 }}
     spec:
+      {{- if and .Values.deployment .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
+      terminationGracePeriodSeconds: {{add1 .Values.deployment.preStopHookGracefulTermination.durationSeconds }}
+      {{- end }}
       containers:
         - name: {{ .Values.name }}
           image: "{{ .Values.deployment.image.repositoryPrefix }}/{{ .Values.deployment.image.repositoryName | default .Values.name }}{{ $imageTag }}{{ $digestSuffix }}"
@@ -58,6 +62,15 @@ spec:
               protocol: {{ $val.protocol }}
             {{- end }}
             {{- end }}
+          {{- if and .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - {{ printf "sleep %d; exit 0;" (int .Values.deployment.preStopHookGracefulTermination.durationSeconds)  }}
+          {{- end }}
           {{- if .Values.deployment.securityContext }}
           securityContext:
             {{- toYaml .Values.deployment.securityContext | nindent 12 }}
@@ -90,7 +103,8 @@ spec:
             {{- end }}
             {{- if and .Values.deployment .Values.deployment.envFromConfigmaps }}
             {{- range $key, $val := .Values.deployment.envFromConfigmaps -}}
-            {{ $configmapAddress := mustRegexSplit "\\." $val 2 }}
+            {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+            {{ $configmapAddress := mustRegexSplit "\\." $renderedVal 2 }}
             - name: {{ $key }}
               valueFrom:
                 configMapKeyRef:
@@ -119,10 +133,10 @@ spec:
               readOnly: true
             {{- end }}
             {{- if and .Values.frontend .Values.frontend.additionalAssets }}
-            {{- range  $key, $val  := .Values.frontend.additionalAssets }}
-            - name: {{ regexReplaceAll "\\." $key "-" }}
-              mountPath: /usr/share/nginx/html/ui/{{ $key }}
-              subPath: {{ $key }}
+            {{- range  .Values.frontend.additionalAssets }}
+            - name: {{ regexReplaceAll "\\." . "-" }}
+              mountPath: /usr/share/nginx/html/ui/{{ . }}
+              subPath: {{ . }}
               readOnly: true
             {{- end }}
             {{- end }}
@@ -137,14 +151,14 @@ spec:
                 path: default.conf
         {{- end }}
         {{- if and .Values.frontend .Values.frontend.additionalAssets }}
-        {{- range  $key, $val  := .Values.frontend.additionalAssets }}
-        - name: {{ regexReplaceAll "\\." $key "-" }}
+        {{- range .Values.frontend.additionalAssets }}
+        - name: {{ regexReplaceAll "\\." . "-" }}
           configMap:
             defaultMode: 420
             name: {{ $root.Values.name }}
             items:
-              - key: {{ $key }}
-                path: {{ $key }}
+              - key: {{ . }}
+                path: {{ . }}
         {{- end }}
         {{- end }}
 {{- end }}

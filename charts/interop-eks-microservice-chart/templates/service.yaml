@@ -1,12 +1,12 @@
 {{- if .Values.service.create }}
 
-{{- if and (or .Values.service.healthcheck.port .Values.service.healthcheck.path .Values.service.healthcheck.successCodes ) .Values.service.targetGroupArn }}
-  {{ fail "healthcheck and service.targetGroupArn cannot both be configured; please define just one." }}
+{{- if and .Values.service.albHealthCheck .Values.service.targetGroupArn }}
+  {{ fail "service.albHealthCheck and service.targetGroupArn cannot both be configured; please define just one." }}
 {{- end }}
 
 {{- $healthcheckPort := "" }}
-{{- if  and .Values.service.healthcheck .Values.service.healthcheck.port }}
-{{- $healthcheckPort = .Values.service.healthcheck.port }}
+{{- if  and .Values.service.albHealthCheck .Values.service.albHealthCheck.port }}
+{{- $healthcheckPort = .Values.service.albHealthCheck.port }}
 {{- else if .Values.service.servicePort -}}
 {{- $healthcheckPort = .Values.service.servicePort }}
 {{- else -}}
@@ -19,18 +19,17 @@ metadata:
   name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
   labels:
-    prometheus: "true"
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
-  {{- if and .Values.service.healthcheck (or .Values.service.healthcheck.port .Values.service.healthcheck.path .Values.service.healthcheck.successCodes) }}
+  {{- if and .Values.service.albHealthCheck (or .Values.service.albHealthCheck.port .Values.service.albHealthCheck.path .Values.service.albHealthCheck.successCodes) }}
   annotations:
-    {{- if .Values.service.healthcheck.protocol }}
-    alb.ingress.kubernetes.io/healthcheck-protocol: {{ .Values.service.healthcheck.protocol }}
+    {{- if .Values.service.albHealthCheck.protocol }}
+    alb.ingress.kubernetes.io/healthcheck-protocol: {{ .Values.service.albHealthCheck.protocol }}
     {{- end }}
-    {{- if .Values.service.healthcheck.path }}
-    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.service.healthcheck.path | quote }}
-    alb.ingress.kubernetes.io/healthcheck-port: {{ $healthcheckPort| quote }}
-    {{- if .Values.service.healthcheck.successCodes }}
-    alb.ingress.kubernetes.io/success-codes: {{ .Values.service.healthcheck.successCodes | quote }}
+    {{- if .Values.service.albHealthCheck.path }}
+    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.service.albHealthCheck.path | quote }}
+    alb.ingress.kubernetes.io/healthcheck-port: {{ $healthcheckPort | quote }}
+    {{- if .Values.service.albHealthCheck.successCodes }}
+    alb.ingress.kubernetes.io/success-codes: {{ .Values.service.albHealthCheck.successCodes | quote }}
     {{- end }}
     {{- end }}
   {{- end }}
