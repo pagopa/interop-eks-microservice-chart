@@ -2,7 +2,7 @@
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: {{ .Values.name }}-scaledobject
+  name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
