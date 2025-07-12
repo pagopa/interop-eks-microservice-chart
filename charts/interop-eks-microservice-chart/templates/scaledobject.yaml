@@ -2,12 +2,12 @@
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: {{ .Values.name }}-scaledobject
+  name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
 spec:
   {{- with .Values.autoscaling.keda.scaledObjectSpec }}
-  {{- toYaml . | nindent 2 }}
+  {{- include "interop-eks-microservice-chart.render-template" (dict "value" . "context" $) | nindent 2}}
   {{- end }}
 {{- end }}
