@@ -122,15 +122,17 @@ deployment:
     envFromFieldRef: {}
 
 autoscaling:
-  # -- Horizontal Pod Autoscaling (HPA) standard configuration as per official kubernetes documentation (https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
-  horizontal:
-    # -- (bool) Enable horizontal pod autoscaling
-    create: false
   # -- KEDA autoscaling configuration
   keda:
     # -- (bool) Enable KEDA autoscaling
     create: false
-    # -- (map) Configuration for the KEDA ScaledObjectSpec triggers
-    #    Refer to the following link for detailed configurations:
-    #    https://keda.sh/docs/2.16/scalers/
-    scaledObjectSpec: {}
+    # -- (int) minimum replica count
+    minReplicaCount:
+    # -- (int) maximum replica count
+    maxReplicaCount:
+    # -- (int) metrics polling interval in seconds
+    pollingInterval:
+    # -- (int) cooldown period in seconds
+    cooldownPeriod:
+    # -- (list) triggers configuration, refer to https://keda.sh/docs/2.17/scalers/
+    triggers:

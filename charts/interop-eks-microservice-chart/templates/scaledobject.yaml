@@ -14,5 +14,5 @@ spec:
   pollingInterval: {{ .Values.autoscaling.keda.pollingInterval }}
   cooldownPeriod: {{ .Values.autoscaling.keda.cooldownPeriod }}
   triggers:
-    {{- include "interop-eks-microservice-chart.render-keda-triggers" (dict "triggers" .Values.autoscaling.keda.triggers "context" $.Values) | nindent 2 -}}
+    {{- toYaml .Values.autoscaling.keda.triggers | nindent 4 }}
 {{- end }}
