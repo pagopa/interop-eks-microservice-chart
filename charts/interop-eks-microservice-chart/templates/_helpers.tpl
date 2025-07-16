@@ -302,13 +302,13 @@ Usage:
 {{- define "interop-eks-microservice-chart.render-keda-triggers" -}}
 {{- $givenTriggers := .triggers -}}
 {{- $givenContext := .context -}}
-{{- $commonAuthenticationRef := $givenContext.autoscaling.keda.commonAuthenticationRef -}}
+{{- $defaultAuthenticationRef := $givenContext.autoscaling.keda.defaultAuthenticationRef -}}
 {{- $out := list -}}
 {{- range $givenTriggers -}}
   {{- if .authenticationRef -}}
     {{- $out = append $out (merge . (dict "authenticationRef" .authenticationRef)) -}}
-  {{- else if $commonAuthenticationRef -}}
-    {{- $out = append $out (merge . (dict "authenticationRef" $commonAuthenticationRef)) -}}
+  {{- else if $defaultAuthenticationRef -}}
+    {{- $out = append $out (merge . (dict "authenticationRef" $defaultAuthenticationRef)) -}}
   {{- else -}}
     {{- $out = append $out . -}}
   {{- end -}}
