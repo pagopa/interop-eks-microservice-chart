@@ -11,11 +11,13 @@ The following table lists the configurable parameters of the Interop-eks-microse
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| autoscaling.horizontal | object | `{"create":false}` | Horizontal Pod Autoscaling (HPA) standard configuration as per official kubernetes documentation (https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) |
-| autoscaling.horizontal.create | bool | `false` | Enable horizontal pod autoscaling |
-| autoscaling.keda | object | `{"create":false,"scaledObjectSpec":{}}` | KEDA autoscaling configuration |
+| autoscaling.keda | object | `{"cooldownPeriod":null,"create":false,"maxReplicaCount":null,"minReplicaCount":null,"pollingInterval":null,"triggers":null}` | KEDA autoscaling configuration |
+| autoscaling.keda.cooldownPeriod | int | `nil` | cooldown period in seconds |
 | autoscaling.keda.create | bool | `false` | Enable KEDA autoscaling |
-| autoscaling.keda.scaledObjectSpec | map | `{}` | Configuration for the KEDA ScaledObjectSpec triggers    Refer to the following link for detailed configurations:    https://keda.sh/docs/2.16/scalers/ |
+| autoscaling.keda.maxReplicaCount | int | `nil` | maximum replica count |
+| autoscaling.keda.minReplicaCount | int | `nil` | minimum replica count |
+| autoscaling.keda.pollingInterval | int | `nil` | metrics polling interval in seconds |
+| autoscaling.keda.triggers | list | `nil` | triggers configuration, refer to https://keda.sh/docs/2.17/scalers/ |
 | deployment.enableRolloutAnnotations | bool | `false` | Enable annotation generation for referenced configmaps and secrets |
 | deployment.env | object | `nil` | List of environment variables for a container, specifying a value directly for each named variable |
 | deployment.envFromConfigmaps | object | `{}` | List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef) |
