@@ -58,10 +58,13 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | service.create | bool | `false` | Enable K8s Service deployment generation |
 | service.enableManagement | bool | `true` | Enable container management port |
 | service.enableMonitoring | bool | `true` | Enable container monitoring port |
+| service.ipAddressType | string | `nil` | IP address type for the target group, allowed values: [ "ipv4", "ipv6" ] |
 | service.managementPort | int | `8558` |  |
 | service.monitoringPort | int | `9095` |  |
 | service.portName | string | `nil` | Service port name |
+| service.targetGroupArn | string | `nil` | Target Group ARN for the service, used to create a TargetGroupBinding |
 | service.targetPort | string | `nil` |  |
+| service.targetType | string | `nil` |  |
 | service.type | enum | `"ClusterIP"` | K8s Service type, allowed values: [ "ClusterIP", "NodePort" ] |
 | serviceAccount.create | bool | `true` | Enable ServiceAccount creation |
 | serviceAccount.roleArn | string | `nil` | ServiceAccount roleARN |
