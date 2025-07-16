@@ -1,4 +1,4 @@
-{{- if and .Values.autoscaling .Values.autoscaling.keda.create .Values.autoscaling.keda.scaledObjectSpec }}
+{{- if and .Values.autoscaling .Values.autoscaling.keda.create }}
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
@@ -7,7 +7,12 @@ metadata:
   labels:
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
 spec:
-  {{- with .Values.autoscaling.keda.scaledObjectSpec }}
-  {{- include "interop-eks-microservice-chart.render-template" (dict "value" . "context" $) | nindent 2}}
-  {{- end }}
+  scaleTargetRef:
+    name: {{ .Values.name }}
+  minReplicaCount: {{ .Values.autoscaling.keda.minReplicaCount }}
+  maxReplicaCount: {{ .Values.autoscaling.keda.maxReplicaCount }}
+  pollingInterval: {{ .Values.autoscaling.keda.pollingInterval }}
+  cooldownPeriod: {{ .Values.autoscaling.keda.cooldownPeriod }}
+  triggers:
+    {{- include "interop-eks-microservice-chart.render-keda-triggers" (dict "triggers" .Values.autoscaling.keda.triggers "context" $.Values) | nindent 2 -}}
 {{- end }}
