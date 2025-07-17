@@ -9,4 +9,10 @@ spec:
     name: {{ .Values.name }}
     port: {{ .Values.service.servicePort | default .Values.service.containerPort }}
   targetGroupARN: {{ .Values.service.targetGroupArn }}
+  {{- with .Values.service.targetType }}
+  targetType: {{ . }}
+  {{- end }}
+  {{- with .Values.service.ipAddressType }}
+  ipAddressType: {{ . }}
+  {{- end }}
 {{- end }}

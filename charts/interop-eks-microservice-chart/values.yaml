@@ -39,6 +39,12 @@ service:
   enableMonitoring: true
   # -- Enable container management port
   enableManagement: true
+  # -- (string) Target Group ARN for the service, used to create a TargetGroupBinding
+  targetGroupArn:
+  # -- (string) Target type for the target group, allowed values: [ "instance", "ip" ]
+  targetType:
+  # -- (string) IP address type for the target group, allowed values: [ "ipv4", "ipv6" ]
+  ipAddressType:
 
 ingress:
   # -- Enable K8s Ingress deployment generation
