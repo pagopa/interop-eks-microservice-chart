@@ -313,5 +313,5 @@ Usage:
     {{- $out = append $out . -}}
   {{- end -}}
 {{- end -}}
-{{- toYaml $out | nindent 2 -}}
+{{- toYaml $out }}
 {{- end -}}
