@@ -293,3 +293,25 @@ Usage:
 {{- end }}
 
 {{/* End of generateFrontendConfigmapData */}}
+
+
+{{/*
+  triggers = the list of keda triggers
+  context = top-level chart values
+*/}}
+{{- define "interop-eks-microservice-chart.render-keda-triggers" -}}
+{{- $givenTriggers := .triggers -}}
+{{- $givenContext := .context -}}
+{{- $defaultAuthenticationRef := $givenContext.autoscaling.keda.defaultAuthenticationRef -}}
+{{- $out := list -}}
+{{- range $givenTriggers -}}
+  {{- if .authenticationRef -}}
+    {{- $out = append $out (merge . (dict "authenticationRef" .authenticationRef)) -}}
+  {{- else if $defaultAuthenticationRef -}}
+    {{- $out = append $out (merge . (dict "authenticationRef" $defaultAuthenticationRef)) -}}
+  {{- else -}}
+    {{- $out = append $out . -}}
+  {{- end -}}
+{{- end -}}
+{{- toYaml $out }}
+{{- end -}}
