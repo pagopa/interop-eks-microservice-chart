@@ -9,8 +9,8 @@ metadata:
 spec:
   scaleTargetRef:
     name: {{ .Values.name }}
-  minReplicaCount: {{ .Values.autoscaling.keda.minReplicaCount }}
-  maxReplicaCount: {{ .Values.autoscaling.keda.maxReplicaCount }}
+  minReplicaCount: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.autoscaling.keda.minReplicaCount "context" $) | int }}
+  maxReplicaCount: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.autoscaling.keda.maxReplicaCount "context" $) | int }}
   pollingInterval: {{ .Values.autoscaling.keda.pollingInterval }}
   cooldownPeriod: {{ .Values.autoscaling.keda.cooldownPeriod }}
   triggers:

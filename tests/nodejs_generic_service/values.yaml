@@ -1,7 +1,6 @@
 name: "nodejs-service"
 namespace: "test-namespace"
 techStack: "nodejs"
-moduleType: ""
 externalValue: "some_value"
 
 service:
@@ -91,17 +90,16 @@ deployment:
   envFromSecrets:
     POSTGRES_USR: "postgres.POSTGRES_USR"
     POSTGRES_PSW: "postgres.POSTGRES_PSW"
+
 autoscaling:
-  horizontal:
-    create: false
   keda:
     create: true
     minReplicaCount: 0
-    maxReplicaCount: 3
+    maxReplicaCount: "{{.Values.deployment.replicas}}"
     triggers:
       - type: cron
         metadata:
           timezone: Europe/Rome
           start: 0 8 * * 1-5
           end: 0 20 * * 1-5
-          desiredReplicas: 1
+          desiredReplicas: "{{.Values.deployment.replicas}}"
