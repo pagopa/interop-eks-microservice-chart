@@ -8,7 +8,7 @@ spec:
   serviceRef:
     name: {{ .Values.name }}
     port: {{ .Values.service.servicePort | default .Values.service.containerPort }}
-  targetGroupARN: {{ .Values.service.targetGroupArn }}
+  targetGroupARN: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.service.targetGroupArn "context" $) }}
   {{- with .Values.service.targetType }}
   targetType: {{ . }}
   {{- end }}
