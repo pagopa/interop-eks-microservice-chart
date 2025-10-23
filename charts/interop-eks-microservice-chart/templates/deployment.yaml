@@ -156,6 +156,12 @@ spec:
           {{- end }} {{/* End of readinessProbe section */}}
           {{- if and .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
           lifecycle:
+            {{- if and .Values.deployment.postStartHook .Values.deployment.postStartHook.create .Values.deployment.postStartHook.command }}
+            postStart:
+              exec:
+                command:
+                  {{- toYaml .Values.deployment.postStartHook.command | nindent 18 }}
+            {{- end }}
             preStop:
               exec:
                 command:
