@@ -14,7 +14,7 @@ metadata:
     alb.ingress.kubernetes.io/scheme: "internal"
     alb.ingress.kubernetes.io/target-type: "ip"
     alb.ingress.kubernetes.io/group.name: {{ .Values.ingress.groupName | quote }}
-    alb.ingress.kubernetes.io/load-balancer-attributes: "routing.http.preserve_host_header.enabled=true"
+    alb.ingress.kubernetes.io/load-balancer-attributes: "routing.http.preserve_host_header.enabled=true,routing.http.xff_header_processing.mode=preserve"
     {{- if not (kindIs "invalid" .Values.ingress.groupOrder) }}  {{/* GroupOrder è un intero e può assumere valore 0; necessario utilizzare sintassi "kindOf" altrimenti la condizione della if è valutata "false" nel caso in cui si voglia valorizzare groupOrder con 0 */}}
     alb.ingress.kubernetes.io/group.order: {{ .Values.ingress.groupOrder }}
     {{- end }}
