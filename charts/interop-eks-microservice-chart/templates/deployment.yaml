@@ -82,20 +82,46 @@ spec:
       initContainers:
         - name: migrate-db
           image: flyway/flyway:{{ .Values.deployment.flywayInitContainer.version}}
-          {{- if .Values.deployment.flywayInitContainer.downloadRedshiftDriver }}
           command:
             - /bin/sh
             - -c
             - |
-              echo "Downloading Redshift JDBC driver..."
-              curl -L -o /flyway/drivers/RedshiftJDBC.jar https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/2.1.0.32/redshift-jdbc42-2.1.0.32.jar
-              echo "Starting Flyway migration..."
-              flyway migrate
-          {{- else }}
-          args:
-            - migrate
-          {{- end }}
+              if [ "$INTERNAL_DOWNLOAD_REDSHIFT_DRIVER" = "true" ]; then
+                echo "Downloading Redshift JDBC driver..."
+                curl -L -o /flyway/drivers/RedshiftJDBC.jar https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/2.1.0.32/redshift-jdbc42-2.1.0.32.jar
+              else
+                echo "Skip Redshift JDBC driver download."
+              fi
+              
+              if [ -z "$FLYWAY_ACTION" ]; then
+                echo "FLYWAY_ACTION do not set, use default 'migrate' action"
+                FLYWAY_ACTION=migrate
+              fi
+              case "$FLYWAY_ACTION" in
+                "repair")
+                  echo "Starting Flyway repair..."
+                  flyway repair
+                  ;;
+                "repair-and-migrate")
+                  echo "Starting Flyway repair && migration ..."
+                  flyway repair && flyway migrate
+                  ;;
+                "migrate")
+                  echo "Starting Flyway migration..."
+                  flyway migrate
+                  ;;
+                *)
+                  echo "Unknown FLYWAY_ACTION: $FLYWAY_ACTION"
+                  exit 1
+                  ;;
+              esac
           env:
+            - name: INTERNAL_DOWNLOAD_REDSHIFT_DRIVER
+              {{- if .Values.deployment.flywayInitContainer.downloadRedshiftDriver }}
+              value: "true"
+              {{- else }}
+              value: "false"
+              {{- end }}
             {{- if .Values.deployment.flywayInitContainer.envFromConfigmaps }}
             {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromConfigmaps -}}
             {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
