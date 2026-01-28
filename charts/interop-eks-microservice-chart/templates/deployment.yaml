@@ -92,7 +92,6 @@ spec:
               else
                 echo "Skip Redshift JDBC driver download."
               fi
-              
               if [ -z "$FLYWAY_ACTION" ]; then
                 echo "FLYWAY_ACTION is not set, using default 'migrate' action"
                 FLYWAY_ACTION=migrate
