@@ -94,7 +94,7 @@ spec:
               fi
               
               if [ -z "$FLYWAY_ACTION" ]; then
-                echo "FLYWAY_ACTION do not set, use default 'migrate' action"
+                echo "FLYWAY_ACTION is not set, using default 'migrate' action"
                 FLYWAY_ACTION=migrate
               fi
               case "$FLYWAY_ACTION" in
