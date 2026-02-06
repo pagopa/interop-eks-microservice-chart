@@ -116,7 +116,7 @@ spec:
               esac
           env:
             - name: INTERNAL_DOWNLOAD_REDSHIFT_DRIVER
-              value: {{ ternary "true" "false" .Values.deployment.flywayInitContainer.downloadRedshiftDriver }}
+              value: "{{ ternary "true" "false" .Values.deployment.flywayInitContainer.downloadRedshiftDriver }}"
             {{- if .Values.deployment.flywayInitContainer.envFromConfigmaps }}
             {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromConfigmaps -}}
             {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
