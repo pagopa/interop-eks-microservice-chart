@@ -55,7 +55,6 @@ deployment:
     downloadRedshiftDriver: true
     migrationsConfigmap: "common-db-migrations"
     env:
-      FLYWAY_ACTION: repair-and-migrate
       FLYWAY_URL: jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)
       FLYWAY_CREATE_SCHEMAS: "true"
       FLYWAY_PLACEHOLDER_REPLACEMENT: "true"
