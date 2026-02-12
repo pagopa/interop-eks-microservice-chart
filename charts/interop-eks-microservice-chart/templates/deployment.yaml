@@ -16,6 +16,20 @@
 {{ fail "One of deployment.image.tag and deployment.image.digest must be defined." }}
 {{- end }}
 
+{{- /* If the flyway initContainer is required then compute the flyway action(s) to execute */ -}}
+{{- $flyway_action := "" -}}
+{{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
+{{- if and .Values.deployment.flywayInitContainer.executeFlywayMigrate .Values.deployment.flywayInitContainer.executeFlywayRepair -}}
+{{ $flyway_action = "repair-and-migrate" }}
+{{- else if .Values.deployment.flywayInitContainer.executeFlywayMigrate -}}
+{{ $flyway_action = "migrate" }}
+{{- else if .Values.deployment.flywayInitContainer.executeFlywayRepair -}}
+{{ $flyway_action = "repair" }}
+{{- else -}}
+{{- fail "Invalid configuration: Both executeFlywayMigrate and executeFlywayRepair in the flywayInitContainer are false." -}}
+{{- end -}}
+{{- end -}}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -92,11 +106,7 @@ spec:
               else
                 echo "Skip Redshift JDBC driver download."
               fi
-              if [ -z "$FLYWAY_ACTION" ]; then
-                echo "FLYWAY_ACTION is not set, using default 'migrate' action"
-                FLYWAY_ACTION=migrate
-              fi
-              case "$FLYWAY_ACTION" in
+              case "$INTERNAL_FLYWAY_ACTION" in
                 "repair")
                   echo "Starting Flyway repair..."
                   flyway repair
@@ -110,13 +120,16 @@ spec:
                   flyway migrate
                   ;;
                 *)
-                  echo "Unknown FLYWAY_ACTION: $FLYWAY_ACTION"
+                  echo "ERROR: Unknown flyway action: $INTERNAL_FLYWAY_ACTION"
+                  echo "ERROR: The chart deploy template has at least one bug!"
                   exit 1
                   ;;
               esac
           env:
             - name: INTERNAL_DOWNLOAD_REDSHIFT_DRIVER
               value: "{{ ternary "true" "false" .Values.deployment.flywayInitContainer.downloadRedshiftDriver }}"
+            - name: INTERNAL_FLYWAY_ACTION
+              value: "{{- $flyway_action }}"
             {{- if .Values.deployment.flywayInitContainer.envFromConfigmaps }}
             {{- range $key, $val := .Values.deployment.flywayInitContainer.envFromConfigmaps -}}
             {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}

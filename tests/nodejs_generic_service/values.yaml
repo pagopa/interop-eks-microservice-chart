@@ -51,6 +51,7 @@ deployment:
     periodSeconds: 5
   flywayInitContainer:
     create: true
+    executeFlywayRepair: true
     downloadRedshiftDriver: true
     migrationsConfigmap: "common-db-migrations"
     env:

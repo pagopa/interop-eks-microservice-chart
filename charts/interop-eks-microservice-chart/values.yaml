@@ -117,6 +117,10 @@ deployment:
     durationSeconds: 30
   flywayInitContainer:
     create: false
+    # -- (bool) execute Flyway migrate command to apply migrations to the database
+    executeFlywayMigrate: true
+    # -- (bool) execute Flyway repair command to recompute applied migrations metadata; useful for whitespaces changes.
+    executeFlywayRepair: false
     # -- (string) Flyway container image version
     version: "8.2.3"
     # -- (bool) Enable Flyway to download Redshift jdbc driver
