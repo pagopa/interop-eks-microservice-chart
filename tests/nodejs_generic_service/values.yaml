@@ -50,7 +50,9 @@ deployment:
     initialDelaySeconds: 15
     periodSeconds: 5
   flywayInitContainer:
-    create: false
+    create: true
+    executeFlywayRepair: true
+    downloadRedshiftDriver: true
     migrationsConfigmap: "common-db-migrations"
     env:
       FLYWAY_URL: jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)
