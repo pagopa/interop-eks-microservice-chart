@@ -121,7 +121,6 @@ spec:
                   ;;
                 *)
                   echo "ERROR: Unknown flyway action: $INTERNAL_FLYWAY_ACTION"
-                  echo "ERROR: The chart deploy template has at least one bug!"
                   exit 1
                   ;;
               esac
