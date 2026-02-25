@@ -151,3 +151,40 @@ autoscaling:
     cooldownPeriod:
     # -- (list) triggers configuration, refer to https://keda.sh/docs/2.17/scalers/
     triggers:
+
+externalSecrets:
+  # -- (bool) Enable ExternalSecret creation
+  create: false
+  # -- (string) Refresh interval for the secret (e.g., "1h", "30m")
+  refreshInterval: "0"
+  # -- (string) Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ]
+  refreshPolicy: "OnChange"
+  # -- (object) Reference to SecretStore or ClusterSecretStore
+  secretStoreRef:
+    name: ""
+    kind: SecretStore  # or ClusterSecretStore
+  # -- (object) Target Kubernetes Secret configuration
+  targetSecret:
+    # -- (string) Name of the target secret (defaults to microservice name)
+    name: ""
+    # -- (string) Creation policy: Owner, Orphan, Merge, None
+    creationPolicy: Merge
+    # -- (string) Deletion policy: Retain, Delete
+    deletionPolicy: Retain
+  # -- (list) List of remote secrets to sync, each with an id and a version
+  remoteSecrets: []
+    # - id: /prod/database/credentials     # (string) Remote secret path/identifier
+    #   version: v1                         # (string) Version identifier for the remote secret
+
+  # -- (list) List of individual secret keys to sync from external secret manager
+  data: []
+    # - secretKey: username
+    #   remoteRef:
+    #     key: /path/to/secret
+    #     property: username
+    #     conversionStrategy: Default
+    #     decodingStrategy: None
+    # - secretKey: password
+    #   remoteRef:
+    #     key: /path/to/secret
+    #     property: password

@@ -52,6 +52,16 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.securityContext | object | `{"allowPrivilegeEscalation":false}` | Pod securityContext, applied to main container |
 | deployment.strategy | object | `{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"0%"},"type":"RollingUpdate"}` | Rollout strategy |
 | enableLookup | bool | `true` | Enable Resources lookup on K8s cluster to resolve referenced values |
+| externalSecrets.create | bool | `false` | Enable ExternalSecret creation |
+| externalSecrets.data | list | `[]` | List of individual secret keys to sync from external secret manager |
+| externalSecrets.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
+| externalSecrets.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
+| externalSecrets.remoteSecrets | list | `[]` | List of remote secrets to sync, each with an id and a version |
+| externalSecrets.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
+| externalSecrets.targetSecret | object | `{"creationPolicy":"Merge","deletionPolicy":"Retain","name":""}` | Target Kubernetes Secret configuration |
+| externalSecrets.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
+| externalSecrets.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
+| externalSecrets.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
 | ingress.className | string | `"alb"` | ingress.create and service.targetGroupArn must be mutually exclusive. |
 | ingress.create | bool | `false` | Enable K8s Ingress deployment generation |
 | ingress.groupName | string | `"interop-be"` |  |
@@ -751,3 +761,269 @@ frontend:
   additionalAssets:
     - tool.js
     - env.js
+
+## 6. ExternalSecrets
+
+External Secrets Operator è un operatore Kubernetes che permette di sincronizzare secrets da provider esterni (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, HashiCorp Vault, ecc.) nei Secret nativi di Kubernetes.
+
+Questa chart crea un singolo ExternalSecret che può sincronizzare multipli secrets da diverse fonti in un unico Secret Kubernetes, semplificando la gestione e il riferimento ai secrets nei deployment.
+
+### 6.1. Configurazione Base
+
+Per abilitare la creazione di un ExternalSecret, impostare `externalSecrets.create: true`:
+
+```yaml
+externalSecrets:
+  create: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-secretsmanager
+    kind: SecretStore
+  targetSecret:
+    name: my-app-secrets  # Nome del Secret K8s che conterrà tutte le chiavi
+  data:
+    - secretKey: db-password
+      remoteRef:
+        key: /prod/database/credentials
+        property: password
+    - secretKey: api-key
+      remoteRef:
+        key: /prod/api/credentials
+        property: api-key
+```
+
+Questa configurazione crea:
+- **1 ExternalSecret** con nome uguale al microservizio
+- **1 Secret Kubernetes** (`my-app-secrets`) contenente tutte le chiavi sincronizzate
+
+### 6.2. Parametri Principali
+
+#### 6.2.1. secretStoreRef
+
+Riferimento al SecretStore o ClusterSecretStore da utilizzare:
+
+```yaml
+secretStoreRef:
+  name: aws-secretsmanager  # Nome del SecretStore
+  kind: SecretStore         # SecretStore o ClusterSecretStore
+```
+
+#### 6.2.2. refreshInterval
+
+Intervallo di refresh per la sincronizzazione:
+
+```yaml
+refreshInterval: "1h"  # Ogni ora
+```
+
+#### 6.2.3. targetSecret
+
+Configurazione del Secret Kubernetes di destinazione che conterrà tutte le chiavi:
+
+```yaml
+targetSecret:
+  name: my-app-secrets     # Nome del Secret K8s
+  creationPolicy: Merge    # Owner, Orphan, Merge, None
+  deletionPolicy: Retain   # Retain, Delete
+```
+
+#### 6.2.4. data
+
+Lista di chiavi individuali da sincronizzare da diverse fonti. Tutte le chiavi vengono aggregate in un unico Secret:
+
+```yaml
+data:
+  - secretKey: db-password      # Nome chiave nel Secret K8s
+    remoteRef:
+      key: /prod/db/creds      # Percorso nel provider esterno
+      property: password        # Proprietà specifica
+  - secretKey: api-key
+    remoteRef:
+      key: /prod/api/credentials
+      property: api-key
+  - secretKey: jwt-secret
+    remoteRef:
+      key: /prod/app/secrets
+      property: jwt-secret
+```
+
+#### 6.2.5. dataFrom
+
+Sincronizzazione di interi secrets o ricerca per pattern:
+
+```yaml
+dataFrom:
+  # Estrarre tutte le chiavi da un secret
+  - extract:
+      key: /prod/api/credentials
+  # Cercare secrets per path e tags
+  - find:
+      path: /prod/secrets/
+      name:
+        regexp: "^feature-.*"
+      tags:
+        environment: production
+```
+
+### 6.3. Template per Secret Trasformati
+
+È possibile trasformare i dati sincronizzati usando template Go:
+
+```yaml
+externalSecrets:
+  create: true
+  secretStoreRef:
+    name: aws-secretsmanager
+    kind: SecretStore
+  targetSecret:
+    name: app-config
+    template:
+      type: Opaque
+      metadata:
+        labels:
+          app: my-app
+      data:
+        # Trasforma i valori sincronizzati in un file config
+        config.yaml: |
+          database:
+            host: {{ .db_host }}
+            port: {{ .db_port }}
+            username: {{ .db_username }}
+            password: {{ .db_password }}
+          api:
+            key: {{ .api_key }}
+            secret: {{ .api_secret }}
+  data:
+    - secretKey: db_host
+      remoteRef:
+        key: /prod/db/config
+        property: host
+    - secretKey: db_port
+      remoteRef:
+        key: /prod/db/config
+        property: port
+    - secretKey: db_username
+      remoteRef:
+        key: /prod/db/credentials
+        property: username
+    - secretKey: db_password
+      remoteRef:
+        key: /prod/db/credentials
+        property: password
+    - secretKey: api_key
+      remoteRef:
+        key: /prod/api/credentials
+        property: key
+    - secretKey: api_secret
+      remoteRef:
+        key: /prod/api/credentials
+        property: secret
+```
+
+### 6.4. Utilizzo nei Deployment
+
+Il Secret creato dall'ExternalSecret può essere referenziato nei deployment tramite `envFromSecrets`:
+
+```yaml
+deployment:
+  enableRolloutAnnotations: true
+  envFromSecrets:
+    # Tutte le chiavi sono nello stesso Secret
+    DATABASE_PASSWORD: my-app-secrets.db-password
+    DATABASE_USERNAME: my-app-secrets.db-username
+    API_KEY: my-app-secrets.api-key
+    JWT_SECRET: my-app-secrets.jwt-secret
+
+externalSecrets:
+  create: true
+  secretStoreRef:
+    name: aws-secretsmanager
+    kind: SecretStore
+  targetSecret:
+    name: my-app-secrets
+  data:
+    - secretKey: db-password
+      remoteRef:
+        key: /prod/database/credentials
+        property: password
+    - secretKey: db-username
+      remoteRef:
+        key: /prod/database/credentials
+        property: username
+    - secretKey: api-key
+      remoteRef:
+        key: /prod/api/credentials
+        property: api-key
+    - secretKey: jwt-secret
+      remoteRef:
+        key: /prod/app/secrets
+        property: jwt-secret
+```
+
+### 6.5. Rollout Annotations
+
+Quando `deployment.enableRolloutAnnotations` è abilitato, i deployment vengono automaticamente riavviati quando cambia la configurazione di ExternalSecret. Viene calcolato l'hash (SHA256) del template ExternalSecret e inserito come annotation nel pod template, triggering un rolling restart ogni volta che la configurazione degli ExternalSecrets viene modificata.
+
+**Workflow automatico:**
+1. Modificare la configurazione di `externalSecrets` nei values (aggiungere/modificare/rimuovere chiavi in `data` o `dataFrom`, cambiare `secretStoreRef`, ecc.)
+2. Applicare l'aggiornamento del chart con `helm upgrade`
+3. L'hash del template ExternalSecret cambia automaticamente
+4. I pod vengono riavviati automaticamente e caricano i nuovi secret
+
+**Vantaggi:**
+- Nessun campo manuale `version` da incrementare
+- Rollout automatico ogni volta che la configurazione degli ExternalSecrets cambia
+- L'hash viene ricalcolato automaticamente da Helm
+
+**Nota**: External Secrets Operator sincronizza automaticamente i secrets dal provider esterno secondo il `refreshInterval` configurato. Il restart dei pod avviene automaticamente quando si modifica la configurazione di ExternalSecret nel chart.
+
+### 6.6. Aggregazione di Secrets da Multiple Fonti
+
+Un vantaggio chiave di questa implementazione è la possibilità di aggregare secrets da diverse fonti in un unico Secret Kubernetes:
+
+```yaml
+externalSecrets:
+  create: true
+  targetSecret:
+    name: aggregated-secrets
+  data:
+    # Database secrets
+    - secretKey: db-host
+      remoteRef:
+        key: /prod/database/config
+        property: host
+    - secretKey: db-password
+      remoteRef:
+        key: /prod/database/credentials
+        property: password
+
+    # API secrets
+    - secretKey: api-key
+      remoteRef:
+        key: /prod/api/credentials
+        property: key
+
+    # Cache secrets
+    - secretKey: redis-password
+      remoteRef:
+        key: /prod/cache/credentials
+        property: password
+
+    # Monitoring secrets
+    - secretKey: monitoring-token
+      remoteRef:
+        key: /prod/monitoring/tokens
+        property: app-token
+
+  # Anche aggiungere interi secrets
+  dataFrom:
+    - extract:
+        key: /prod/feature-flags
+```
+
+Risultato: un singolo Secret K8s `aggregated-secrets` contenente tutte le chiavi.
+
+### 6.7. Esempio Completo
+
+Vedere il file `microservices/externalsecrets-example/values.yaml` per un esempio completo di configurazione.
+
