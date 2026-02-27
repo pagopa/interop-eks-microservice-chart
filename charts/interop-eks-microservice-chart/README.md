@@ -56,7 +56,6 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | externalSecrets.data | list | `[]` | List of individual secret keys to sync from external secret manager |
 | externalSecrets.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
 | externalSecrets.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
-| externalSecrets.remoteSecrets | list | `[]` | List of remote secrets to sync, each with an id and a version |
 | externalSecrets.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
 | externalSecrets.targetSecret | object | `{"creationPolicy":"Merge","deletionPolicy":"Retain","name":""}` | Target Kubernetes Secret configuration |
 | externalSecrets.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |

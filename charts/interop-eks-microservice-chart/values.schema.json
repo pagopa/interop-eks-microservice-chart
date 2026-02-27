@@ -177,26 +177,6 @@
             }
           }
         },
-        "remoteSecrets": {
-          "description": "List of remote secrets to sync, each with an id and a version",
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Remote secret path/identifier",
-                "type": "string"
-              },
-              "version": {
-                "description": "Version identifier for the remote secret",
-                "type": "string"
-              }
-            },
-            "required": ["id", "version"],
-            "additionalProperties": false
-          },
-          "default": []
-        },
         "data": {
           "description": "List of individual secret keys to sync from external secret manager",
           "type": "array",
@@ -220,7 +200,7 @@
                     "type": "string"
                   },
                   "version": {
-                    "description": "Optional version override (otherwise looked up from remoteSecrets)",
+                    "description": "Version identifier for the remote secret",
                     "type": "string"
                   },
                   "conversionStrategy": {
@@ -232,7 +212,7 @@
                     "type": "string"
                   }
                 },
-                "required": ["key"],
+                "required": ["key", "property"],
                 "additionalProperties": false
               }
             },

@@ -171,20 +171,17 @@ externalSecrets:
     creationPolicy: Merge
     # -- (string) Deletion policy: Retain, Delete
     deletionPolicy: Retain
-  # -- (list) List of remote secrets to sync, each with an id and a version
-  remoteSecrets: []
-    # - id: /prod/database/credentials     # (string) Remote secret path/identifier
-    #   version: v1                         # (string) Version identifier for the remote secret
-
   # -- (list) List of individual secret keys to sync from external secret manager
   data: []
     # - secretKey: username
     #   remoteRef:
     #     key: /path/to/secret
     #     property: username
+    #     version: v1                       # (string) Version identifier for the remote secret
     #     conversionStrategy: Default
     #     decodingStrategy: None
     # - secretKey: password
     #   remoteRef:
     #     key: /path/to/secret
     #     property: password
+    #     version: v1

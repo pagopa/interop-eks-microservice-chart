@@ -245,13 +245,13 @@ Usage:
 {{/* End of generateRolloutAnnotations */}}
 
 {{- define "externalsecrets.contractMarker" -}}
-{{- if and .Values.externalSecrets .Values.externalSecrets.create .Values.externalSecrets.remoteSecrets }}
-{{- $pairs := list -}}
-{{- range .Values.externalSecrets.remoteSecrets }}
-  {{- $pairs = append $pairs (printf "%s=%s" .id .version) -}}
+{{- if and .Values.externalSecrets .Values.externalSecrets.create .Values.externalSecrets.data }}
+{{- $dataContent := list -}}
+{{- range .Values.externalSecrets.data }}
+{{- $dataContent = append $dataContent (printf "%s:%s:%s" .secretKey .remoteRef.key (.remoteRef.property | default "")) -}}
 {{- end -}}
 {{- /* Use sortAlpha to preserve hash output - ignore keys ordering */ -}}
-{{- join "|" (sortAlpha $pairs) | sha256sum -}}
+{{- join "|" (sortAlpha $dataContent) | sha256sum -}}
 {{- end -}}
 {{- end -}}
 
