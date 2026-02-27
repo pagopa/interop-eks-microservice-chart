@@ -239,7 +239,7 @@ Usage:
 {{- end -}}
 
 {{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations .Values.externalSecrets.create }}
-externalSecrets/sha256: {{ include (print $.Template.BasePath "/externalsecret.yaml") . | sha256sum | quote }}
+{{ .Values.name }}/secrets.sha256: {{ include (print $.Template.BasePath "/externalsecret.yaml") . | sha256sum | quote }}
 {{- end -}}
 {{- end }}
 {{/* End of generateRolloutAnnotations */}}
