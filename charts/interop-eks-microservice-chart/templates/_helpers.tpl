@@ -248,7 +248,7 @@ Usage:
 {{- if and .Values.externalSecrets .Values.externalSecrets.create .Values.externalSecrets.data }}
 {{- $dataContent := list -}}
 {{- range .Values.externalSecrets.data }}
-{{- $dataContent = append $dataContent (printf "%s:%s:%s" .secretKey .remoteRef.key (.remoteRef.property | default "")) -}}
+{{- $dataContent = append $dataContent (printf "%s:%s:%s:%s" .secretKey .remoteRef.key (.remoteRef.property | default "")  (.remoteRef.version | default "")) -}}
 {{- end -}}
 {{- /* Use sortAlpha to preserve hash output - ignore keys ordering */ -}}
 {{- join "|" (sortAlpha $dataContent) | sha256sum -}}
