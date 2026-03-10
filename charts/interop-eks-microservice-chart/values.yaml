@@ -117,6 +117,15 @@ deployment:
     durationSeconds: 30
   flywayInitContainer:
     create: false
+    image:
+      # -- (string) defaults to deployment repositoryPrefix if not set
+      repositoryPrefix:
+      # -- (string) must be set if create is true, e.g. "interop-flyway-migrations"
+      repositoryName:
+      # -- (string) defaults to deployment image tag if not set
+      tag:
+      # -- (string) if set, overrides tag with the specified digest
+      digest:
     # -- (bool) execute Flyway migrate command to apply migrations to the database
     executeFlywayMigrate: true
     # -- (bool) execute Flyway repair command to recompute applied migrations metadata; useful for whitespace changes.
@@ -127,6 +136,8 @@ deployment:
     downloadRedshiftDriver: false
     # -- Configmap with migrations
     migrationsConfigmap:
+    # -- (string) List of comma separated paths to migration files or directories containing migration files (e.g. "/migrations/a_directory,v1_migration.sql,/migrations/b_directory")
+    migrationPaths:
     # -- (object) List of environment variables for a container, specifying a value directly for each named variable
     env: {}
     # -- (object) List of environment variables for a container, specifying a key from a Configmap for each named variable (k8s equivalent of envFrom.configMapRef)
