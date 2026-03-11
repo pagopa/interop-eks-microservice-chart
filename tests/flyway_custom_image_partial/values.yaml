@@ -1,0 +1,47 @@
+# Test case: immagine Flyway parzialmente custom (solo repositoryName).
+# Verifica che il repositoryPrefix venga ereditato dal container principale
+# e il tag venga ereditato dal tag del container principale quando non
+# specificato nell'immagine flyway.
+# Immagine risultante attesa:
+#   <deployment.image.repositoryPrefix>/<flyway.repositoryName>:<deployment.image.tag>
+name: "flyway-custom-image-partial-service"
+namespace: "test-namespace"
+techStack: "nodejs"
+
+serviceAccount:
+  roleArn: "arn:aws:iam::000000000:role/flyway-custom-image-partial-service"
+
+service:
+  create: true
+  containerPort: 8080
+  portName: http
+
+deployment:
+  replicas: 1
+  image:
+    repositoryPrefix: "000000000000.dkr.ecr.eu-central-1.amazonaws.com"
+    tag: "1.5.0"
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+  flywayInitContainer:
+    create: true
+    image:
+      # repositoryPrefix not set -> inherits deployment.image.repositoryPrefix
+      repositoryName: "interop-flyway-migrations"
+      # tag not set ->  inherits deployment.image.tag ("1.5.0")
+    executeFlywayMigrate: true
+    executeFlywayRepair: false
+    migrationPaths: "/flyway_custom_image_partial/migrations/v1_migrations,/flyway_custom_image_partial/migrations/v2_migrations"
+    env:
+      FLYWAY_URL: "jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+      POSTGRES_HOST: "db-host.example.com"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "mydb"
+    envFromSecrets:
+      FLYWAY_USER: "postgres-secret.POSTGRES_USR"
+      FLYWAY_PASSWORD: "postgres-secret.POSTGRES_PSW"

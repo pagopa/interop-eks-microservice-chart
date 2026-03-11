@@ -1,0 +1,46 @@
+# Test case: migrationPaths con paths multipli separati da virgola.
+# Verifica che INTERNAL_FLYWAY_MIGRATIONS_PATHS venga popolato con il valore CSV
+# passato direttamente a Flyway come -locations.
+# Mix di directory e singolo file SQL.
+# Azione Flyway: migrate only.
+name: "flyway-multi-paths-service"
+namespace: "test-namespace"
+techStack: "nodejs"
+
+serviceAccount:
+  roleArn: "arn:aws:iam::000000000:role/flyway-multi-paths-service"
+
+service:
+  create: true
+  containerPort: 8080
+  portName: http
+
+deployment:
+  replicas: 1
+  image:
+    repositoryPrefix: "000000000000.dkr.ecr.eu-central-1.amazonaws.com"
+    tag: "2.0.0"
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+  flywayInitContainer:
+    create: true
+    image:
+      repositoryName: "interop-flyway-migrations"
+    executeFlywayMigrate: true
+    executeFlywayRepair: false
+    # Multiple paths: two directories and one single SQL file
+    migrationPaths: "/flyway_migrationpaths_multi/migrations/v1_migrations,/flyway_migrationpaths_multi/migrations/v2_migrations,/flyway_migrationpaths_multi/migrations/patches/fix_001.sql"
+    env:
+      FLYWAY_URL: "jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+      FLYWAY_SCHEMAS: "public"
+      POSTGRES_HOST: "db-host.example.com"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "mydb"
+    envFromSecrets:
+      FLYWAY_USER: "postgres-secret.POSTGRES_USR"
+      FLYWAY_PASSWORD: "postgres-secret.POSTGRES_PSW"

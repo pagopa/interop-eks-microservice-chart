@@ -1,0 +1,45 @@
+# Test case: flywayInitContainer senza migrationPaths né migrationsConfigmap.
+# Verifica che quando entrambi sono omessi, la variabile d'ambiente
+# INTERNAL_FLYWAY_MIGRATIONS_PATHS NON venga iniettata nel container e Flyway
+# usi le sue location di default (nessun -locations arg nello script flyway-init.sh).
+# Verifica anche che nessun volumeMount/volume per le migrazioni venga generato.
+name: "flyway-no-paths-default-locations-service"
+namespace: "test-namespace"
+techStack: "nodejs"
+
+serviceAccount:
+  roleArn: "arn:aws:iam::000000000:role/flyway-no-paths-default-locations-service"
+
+service:
+  create: true
+  containerPort: 8080
+  portName: http
+
+deployment:
+  replicas: 1
+  image:
+    repositoryPrefix: "000000000000.dkr.ecr.eu-central-1.amazonaws.com"
+    tag: "1.0.0"
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+  flywayInitContainer:
+    create: true
+    image:
+      repositoryName: "interop-flyway-migrations"
+    executeFlywayMigrate: true
+    executeFlywayRepair: false
+    # migrationPaths: NOT SET -> INTERNAL_FLYWAY_MIGRATIONS_PATHS not injected
+    # migrationsConfigmap: NOT SET -> no volumeMount/volume generated
+    env:
+      FLYWAY_URL: "jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+      POSTGRES_HOST: "db-host.example.com"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "mydb"
+    envFromSecrets:
+      FLYWAY_USER: "postgres-secret.POSTGRES_USR"
+      FLYWAY_PASSWORD: "postgres-secret.POSTGRES_PSW"
