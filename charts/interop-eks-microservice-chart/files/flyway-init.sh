@@ -12,9 +12,7 @@ resolve_location() {
   path="$1"
   if [ -f "$path" ]; then
       # Single file: copy into a temp dir and return that
-      tmpdir=$(mktemp -d)
-      cp "$path" "$tmpdir/"
-      echo "$tmpdir"
+      dirname "$path"
   elif [ -d "$path" ]; then
       echo "$path"
   else
