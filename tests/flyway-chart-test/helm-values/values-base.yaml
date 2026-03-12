@@ -1,12 +1,12 @@
-# imagePullPolicy: IfNotPresent su tutti i container — kind ha già le immagini
-# caricate localmente, non deve fare pull da nessun registry.
+# imagePullPolicy: IfNotPresent on all containers — since kind already has the images
+# loaded locally, it should not pull from any registry.
 techStack: nodejs
 namespace: flyway-chart-test
 
 deployment:
   replicas: 1
   image:
-    repositoryPrefix: "library"   # busybox:latest -> kind lo registra come library/busybox:latest
+    repositoryPrefix: "library"   # busybox:latest
     repositoryName: busybox
     tag: "latest"
     imagePullPolicy: IfNotPresent

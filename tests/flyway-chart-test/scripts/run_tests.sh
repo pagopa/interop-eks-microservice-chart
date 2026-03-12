@@ -39,7 +39,7 @@ INFRA_IMAGES=(
   "busybox:latest"
 )
 
-# ── Argument parsing ──────────────────────────────────────────────────────────
+# ── Argument parsing
 SELECTED_TESTS=()   # empty = run all
 
 for arg in "$@"; do
@@ -53,14 +53,14 @@ done
 
 should_run() {
   local id="$1"
-  [ "${#SELECTED_TESTS[@]}" -eq 0 ] && return 0   # no filter → run all
+  [ "${#SELECTED_TESTS[@]}" -eq 0 ] && return 0   # no filter means run all the tests
   for sel in "${SELECTED_TESTS[@]}"; do
     [ "$sel" = "$id" ] && return 0
   done
   return 1
 }
 
-# ── Colors ────────────────────────────────────────────────────────────────────
+# ── Colors
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 pass()      { echo -e "${GREEN}[PASS]${NC} $*"; }
 fail()      { echo -e "${RED}[FAIL]${NC} $*"; FAILED_TESTS+=("$*"); }
@@ -140,7 +140,7 @@ setup_infrastructure() {
   kubectl apply -f "${ROOT_DIR}/configmaps/flyway-migrations-configmap.yaml"
   info "Waiting for PostgreSQL..."
   kubectl wait deployment/postgres \
-    --for=condition=available --timeout=90s -n "${NS}" \
+    --for=condition=available --timeout=120s -n "${NS}" \
     || { echo "ERROR: PostgreSQL not ready"; exit 1; }
   pass "PostgreSQL ready"
 }
@@ -318,7 +318,7 @@ reset_db() {
     " >/dev/null 2>&1 || true
 }
 
-# ── Test cases ────────────────────────────────────────────────────────────────
+# ── Test cases
 run_test_1() {
   separator; info "TEST 1: migrationsConfigmap (official image, ConfigMap volume)"
   local release="test-flyway-configmap"
@@ -429,7 +429,7 @@ run_test_5() {
   helm_uninstall "${release}"
   reset_db
 
-  # ── Step 1: first install — tenant migrations only (V1, V2) ─────────────────
+  # ── Step 1: first install — tenant migrations only (V1, V2)
   section "  [TEST 5 / step 1] First deploy — tenant migrations"
   if helm_install "${release}" "test-case-5-step1.yaml"; then
     logs=$(flyway_init_logs "${release}")
@@ -448,7 +448,7 @@ run_test_5() {
     return
   fi
 
-  # ── Step 2: helm upgrade — adds product migrations (V3, V4) ─────────────────
+  # ── Step 2: helm upgrade — adds product migrations (V3, V4)
   # No reset_db: V1+V2 must remain in flyway_schema_history.
   # V4 adds a FK from product.tenant_id → tenant.id, proving that the product
   # migration can reference a table created in a previous deploy (step 1).
