@@ -94,14 +94,33 @@ setup_cluster() {
 }
 
 # ── Images
+remove_image() {
+  local img="$1"
+  # Remove from local Docker daemon
+  if docker image inspect "${img}" >/dev/null 2>&1; then
+    docker rmi "${img}" 2>/dev/null && info "Removed local image: ${img}" || true
+  fi
+  # Remove from kind node via ctr (containerd CLI available inside the node)
+  local kind_node="${KIND_CLUSTER_NAME}-control-plane"
+  if docker exec "${kind_node}" ctr -n k8s.io images ls 2>/dev/null | grep -q "${img}"; then
+    docker exec "${kind_node}" ctr -n k8s.io images rm "${img}" 2>/dev/null \
+      && info "Removed image from kind node: ${img}" || true
+  fi
+}
+
 build_and_load_images() {
   separator; info "Building and loading all images into kind..."
 
   if $SKIP_BUILD; then
-    info "--skip-build: reusing existing image ${CUSTOM_IMAGE}."
+    info "--skip-build: skipping removal and build, reusing existing image ${CUSTOM_IMAGE}."
   else
+    # Remove custom image from local daemon and kind node before rebuilding,
+    # so the new build is guaranteed to be used and no stale layers are cached.
+    info "Removing stale images before build..."
+    remove_image "${CUSTOM_IMAGE}"
+
     info "Building ${CUSTOM_IMAGE}..."
-    docker build -t "${CUSTOM_IMAGE}" "${ROOT_DIR}/docker"
+    docker build --no-cache -t "${CUSTOM_IMAGE}" "${ROOT_DIR}/docker"
   fi
   kind load docker-image "${CUSTOM_IMAGE}" --name "${KIND_CLUSTER_NAME}"
 
@@ -159,8 +178,6 @@ flyway_init_logs() {
 }
 
 # ── Flyway DB check
-# Runs a psql query against the postgres pod and prints the result.
-# Used after each test to inspect flyway_schema_history.
 verify_flyway_history() {
   local label="$1"
 
@@ -186,7 +203,6 @@ SELECT * FROM flyway_schema_history ORDER BY installed_rank;
 
   echo "${result}"
 
-  # Assert at least one successful migration row
   local success_count
   success_count=$(kubectl exec "${pg_pod}" -n "${NS}" -- \
     psql -U flyway -d testdb -tAc \
@@ -198,7 +214,6 @@ SELECT * FROM flyway_schema_history ORDER BY installed_rank;
     fail "DB check (${label}) — no successful migrations found in flyway_schema_history"
   fi
 
-  # Also print any failed rows if present
   local failed_count
   failed_count=$(kubectl exec "${pg_pod}" -n "${NS}" -- \
     psql -U flyway -d testdb -tAc \
