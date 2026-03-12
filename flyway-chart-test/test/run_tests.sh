@@ -175,17 +175,11 @@ verify_flyway_history() {
     return
   fi
 
-  # Query flyway_schema_history across all schemas in the DB
-  local query="
-SELECT
-  *
-FROM flyway_schema_history
-ORDER BY installed_rank;
-"
-
   local result
   result=$(kubectl exec "${pg_pod}" -n "${NS}" -- \
-    psql -U flyway -d testdb -c "${query}" 2>&1) || {
+    psql -U flyway -d testdb -c "
+SELECT * FROM flyway_schema_history ORDER BY installed_rank;
+" 2>&1) || {
       info "flyway_schema_history not found (migration may not have run yet)."
       return
     }
@@ -216,6 +210,77 @@ ORDER BY installed_rank;
       psql -U flyway -d testdb -c \
       "SELECT installed_rank, version, script, success FROM flyway_schema_history WHERE success = false;" \
       2>/dev/null || true
+  fi
+}
+
+assert_migration_count() {
+  local label="$1"
+  local expected="$2"
+
+  local pg_pod
+  pg_pod=$(kubectl get pods -n "${NS}" -l "app=postgres" \
+    -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+  [ -z "$pg_pod" ] && { fail "assert_migration_count (${label}) — no postgres pod"; return; }
+
+  local actual
+  actual=$(kubectl exec "${pg_pod}" -n "${NS}" -- \
+    psql -U flyway -d testdb -tAc \
+    "SELECT COUNT(*) FROM flyway_schema_history WHERE success = true;" 2>/dev/null || echo "0")
+
+  if [ "${actual}" -eq "${expected}" ]; then
+    pass "DB check (${label}) — expected ${expected} migration(s), got ${actual} ✓"
+  else
+    fail "DB check (${label}) — expected ${expected} migration(s), got ${actual}"
+  fi
+}
+
+# Verifies that a column exists on a given table.
+# Usage: assert_column_exists <label> <table> <column>
+assert_column_exists() {
+  local label="$1"
+  local table="$2"
+  local column="$3"
+
+  local pg_pod
+  pg_pod=$(kubectl get pods -n "${NS}" -l "app=postgres" \
+    -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+  [ -z "$pg_pod" ] && { fail "assert_column_exists (${label}) — no postgres pod"; return; }
+
+  local count
+  count=$(kubectl exec "${pg_pod}" -n "${NS}" -- \
+    psql -U flyway -d testdb -tAc \
+    "SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_name='${table}' AND column_name='${column}';" 2>/dev/null || echo "0")
+
+  if [ "${count}" -eq 1 ]; then
+    pass "DB check (${label}) — column '${column}' exists on table '${table}' ✓"
+  else
+    fail "DB check (${label}) — column '${column}' not found on table '${table}'"
+  fi
+}
+
+# Verifies that a foreign key constraint exists between two tables.
+# Usage: assert_fk_exists <label> <fk_constraint_name>
+assert_fk_exists() {
+  local label="$1"
+  local constraint_name="$2"
+
+  local pg_pod
+  pg_pod=$(kubectl get pods -n "${NS}" -l "app=postgres" \
+    -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+  [ -z "$pg_pod" ] && { fail "assert_fk_exists (${label}) — no postgres pod"; return; }
+
+  local count
+  count=$(kubectl exec "${pg_pod}" -n "${NS}" -- \
+    psql -U flyway -d testdb -tAc \
+    "SELECT COUNT(*) FROM information_schema.table_constraints
+     WHERE constraint_type = 'FOREIGN KEY'
+       AND constraint_name = '${constraint_name}';" 2>/dev/null || echo "0")
+
+  if [ "${count}" -eq 1 ]; then
+    pass "DB check (${label}) — FK constraint '${constraint_name}' exists ✓"
+  else
+    fail "DB check (${label}) — FK constraint '${constraint_name}' not found"
   fi
 }
 
@@ -338,6 +403,60 @@ run_test_4() {
   helm_uninstall "${release}"
 }
 
+run_test_5() {
+  separator
+  info "TEST 5: incremental migrations — two successive deploys on the same DB"
+  info "  Step 1: initial deploy, tenant only"
+  info "          → V1 (create tenant), V2 (add email)"
+  info "  Step 2: upgrade, adds product domain"
+  info "          → V3 (create product), V4 (FK product→tenant from step 1)"
+  local release="test-flyway-incremental"
+  helm_uninstall "${release}"
+  reset_db
+
+  # ── Step 1: first install — tenant migrations only (V1, V2) ─────────────────
+  section "  [TEST 5 / step 1] First deploy — tenant migrations"
+  if helm_install "${release}" "test-case-5-step1.yaml"; then
+    logs=$(flyway_init_logs "${release}")
+    echo "${logs}"
+    if echo "${logs}" | grep -qE "Successfully applied|Schema.*up to date"; then
+      pass "TEST 5 step 1 — tenant migrations applied"
+    else
+      fail "TEST 5 step 1 — Flyway did not confirm success"
+    fi
+    verify_flyway_history "TEST 5 / step 1"
+    assert_migration_count "TEST 5 / step 1" 2        # V1 + V2
+    assert_column_exists   "TEST 5 / step 1" "tenant" "email"
+  else
+    fail "TEST 5 step 1 — helm install failed or timed out"
+    helm_uninstall "${release}"
+    return
+  fi
+
+  # ── Step 2: helm upgrade — adds product migrations (V3, V4) ─────────────────
+  # No reset_db: V1+V2 must remain in flyway_schema_history.
+  # V4 adds a FK from product.tenant_id → tenant.id, proving that the product
+  # migration can reference a table created in a previous deploy (step 1).
+  section "  [TEST 5 / step 2] Upgrade — adding product migrations"
+  if helm_install "${release}" "test-case-5-step2.yaml"; then
+    logs=$(flyway_init_logs "${release}")
+    echo "${logs}"
+    if echo "${logs}" | grep -qE "Successfully applied|Schema.*up to date"; then
+      pass "TEST 5 step 2 — product migrations applied"
+    else
+      fail "TEST 5 step 2 — Flyway did not confirm success"
+    fi
+    verify_flyway_history "TEST 5 / step 2"
+    assert_migration_count "TEST 5 / step 2" 4        # V1 + V2 + V3 + V4
+    assert_column_exists   "TEST 5 / step 2" "product" "tenant_id"
+    assert_fk_exists       "TEST 5 / step 2" "fk_product_tenant"
+  else
+    fail "TEST 5 step 2 — helm upgrade failed or timed out"
+  fi
+
+  helm_uninstall "${release}"
+}
+
 # ── Teardown
 teardown() {
   separator; info "Teardown..."
@@ -369,6 +488,7 @@ should_run 1 && run_test_1
 should_run 2 && run_test_2
 should_run 3 && run_test_3
 should_run 4 && run_test_4
+should_run 5 && run_test_5
 
 separator
 if [ ${#FAILED_TESTS[@]} -eq 0 ]; then
