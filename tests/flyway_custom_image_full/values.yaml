@@ -1,0 +1,49 @@
+# Test case: immagine Flyway completamente custom con tutti i campi specificati.
+# Verifica che l'immagine dell'initContainer sia costruita con i valori di
+# flywayInitContainer.image (repositoryPrefix, repositoryName, tag, digest)
+# ignorando completamente i valori del container principale.
+# NB: quando 'digest' è impostato, il 'tag' viene ignorato dal template.
+name: "flyway-custom-image-full-service"
+namespace: "test-namespace"
+techStack: "nodejs"
+
+serviceAccount:
+  roleArn: "arn:aws:iam::000000000:role/flyway-custom-image-full-service"
+
+service:
+  create: true
+  containerPort: 8080
+  portName: http
+
+deployment:
+  replicas: 1
+  image:
+    repositoryPrefix: "000000000000.dkr.ecr.eu-central-1.amazonaws.com"
+    tag: "main-app-tag"
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+  flywayInitContainer:
+    create: true
+    image:
+      # Custom registry completely different from the main app image
+      repositoryPrefix: "999999999999.dkr.ecr.us-east-1.amazonaws.com"
+      repositoryName: "interop-flyway-migrations-custom"
+      # Both tag and digest set: digest takes precedence (tag is ignored by template)
+      tag: "3.0.0"
+      digest: "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+    executeFlywayMigrate: true
+    executeFlywayRepair: false
+    migrationPaths: "/migrations/flyway_custom_image_full/v1_migrations"
+    env:
+      FLYWAY_URL: "jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+      POSTGRES_HOST: "db-host.example.com"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "mydb"
+    envFromSecrets:
+      FLYWAY_USER: "postgres-secret.POSTGRES_USR"
+      FLYWAY_PASSWORD: "postgres-secret.POSTGRES_PSW"

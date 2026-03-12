@@ -1,0 +1,43 @@
+# Test case EXPECTED TO FAIL (helm lint/template deve fallire).
+#
+# Verifica il caso limite in cui vengono valorizzati contemporaneamente
+# migrationPaths e migrationsConfigmap: la chart deve produrre un errore
+# tramite la funzione `fail` del template con il messaggio:
+#   "Invalid configuration: Both migrationsConfigmap and migrationPaths in
+#    flywayInitContainer cannot be defined at the same time."
+name: "flyway-conflict-paths-configmap-service"
+namespace: "test-namespace"
+techStack: "nodejs"
+
+serviceAccount:
+  roleArn: "arn:aws:iam::000000000:role/flyway-conflict-paths-configmap-service"
+
+service:
+  create: true
+  containerPort: 8080
+  portName: http
+
+deployment:
+  replicas: 1
+  image:
+    repositoryPrefix: "000000000000.dkr.ecr.eu-central-1.amazonaws.com"
+    tag: "1.0.0"
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+  flywayInitContainer:
+    create: true
+    image:
+      repositoryName: "interop-flyway-migrations"
+    executeFlywayMigrate: true
+    executeFlywayRepair: false
+    # CONFLICT: both migrationPaths and migrationsConfigmap are set -> chart must fail
+    migrationPaths: "/flyway_fail_migrationpaths_and_configmap/migrations/v1_migrations"
+    migrationsConfigmap: "common-db-migrations"
+    envFromSecrets:
+      FLYWAY_USER: "postgres-secret.POSTGRES_USR"
+      FLYWAY_PASSWORD: "postgres-secret.POSTGRES_PSW"
