@@ -11,7 +11,7 @@ deployment:
       repositoryPrefix: "local"
       repositoryName: "flyway-custom"
       tag: "test"
-    migrationPaths: "filesystem:/migrations/tenant,filesystem:/migrations/product"
+    migrationPaths: "filesystem:/migrations/product,filesystem:/migrations/tenant"
     executeFlywayMigrate: true
     executeFlywayRepair: false
     downloadRedshiftDriver: false
