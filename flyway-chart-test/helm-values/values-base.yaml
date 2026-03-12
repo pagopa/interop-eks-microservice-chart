@@ -1,0 +1,29 @@
+# imagePullPolicy: IfNotPresent su tutti i container — kind ha già le immagini
+# caricate localmente, non deve fare pull da nessun registry.
+techStack: nodejs
+namespace: flyway-chart-test
+
+deployment:
+  replicas: 1
+  image:
+    repositoryPrefix: "library"   # busybox:latest -> kind lo registra come library/busybox:latest
+    repositoryName: busybox
+    tag: "latest"
+    imagePullPolicy: IfNotPresent
+  command: ["sh", "-c", "echo 'App started after migrations.' && sleep infinity"]
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "32Mi"
+    limits:
+      cpu: "100m"
+      memory: "64Mi"
+  metadata:
+    labels: {}
+    annotations: {}
+  podTemplateMetadata:
+    labels: {}
+    annotations: {}
+
+serviceAccount:
+  create: false
