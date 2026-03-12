@@ -25,8 +25,18 @@ LOCATIONS_ARG=""
 if [ -n "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" ]; then
   echo "INTERNAL_FLYWAY_MIGRATIONS_PATHS found: $INTERNAL_FLYWAY_MIGRATIONS_PATHS"
   locations="$INTERNAL_FLYWAY_MIGRATIONS_PATHS"
-  #tmplist=$(mktemp)
-  #echo "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" | tr ',' '\n' > "$tmplist"
+  tmplist=$(mktemp)
+  echo "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" | tr ',' '\n' > "$tmplist"
+
+  # Temporary workaround: assume INTERNAL_FLYWAY_MIGRATIONS_PATHS contains only one path (either file or directory) and resolve it directly without looping.
+  first_path=$(head -n 1 "$tmplist" | tr -d '[:space:]')
+  if [ -n "$first_path" ]; then
+    location=$(resolve_location "$first_path")
+    locations="$location"
+  else
+    echo "ERROR: No valid paths found in INTERNAL_FLYWAY_MIGRATIONS_PATHS." >&2
+    exit 1
+  fi
 
   #while IFS= read -r path; do
   #  path=$(echo "$path" | tr -d '[:space:]')
@@ -35,7 +45,7 @@ if [ -n "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" ]; then
   #  locations="${locations:+$locations,}filesystem:$location"
   #done < "$tmplist"
 
-  #rm -f "$tmplist"
+  rm -f "$tmplist"
   LOCATIONS_ARG="-locations=$locations"
   echo "Resolved locations: $locations"
 else
