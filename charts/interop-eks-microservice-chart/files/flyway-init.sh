@@ -9,14 +9,18 @@ fi
 # If it's a file, it copies it to a temp directory and returns the temp directory path.
 # If it's a directory, it returns the directory path as is.
 resolve_location() {
-  path="$1"
-  if [ -f "$path" ]; then
-      # Single file: copy into a temp dir and return that
-      dirname "$path"
-  elif [ -d "$path" ]; then
-      echo "$path"
+  input_path="$1"
+
+  if [ "${input_path#filesystem:}" != "$input_path" ]; then
+    input_path="${input_path#filesystem:}"
+  fi
+
+  if [ -f "$input_path" ]; then
+      dirname "$input_path"
+  elif [ -d "$input_path" ]; then
+      echo "$input_path"
   else
-      echo "ERROR: path does not exist or is not accessible: $path" >&2
+      echo "ERROR: path does not exist or is not accessible: $input_path" >&2
       exit 1
   fi
 }
@@ -24,7 +28,7 @@ resolve_location() {
 LOCATIONS_ARG=""
 if [ -n "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" ]; then
   echo "INTERNAL_FLYWAY_MIGRATIONS_PATHS found: $INTERNAL_FLYWAY_MIGRATIONS_PATHS"
-  locations="$INTERNAL_FLYWAY_MIGRATIONS_PATHS"
+  locations=""
   tmplist=$(mktemp)
   echo "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" | tr ',' '\n' > "$tmplist"
 
@@ -32,11 +36,9 @@ if [ -n "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" ]; then
   first_path=$(head -n 1 "$tmplist" | tr -d '[:space:]')
   if [ -n "$first_path" ]; then
     location=$(resolve_location "$first_path")
-    locations="$location"
-  else
-    echo "ERROR: No valid paths found in INTERNAL_FLYWAY_MIGRATIONS_PATHS." >&2
-    exit 1
+    locations="filesystem:$location"
   fi
+
 
   #while IFS= read -r path; do
   #  path=$(echo "$path" | tr -d '[:space:]')
@@ -46,8 +48,12 @@ if [ -n "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" ]; then
   #done < "$tmplist"
 
   rm -f "$tmplist"
-  LOCATIONS_ARG="-locations=$locations"
-  echo "Resolved locations: $locations"
+  if [ -n "$locations" ]; then
+    LOCATIONS_ARG="-locations=$locations"
+    echo "Resolved locations: $locations"
+  else
+    echo "Resolved locations: No valid paths found in INTERNAL_FLYWAY_MIGRATIONS_PATHS."
+  fi
 else
   echo "INTERNAL_FLYWAY_MIGRATIONS_PATHS not set — using default Flyway locations."
 fi
