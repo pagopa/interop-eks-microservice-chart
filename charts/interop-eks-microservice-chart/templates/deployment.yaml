@@ -18,7 +18,29 @@
 
 {{- /* If the flyway initContainer is required then compute the flyway action(s) to execute */ -}}
 {{- $flyway_action := "" -}}
+
+{{- $flyway_repository_prefix := .Values.deployment.flywayInitContainer.image.repositoryPrefix | default .Values.deployment.image.repositoryPrefix }}
+{{- $flyway_repository_name := .Values.deployment.flywayInitContainer.image.repositoryName }}
+
+{{- $flyway_image_digest := "" }}
+{{- if .Values.deployment.flywayInitContainer.image.digest }}
+{{- $flyway_image_digest = (nospace (cat "@" .Values.deployment.flywayInitContainer.image.digest)) }}
+{{- end }}
+
+{{- $flyway_image_tag := "" }}
+{{- if not .Values.deployment.flywayInitContainer.image.digest }}
+{{- if .Values.deployment.flywayInitContainer.image.tag }}
+{{- $flyway_image_tag = (nospace (cat ":" .Values.deployment.flywayInitContainer.image.tag)) }}
+{{- else }}
+{{- $flyway_image_tag = (nospace (cat ":" .Values.deployment.image.tag)) }}
+{{- end }}
+{{- end }}
+
 {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
+{{- if and .Values.deployment.flywayInitContainer.migrationsConfigmap .Values.deployment.flywayInitContainer.migrationPaths }}
+{{ fail "Invalid configuration - Both migrationsConfigmap and migrationPaths in flywayInitContainer cannot be defined at the same time." }}
+{{- end }}
+
 {{- if and .Values.deployment.flywayInitContainer.executeFlywayMigrate .Values.deployment.flywayInitContainer.executeFlywayRepair -}}
 {{ $flyway_action = "repair-and-migrate" }}
 {{- else if .Values.deployment.flywayInitContainer.executeFlywayMigrate -}}
@@ -95,36 +117,17 @@ spec:
       {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
       initContainers:
         - name: migrate-db
-          image: flyway/flyway:{{ .Values.deployment.flywayInitContainer.version}}
+          image: "{{ $flyway_repository_prefix }}/{{ $flyway_repository_name }}{{ $flyway_image_tag }}{{ $flyway_image_digest }}"
           command:
             - /bin/sh
             - -c
             - |
-              if [ "$INTERNAL_DOWNLOAD_REDSHIFT_DRIVER" = "true" ]; then
-                echo "Downloading Redshift JDBC driver..."
-                curl -L -o /flyway/drivers/RedshiftJDBC.jar https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/2.1.0.32/redshift-jdbc42-2.1.0.32.jar
-              else
-                echo "Skip Redshift JDBC driver download."
-              fi
-              case "$INTERNAL_FLYWAY_ACTION" in
-                "repair")
-                  echo "Starting Flyway repair..."
-                  flyway repair
-                  ;;
-                "repair-and-migrate")
-                  echo "Starting Flyway repair && migration ..."
-                  flyway repair && flyway migrate
-                  ;;
-                "migrate")
-                  echo "Starting Flyway migration..."
-                  flyway migrate
-                  ;;
-                *)
-                  echo "ERROR: Unknown flyway action: $INTERNAL_FLYWAY_ACTION"
-                  exit 1
-                  ;;
-              esac
+{{- .Files.Get "files/flyway-init.sh" | nindent 14 }}
           env:
+            {{- if .Values.deployment.flywayInitContainer.migrationPaths }}
+            - name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
+              value: "{{ .Values.deployment.flywayInitContainer.migrationPaths }}"
+            {{- end }}
             - name: INTERNAL_DOWNLOAD_REDSHIFT_DRIVER
               value: "{{ ternary "true" "false" .Values.deployment.flywayInitContainer.downloadRedshiftDriver }}"
             - name: INTERNAL_FLYWAY_ACTION
@@ -158,9 +161,11 @@ spec:
                   key: {{ index $secretAddress 1 }}
             {{- end }}
             {{- end }}
+          {{- if .Values.deployment.flywayInitContainer.migrationsConfigmap }}
           volumeMounts:
             - name: migrations-files
               mountPath: "/flyway/sql"
+          {{- end }}
           {{- if .Values.deployment.flywayInitContainer.resources }}
           resources:
             {{- toYaml .Values.deployment.flywayInitContainer.resources | nindent 12 }}
@@ -274,7 +279,7 @@ spec:
           {{- end }}
       {{- if and .Values.deployment (or .Values.deployment.volumes (and .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create)) }}
       volumes:
-        {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
+        {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create .Values.deployment.flywayInitContainer.migrationsConfigmap }}
         - name: migrations-files
           projected:
             sources:

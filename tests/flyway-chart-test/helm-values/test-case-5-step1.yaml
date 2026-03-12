@@ -1,0 +1,29 @@
+# Test case 5 — step 1: first deploy, tenant migrations only (V1, V2)
+# Simulates the initial release of a microservice.
+
+name: test-flyway-incremental
+
+deployment:
+  flywayInitContainer:
+    create: true
+    image:
+      repositoryPrefix: "local"
+      repositoryName: "flyway-custom"
+      tag: "test"
+    migrationPaths: "filesystem:/migrations/tenant"
+    executeFlywayMigrate: true
+    executeFlywayRepair: false
+    downloadRedshiftDriver: false
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    envFromSecrets:
+      FLYWAY_USER:     "flyway-db-secret.username"
+      FLYWAY_PASSWORD: "flyway-db-secret.password"
+    env:
+      FLYWAY_URL: "jdbc:postgresql://postgres:5432/testdb"
+      FLYWAY_CONNECT_RETRIES: "10"

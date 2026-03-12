@@ -1,0 +1,26 @@
+name: test-flyway-paths-dirs
+
+deployment:
+  flywayInitContainer:
+    create: true
+    image:
+      repositoryPrefix: "local"
+      repositoryName: "flyway-custom"
+      tag: "test"
+    migrationPaths: "filesystem:/migrations/tenant,filesystem:/migrations/product"
+    executeFlywayMigrate: true
+    executeFlywayRepair: false
+    downloadRedshiftDriver: false
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    envFromSecrets:
+      FLYWAY_USER:     "flyway-db-secret.username"
+      FLYWAY_PASSWORD: "flyway-db-secret.password"
+    env:
+      FLYWAY_URL: "jdbc:postgresql://postgres:5432/testdb"
+      FLYWAY_CONNECT_RETRIES: "10"
