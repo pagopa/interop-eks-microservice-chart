@@ -34,7 +34,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.flywayInitContainer.image.digest | string | `nil` | if set, overrides tag with the specified digest |
 | deployment.flywayInitContainer.image.repositoryName | string | `nil` | must be set if create is true, e.g. "interop-flyway-migrations" |
 | deployment.flywayInitContainer.image.repositoryPrefix | string | `nil` |  |
-| deployment.flywayInitContainer.image.tag | string | `nil` | defaults to deployment image tag if not set |w
+| deployment.flywayInitContainer.image.tag | string | `nil` | defaults to deployment image tag if not set |
 | deployment.flywayInitContainer.migrationPaths | string | `nil` | List of comma separated paths to migration files or directories containing migration files (e.g. "/migrations/a_directory,v1_migration.sql,/migrations/b_directory") |
 | deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
 | deployment.flywayInitContainer.version | string | `"8.2.3"` | Flyway container image version |
@@ -851,24 +851,6 @@ data:
       property: jwt-secret
 ```
 
-#### 6.2.5. dataFrom
-
-Synchronising entire secrets or searching by pattern:
-
-```yaml
-dataFrom:
-  # Extract all keys from a secret
-  - extract:
-      key: /prod/api/credentials
-  # Search secrets by path and tags
-  - find:
-      path: /prod/secrets/
-      name:
-        regexp: "^feature-.*"
-      tags:
-        environment: production
-```
-
 ### 6.3. Template for Transformed Secrets
 
 It is possible to transform the synced data using Go templates:
@@ -1018,11 +1000,6 @@ externalSecrets:
       remoteRef:
         key: /prod/monitoring/tokens
         property: app-token
-
-  # Also add entire secrets
-  dataFrom:
-    - extract:
-        key: /prod/feature-flags
 ```
 
 Result: a single K8s Secret `aggregated-secrets` containing all keys.
