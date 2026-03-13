@@ -237,8 +237,18 @@ Usage:
 {{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations .Values.serviceAccount.create}}
 {{ $.Values.name }}/serviceAccount.sha256: {{ include (print $.Template.BasePath "/serviceaccount.yaml") . | sha256sum | quote }}
 {{- end -}}
+
+{{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations .Values.externalSecrets.create }}
+{{ .Values.name }}/externalSecret.sha256: {{ include (print $.Template.BasePath "/externalSecret.yaml") . | sha256sum | quote }}
+{{- end -}}
 {{- end }}
 {{/* End of generateRolloutAnnotations */}}
+
+{{- define "externalsecrets.contractMarker" -}}
+{{- if and .Values.externalSecrets .Values.externalSecrets.create .Values.externalSecrets.data }}
+{{- toJson .Values.externalSecrets.data | sha256sum }}
+{{- end -}}
+{{- end -}}
 
 {{/* Generate frontend configmap dynamic data */}}
 {{- define "interop-eks-microservice-chart.generateFrontendConfigmapData" -}}

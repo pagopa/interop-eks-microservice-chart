@@ -117,6 +117,112 @@
     "namespace": {
       "description": "Kubernetes namespace",
       "type": "string"
+    },
+    "externalSecrets": {
+      "description": "External Secrets Operator configuration",
+      "type": "object",
+      "properties": {
+        "create": {
+          "description": "Enable ExternalSecret creation",
+          "type": "boolean",
+          "default": false
+        },
+        "refreshInterval": {
+          "description": "Refresh interval for the secret (e.g., '1h', '30m')",
+          "type": "string",
+          "default": "0"
+        },
+        "refreshPolicy": {
+          "description": "Refresh policy for the secret",
+          "type": "string",
+          "enum": ["OnChange", "Interval"],
+          "default": "OnChange"
+        },
+        "secretStoreRef": {
+          "description": "Reference to SecretStore or ClusterSecretStore",
+          "type": "object",
+          "properties": {
+            "name": {
+              "description": "Name of the SecretStore",
+              "type": "string"
+            },
+            "kind": {
+              "description": "Kind of the store",
+              "type": "string",
+              "enum": ["SecretStore", "ClusterSecretStore"],
+              "default": "SecretStore"
+            }
+          },
+          "required": ["name"]
+        },
+        "targetSecret": {
+          "description": "Target Kubernetes Secret configuration",
+          "type": "object",
+          "properties": {
+            "name": {
+              "description": "Name of the target secret (defaults to microservice name)",
+              "type": "string"
+            },
+            "creationPolicy": {
+              "description": "Creation policy for the target secret",
+              "type": "string",
+              "enum": ["Owner", "Orphan", "Merge", "None"],
+              "default": "Merge"
+            },
+            "deletionPolicy": {
+              "description": "Deletion policy for the target secret",
+              "type": "string",
+              "enum": ["Retain", "Delete"],
+              "default": "Retain"
+            }
+          }
+        },
+        "data": {
+          "description": "List of individual secret keys to sync from external secret manager",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "secretKey": {
+                "description": "Key name in the target Kubernetes Secret",
+                "type": "string"
+              },
+              "remoteRef": {
+                "description": "Reference to the remote secret",
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "description": "Remote secret key/path",
+                    "type": "string"
+                  },
+                  "property": {
+                    "description": "Property to extract from the remote secret",
+                    "type": "string"
+                  },
+                  "version": {
+                    "description": "Version identifier for the remote secret",
+                    "type": "string"
+                  },
+                  "conversionStrategy": {
+                    "description": "Conversion strategy",
+                    "type": "string"
+                  },
+                  "decodingStrategy": {
+                    "description": "Decoding strategy",
+                    "type": "string"
+                  }
+                },
+                "required": ["key", "property"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["secretKey", "remoteRef"],
+            "additionalProperties": false
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": true
     }
   },
   "required": [
