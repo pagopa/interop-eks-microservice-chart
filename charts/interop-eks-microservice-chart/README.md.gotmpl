@@ -255,52 +255,79 @@ resources:
 
 ## 3.  Ingress
 
-To install and enable the Ingress for a given microservice, for example agreement-management for the "qa" environment, the following block must be defined in the _values.yaml_:
+To enable Ingress for a microservice, define:
+
+```
+# /microservices/<microservice>/<env>/values.yaml
+
+ingress:
+  create: true
+```
+
+`ingress.create` and `service.targetGroupArn` are mutually exclusive.
+
+Ingress behavior depends on `ingress.type`.
+
+### 3.1 ALB ingress (`ingress.type: "alb"`)
+
+When `type` is `alb`, the chart renders `templates/ingress-alb.yaml`.
+
+Main fields:
+- `groupName` (default: `interop-be`)
+- `groupOrder` (optional; `0` is valid)
+- `host` (optional)
+- `applicationPath` (optional)
+
+Example:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
 
 ingress:
   create: true
-```
-
-To add a routing rule specific to the microservice, it is also necessary to specify the "ingress.applicationPath" parameter as follows:
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-ingress:
+  type: "alb"
+  groupName: "custom-group-name"
+  groupOrder: 1
+  host: "*.dev.interop.pagopa.it"
   applicationPath: "/api-gateway"
 ```
 
-An Ingress template will automatically be generated with the annotation "alb.ingress.kubernetes.io/group.name" set to the default value "interop-be"; it is however possible to override this value by specifying the "groupName" field as follows:
+### 3.2 NGINX ingress (`ingress.type: "nginx"`)
+
+When `type` is `nginx`, the chart renders `templates/ingress-nginx.yaml`.
+
+When `create: true` and `type: "nginx"`, these fields are required:
+- `ingressClassName`
+- `rules` (at least one entry)
+
+Each rule item must define:
+- `host` (non-empty string)
+- `path` (non-empty string)
+- `pathType` (`Prefix`, `Exact`, or `ImplementationSpecific`)
+
+Rules sharing the same host are grouped automatically under one host entry with multiple paths.
+
+Example:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
 
 ingress:
-  groupName: "custom-group-name"
+  create: true
+  type: "nginx"
+  ingressClassName: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  rules:
+    - host: "api.dev.interop.pagopa.it"
+      path: "/api"
+      pathType: Prefix
+    - host: "api.dev.interop.pagopa.it"
+      path: "/health"
+      pathType: Exact
 ```
 
-Optionally,
-
-* it is possible to define a host to override the default "*":
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-ingress:
-  host: "*.dev.interop.pagopa.it"
-```
-
-* it is possible to add the annotation "alb.ingress.kubernetes.io/group.order" to the Ingress using the following configuration in the microservice _values.yaml_, for example for "agreement-management" in "qa" environment:
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-ingress:
-  groupOrder: 1
-```
+If `ingress.type` is `alb`, `ingress.rules` can be `null` (for example `rules: ~`) or omitted.
 ---
 
 ## 4. Service
