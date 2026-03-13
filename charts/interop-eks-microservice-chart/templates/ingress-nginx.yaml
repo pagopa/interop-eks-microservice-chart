@@ -1,0 +1,35 @@
+{{- if and .Values.ingress .Values.ingress.create .Values.service.targetGroupArn }}
+  {{ fail "ingress.create and service.targetGroupArn cannot both be configured; please define just one." }}
+{{- end }}
+
+{{- if and .Values.ingress.create (eq .Values.ingress.type "nginx") }}
+{{- $rulesByHost := include "interop-eks-microservice-chart.ingress-rules-by-host" .Values.ingress.rules | fromYaml | default (dict) }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
+  annotations:
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.ingressClassName }}
+  rules:
+    {{- range $host, $paths := $rulesByHost }}
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          {{- range $path := $paths }}
+          - path: {{ $path.path | quote }}
+            pathType: {{ $path.pathType }}
+            backend:
+              service:
+                name: {{ $.Values.name }}
+                port:
+                  number: {{ $.Values.service.containerPort }}
+          {{- end }}
+    {{- end }}
+{{- end }}
