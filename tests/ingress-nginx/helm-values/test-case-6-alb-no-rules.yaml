@@ -1,0 +1,16 @@
+# Test case 6 – ALB type without rules (rules is optional for alb)
+# Expected: helm lint passes (no schema error for missing rules),
+#           NO kind: Ingress is rendered (ALB is handled by a different template).
+name: test
+namespace: test
+techStack: nodejs
+
+deployment:
+  image:
+    repository: nginx
+    tag: stable
+
+ingress:
+  create: true
+  type: alb
+  groupName: interop-be
