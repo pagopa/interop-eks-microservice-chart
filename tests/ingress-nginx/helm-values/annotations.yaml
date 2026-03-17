@@ -16,6 +16,7 @@ ingress:
   ingressClassName: nginx
   annotations:
     nginx.org/proxy-connect-timeout: "60s"
+    nginx.org/proxy-read-timeout: "60s"
     nginx.org/rewrite-target: /$1
     ingress.kubernetes.io/ssl-redirect: "true"
   rules:
