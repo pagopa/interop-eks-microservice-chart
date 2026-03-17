@@ -15,8 +15,9 @@ ingress:
   type: nginx
   ingressClassName: nginx
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.org/proxy-connect-timeout: "60s"
+    nginx.org/rewrite-target: /$1
+    ingress.kubernetes.io/ssl-redirect: "true"
   rules:
     - host: api.example.com
       path: /api(/|$)(.*)
