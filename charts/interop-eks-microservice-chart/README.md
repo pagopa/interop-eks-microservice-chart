@@ -66,7 +66,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | externalSecrets.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
 | externalSecrets.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
 | externalSecrets.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
-| ingress.annotations | list | `{}` | list of annotations to apply to the Ingress resource |
+| ingress.annotations | list | `{"nginx.org/client-max-body-size":"10m","nginx.org/proxy-connect-timeout":"10s","nginx.org/proxy-read-timeout":"28s","nginx.org/proxy-send-timeout":"10s"}` | list of annotations to apply to the Ingress resource |
 | ingress.applicationPath | string | `nil` | Path prefix for the ALB ingress rule; used when ingress.type is "alb" |
 | ingress.create | bool | `false` | ingress.create and service.targetGroupArn must be mutually exclusive. |
 | ingress.groupName | string | `"interop-be"` | Group name for ALB Ingresses, used to associate multiple ingresses to the same ALB when using AWS Load Balancer Controller; used when ingress.type is "alb" |

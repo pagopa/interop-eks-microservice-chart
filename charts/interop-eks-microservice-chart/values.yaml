@@ -61,7 +61,11 @@ ingress:
   ingressClassName:
   type:
   # -- (list) list of annotations to apply to the Ingress resource
-  annotations: {}
+  annotations:
+    nginx.org/proxy-connect-timeout: "10s"
+    nginx.org/proxy-read-timeout: "28s"
+    nginx.org/proxy-send-timeout: "10s"
+    nginx.org/client-max-body-size: "10m"
   # -- (list) List of ingress rules; required when ingress.type is "nginx", must be null (~) or omitted when type is "alb".
   # Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific).
   # Example:
