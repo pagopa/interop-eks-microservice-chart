@@ -786,6 +786,65 @@ data:
       property: jwt-secret
 ```
 
+#### 6.2.5. dataFrom
+
+`dataFrom` is optional and allows importing full key/value sets instead of mapping individual keys.
+
+Each `dataFrom` entry must contain exactly one source among:
+- `extract`: import from one specific remote secret
+- `find`: search and import multiple remote secrets
+- `sourceRef`: import from an External Secrets Generator resource
+
+Optional `rewrite` rules are supported with `extract` and `find` to rename imported keys.
+
+> `data` and `dataFrom` can be used together in the same `externalSecrets` configuration.
+
+Example using `extract`:
+
+```yaml
+externalSecrets:
+  create: true
+  secretStoreRef:
+    name: aws-secretsmanager
+    kind: SecretStore
+  dataFrom:
+    - extract:
+        key: /prod/app/config
+        decodingStrategy: Auto
+```
+
+Example using `find` with `rewrite`:
+
+```yaml
+externalSecrets:
+  create: true
+  secretStoreRef:
+    name: aws-secretsmanager
+    kind: SecretStore
+  dataFrom:
+    - find:
+        path: /prod/app
+        name:
+          regexp: "^my-app-.*"
+      rewrite:
+        - regexp:
+            source: "^my-app-(.*)$"
+            target: "$1"
+```
+
+Example using `sourceRef` (generator):
+
+```yaml
+externalSecrets:
+  create: true
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: ECRAuthorizationToken
+          name: ecr-token
+```
+
 ### 6.3. Template for Transformed Secrets
 
 It is possible to transform the synced data using Go templates:

@@ -196,3 +196,47 @@ externalSecrets:
     #     key: /path/to/secret
     #     property: password
     #     version: v1
+  # dataFrom fetches all key/value pairs from an external source without mapping individual keys.
+  # It can be used alongside `data` (in case of key collisions, `data` takes precedence).
+  # Each entry supports exactly one of the following mutually exclusive fields:
+  #
+  # 1. extract: fetches all key/value pairs from a single specific secret.
+  #    Helm template expressions are supported in: key, property.
+  # dataFrom:
+  #   - extract:
+  #       key: my-app/production/config   # required
+  #       version: AWSCURRENT             # optional
+  #       property: ""                    # optional
+  #       conversionStrategy: Default     # optional (Default | Unicode | PascalCase | CamelCase | UpperCase | LowerCase)
+  #       decodingStrategy: None          # optional (None | Base64 | Base64URL | Auto)
+  #       metadataPolicy: None            # optional (None | Fetch)
+  #     rewrite:                          # optional: transforms the resulting key names
+  #       - regexp:
+  #           source: "my-app/(.*)"
+  #           target: "$1"
+  #
+  # 2. find: searches for multiple secrets by name (regexp) or tags/metadata.
+  #    Helm template expressions are supported in: path.
+  # dataFrom:
+  #   - find:
+  #       path: "my-app/"                 # optional: search path prefix
+  #       name:                           # optional: filter by name
+  #         regexp: "^my-app/prod/.*"
+  #       tags:                           # optional: filter by tags
+  #         environment: production
+  #       conversionStrategy: Default     # optional
+  #       decodingStrategy: None          # optional
+  #     rewrite:
+  #       - regexp:
+  #           source: "my-app/prod/(.*)"
+  #           target: "$1"
+  #
+  # 3. sourceRef.generatorRef: fetches values from a Generator resource (e.g. ECRAuthorizationToken, Password, etc.).
+  #    Helm template expressions are supported in: sourceRef.generatorRef.name.
+  # dataFrom:
+  #   - sourceRef:
+  #       generatorRef:
+  #         apiVersion: generators.external-secrets.io/v1alpha1
+  #         kind: Password
+  #         name: my-password-generator
+  dataFrom: null

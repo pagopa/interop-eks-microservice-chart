@@ -74,7 +74,6 @@
           "enum": [ "ClusterIP", "NodePort" ],
           "default": "ClusterIP"
         },
-
         "containerPort": {
           "$comment": "This property shouldn't have a default value",
           "description": "Port",
@@ -220,9 +219,170 @@
             "additionalProperties": false
           },
           "default": []
+        },
+        "dataFrom": {
+          "description": "List of sources to fetch all key/value pairs from. Each entry must contain exactly one of: extract, find, or sourceRef.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "oneOf": [
+              {
+                "description": "Fetch all key/value pairs from a single specific secret",
+                "properties": {
+                  "extract": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "description": "Remote secret key/path",
+                        "type": "string"
+                      },
+                      "version": {
+                        "description": "Version identifier for the remote secret",
+                        "type": "string"
+                      },
+                      "property": {
+                        "description": "Property to extract from the remote secret",
+                        "type": "string"
+                      },
+                      "conversionStrategy": {
+                        "description": "Conversion strategy for secret keys",
+                        "type": "string",
+                        "enum": ["Default", "Unicode", "PascalCase", "CamelCase", "UpperCase", "LowerCase"]
+                      },
+                      "decodingStrategy": {
+                        "description": "Decoding strategy for secret values",
+                        "type": "string",
+                        "enum": ["None", "Base64", "Base64URL", "Auto"]
+                      },
+                      "metadataPolicy": {
+                        "description": "Policy for fetching secret metadata",
+                        "type": "string",
+                        "enum": ["None", "Fetch"]
+                      }
+                    },
+                    "required": ["key"],
+                    "additionalProperties": false
+                  },
+                  "rewrite": {
+                    "$ref": "#/properties/externalSecrets/definitions/rewrite"
+                  }
+                },
+                "required": ["extract"],
+                "additionalProperties": false
+              },
+              {
+                "description": "Search for multiple secrets by name (regexp) or tags/metadata",
+                "properties": {
+                  "find": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "description": "Search path prefix",
+                        "type": "string"
+                      },
+                      "name": {
+                        "description": "Filter by secret name using regexp",
+                        "type": "object",
+                        "properties": {
+                          "regexp": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["regexp"],
+                        "additionalProperties": false
+                      },
+                      "tags": {
+                        "description": "Filter by tags/metadata",
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "conversionStrategy": {
+                        "description": "Conversion strategy for secret keys",
+                        "type": "string",
+                        "enum": ["Default", "Unicode", "PascalCase", "CamelCase", "UpperCase", "LowerCase"]
+                      },
+                      "decodingStrategy": {
+                        "description": "Decoding strategy for secret values",
+                        "type": "string",
+                        "enum": ["None", "Base64", "Base64URL", "Auto"]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "rewrite": {
+                    "$ref": "#/properties/externalSecrets/definitions/rewrite"
+                  }
+                },
+                "required": ["find"],
+                "additionalProperties": false
+              },
+              {
+                "description": "Fetch values from a Generator resource",
+                "properties": {
+                  "sourceRef": {
+                    "type": "object",
+                    "properties": {
+                      "generatorRef": {
+                        "type": "object",
+                        "properties": {
+                          "apiVersion": {
+                            "description": "API version of the Generator resource",
+                            "type": "string"
+                          },
+                          "kind": {
+                            "description": "Kind of the Generator resource",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Name of the Generator resource",
+                            "type": "string"
+                          }
+                        },
+                        "required": ["apiVersion", "kind", "name"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": ["generatorRef"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["sourceRef"],
+                "additionalProperties": false
+              }
+            ]
+          }
         }
       },
-      "additionalProperties": true
+      "additionalProperties": true,
+      "definitions": {
+        "rewrite": {
+          "description": "Rewrite rules to transform secret key names",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "regexp": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "description": "Regexp pattern to match",
+                    "type": "string"
+                  },
+                  "target": {
+                    "description": "Replacement string",
+                    "type": "string"
+                  }
+                },
+                "required": ["source", "target"],
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
     }
   },
   "required": [
