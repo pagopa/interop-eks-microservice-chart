@@ -222,7 +222,7 @@
         },
         "dataFrom": {
           "description": "List of sources to fetch all key/value pairs from. Each entry must contain exactly one of: extract, find, or sourceRef.",
-          "type": "array",
+          "type": ["array", "null"],
           "items": {
             "type": "object",
             "oneOf": [
