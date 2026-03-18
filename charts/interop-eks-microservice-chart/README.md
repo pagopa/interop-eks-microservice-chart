@@ -66,9 +66,15 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | externalSecrets.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
 | externalSecrets.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
 | externalSecrets.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
-| ingress.className | string | `"alb"` | ingress.create and service.targetGroupArn must be mutually exclusive. |
-| ingress.create | bool | `false` | Enable K8s Ingress deployment generation |
-| ingress.groupName | string | `"interop-be"` |  |
+| ingress.annotations | list | `{}` | list of annotations to apply to the Ingress resource |
+| ingress.applicationPath | string | `nil` | Path prefix for the ALB ingress rule; used when ingress.type is "alb" |
+| ingress.create | bool | `false` | ingress.create and service.targetGroupArn must be mutually exclusive. |
+| ingress.groupName | string | `"interop-be"` | Group name for ALB Ingresses, used to associate multiple ingresses to the same ALB when using AWS Load Balancer Controller; used when ingress.type is "alb" |
+| ingress.groupOrder | int | `nil` | ALB group order annotation value (`alb.ingress.kubernetes.io/group.order`); optional, used when ingress.type is "alb". Can be 0. |
+| ingress.host | string | `nil` | Hostname for the ALB ingress rule; used when ingress.type is "alb" |
+| ingress.ingressClassName | string | `nil` |  |
+| ingress.rules | list | `nil` | List of ingress rules; required when ingress.type is "nginx", must be null (~) or omitted when type is "alb". Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific). Example:   rules:     - host: api.example.com       path: /api       pathType: Prefix     - host: api.example.com       path: /health       pathType: Exact |
+| ingress.type | string | `nil` |  |
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
 | namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
 | service.albHealthcheck | object | `{"path":null,"port":null,"protocol":null,"successCodes":null}` | ALB healthcheck config |
@@ -328,52 +334,79 @@ resources:
 
 ## 3.  Ingress
 
-To install and enable the Ingress for a given microservice, for example agreement-management for the "qa" environment, the following block must be defined in the _values.yaml_:
+To enable Ingress for a microservice, define:
+
+```
+# /microservices/<microservice>/<env>/values.yaml
+
+ingress:
+  create: true
+```
+
+`ingress.create` and `service.targetGroupArn` are mutually exclusive.
+
+Ingress behavior depends on `ingress.type`.
+
+### 3.1 ALB ingress (`ingress.type: "alb"`)
+
+When `type` is `alb`, the chart renders `templates/ingress-alb.yaml`.
+
+Main fields:
+- `groupName` (default: `interop-be`)
+- `groupOrder` (optional; `0` is valid)
+- `host` (optional)
+- `applicationPath` (optional)
+
+Example:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
 
 ingress:
   create: true
-```
-
-To add a routing rule specific to the microservice, it is also necessary to specify the "ingress.applicationPath" parameter as follows:
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-ingress:
+  type: "alb"
+  groupName: "custom-group-name"
+  groupOrder: 1
+  host: "*.dev.interop.pagopa.it"
   applicationPath: "/api-gateway"
 ```
 
-An Ingress template will automatically be generated with the annotation "alb.ingress.kubernetes.io/group.name" set to the default value "interop-be"; it is however possible to override this value by specifying the "groupName" field as follows:
+### 3.2 NGINX ingress (`ingress.type: "nginx"`)
+
+When `type` is `nginx`, the chart renders `templates/ingress-nginx.yaml`.
+
+When `create: true` and `type: "nginx"`, these fields are required:
+- `ingressClassName`
+- `rules` (at least one entry)
+
+Each rule item must define:
+- `host` (non-empty string)
+- `path` (non-empty string)
+- `pathType` (`Prefix`, `Exact`, or `ImplementationSpecific`)
+
+Rules sharing the same host are grouped automatically under one host entry with multiple paths.
+
+Example:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
 
 ingress:
-  groupName: "custom-group-name"
+  create: true
+  type: "nginx"
+  ingressClassName: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  rules:
+    - host: "api.dev.interop.pagopa.it"
+      path: "/api"
+      pathType: Prefix
+    - host: "api.dev.interop.pagopa.it"
+      path: "/health"
+      pathType: Exact
 ```
 
-Optionally,
-
-* it is possible to define a host to override the default "*":
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-ingress:
-  host: "*.dev.interop.pagopa.it"
-```
-
-* it is possible to add the annotation "alb.ingress.kubernetes.io/group.order" to the Ingress using the following configuration in the microservice _values.yaml_, for example for "agreement-management" in "qa" environment:
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-ingress:
-  groupOrder: 1
-```
+If `ingress.type` is `alb`, `ingress.rules` can be `null` (for example `rules: ~`) or omitted.
 ---
 
 ## 4. Service

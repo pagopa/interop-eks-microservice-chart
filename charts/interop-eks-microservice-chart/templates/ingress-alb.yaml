@@ -2,7 +2,7 @@
   {{ fail "ingress.create and service.targetGroupArn cannot both be configured; please define just one." }}
 {{- end }}
 
-{{- if .Values.ingress.create -}}
+{{- if and .Values.ingress.create (eq .Values.ingress.type "alb") }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
