@@ -1,0 +1,6 @@
+
+# extract missing required field key
+externalSecrets:
+  dataFrom:
+  - extract:
+      version: AWSCURRENT

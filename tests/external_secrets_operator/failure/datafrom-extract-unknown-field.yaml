@@ -1,0 +1,6 @@
+# extract with unknown field
+externalSecrets:
+  dataFrom:
+  - extract:
+      key: my-app/config
+      unknownField: value

@@ -1,0 +1,9 @@
+# sourceRef with unknown field
+externalSecrets:
+  dataFrom:
+  - sourceRef:
+      generatorRef:
+        apiVersion: generators.external-secrets.io/v1alpha1
+        kind: Password
+        name: my-generator
+      unknownField: value

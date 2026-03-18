@@ -1,0 +1,5 @@
+# dataFrom is not an array
+externalSecrets:
+  dataFrom:
+    extract:
+      key: my-app/config

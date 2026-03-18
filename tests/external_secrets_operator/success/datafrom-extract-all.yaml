@@ -1,0 +1,11 @@
+
+# extract with all optional fields
+externalSecrets:
+  dataFrom:
+  - extract:
+      key: my-app/config
+      version: AWSCURRENT
+      property: myProperty
+      conversionStrategy: Default
+      decodingStrategy: None
+      metadataPolicy: Fetch

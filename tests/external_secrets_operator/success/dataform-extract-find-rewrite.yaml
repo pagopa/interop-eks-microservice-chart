@@ -1,0 +1,16 @@
+# extract and find with rewrite mixed in the same list
+externalSecrets:
+  dataFrom:
+  - extract:
+      key: my-app/config
+    rewrite:
+      - regexp:
+          source: "my-app/(.*)"
+          target: "$1"
+  - find:
+      name:
+        regexp: "^my-app/.*"
+    rewrite:
+      - regexp:
+          source: "my-app/(.*)"
+          target: "$1"
