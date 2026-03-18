@@ -245,9 +245,9 @@ Usage:
 {{/* End of generateRolloutAnnotations */}}
 
 {{- define "externalsecrets.contractMarker" -}}
-{{- if and .Values.externalSecrets .Values.externalSecrets.create .Values.externalSecrets.data }}
-{{- toJson .Values.externalSecrets.data | sha256sum }}
-{{- end -}}
+{{- $data := .Values.externalSecrets.data | default list -}}
+{{- $dataFrom := .Values.externalSecrets.dataFrom | default list -}}
+{{- printf "%s|%s" (toJson $data) (toJson $dataFrom) | sha256sum -}}
 {{- end -}}
 
 {{/* Generate frontend configmap dynamic data */}}
