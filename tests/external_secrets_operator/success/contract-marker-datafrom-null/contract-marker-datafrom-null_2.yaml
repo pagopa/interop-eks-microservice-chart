@@ -1,0 +1,10 @@
+# no-change: datafrom null to empty list: edge case, should not change hash
+externalSecrets:
+  create: true
+  data:
+    - secretKey: USERNAME
+      remoteRef:
+        key: my-secret
+        property: username
+        version: v1
+  dataFrom: []

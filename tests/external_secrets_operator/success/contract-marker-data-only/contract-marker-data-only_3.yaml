@@ -1,0 +1,14 @@
+# reorder array
+externalSecrets:
+  create: true
+  data:
+    - secretKey: PASSWORD
+      remoteRef:
+        key: my-secret
+        property: password
+        version: v1
+    - secretKey: USERNAME
+      remoteRef:
+        key: my-secret
+        property: username
+        version: v1

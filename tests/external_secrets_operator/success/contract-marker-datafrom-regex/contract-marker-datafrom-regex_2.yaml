@@ -1,0 +1,9 @@
+# update regexp: hash should change
+
+externalSecrets:
+  create: true
+  dataFrom:
+    - find:
+        path: my-app/
+        name:
+          regexp: ".*dev.*"
