@@ -1,0 +1,25 @@
+# Test case 2 – Single host with multiple paths
+# Expected: one Ingress rule for api.example.com containing two distinct
+#           path entries (/api and /health) under the same host block.
+name: test
+namespace: test
+techStack: nodejs
+
+locals:
+  hostName: "test.api.example.com"
+deployment:
+  image:
+    repository: nginx
+    tag: stable
+
+ingress:
+  create: true
+  type: nginx
+  ingressClassName: nginx
+  rules:
+    - host: "{{ .Values.locals.hostName }}"
+      path: /api
+      pathType: Prefix
+    - host: "{{ .Values.locals.hostName }}"
+      path: /health
+      pathType: Exact

@@ -1,0 +1,8 @@
+# Test case 3 – Host omitted
+# Expected: ALB rule is rendered without host field.
+
+ingress:
+  create: true
+  type: alb
+  groupName: interop-be
+  applicationPath: /api
