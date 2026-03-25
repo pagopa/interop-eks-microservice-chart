@@ -1,18 +1,12 @@
-# Base values shared by all ingress-nginx test cases.
-# Each test case file overrides only the ingress section.
+# Base values shared by all serviceaccount test cases.
+# Each test case file overrides only the serviceAccount section.
 
 name: test-svc
 namespace: test-ns
 techStack: nodejs
 
-serviceAccount:
-  create: false
-
 service:
-  create: true
-  containerPort: 8080
-  targetPort: 8080
-  portName: http
+  create: false
 
 deployment:
   replicas: 1

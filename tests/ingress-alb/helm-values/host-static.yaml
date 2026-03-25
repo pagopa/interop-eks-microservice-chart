@@ -1,0 +1,9 @@
+# Test case 1 – Static host with applicationPath
+# Expected: host is rendered in ALB ingress rule.
+
+ingress:
+  create: true
+  type: alb
+  groupName: interop-be
+  applicationPath: /api
+  host: api.example.com

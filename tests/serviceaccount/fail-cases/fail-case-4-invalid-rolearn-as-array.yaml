@@ -1,0 +1,7 @@
+# Test case: Invalid roleArn as array
+# Expected: Schema validation fail - roleArn must be string or null, not array
+
+serviceAccount:
+  create: true
+  roleArn:
+    - "arn:aws:iam::123456789012:role/test-role"

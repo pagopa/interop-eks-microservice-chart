@@ -32,7 +32,7 @@ spec:
                 port:
                   number: {{ .Values.service.containerPort }}
     {{- if .Values.ingress.host }}
-      host: {{ .Values.ingress.host | quote }}
+      host: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.ingress.host "context" $) | quote }}
     {{- end }}
     {{- end }}
 {{- end }}

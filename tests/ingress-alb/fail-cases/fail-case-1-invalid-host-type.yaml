@@ -1,0 +1,9 @@
+# Fail case 1 – Host has invalid type (number)
+# Expected: helm lint fails due to schema type mismatch.
+
+ingress:
+  create: true
+  type: alb
+  groupName: interop-be
+  applicationPath: /api
+  host: 123

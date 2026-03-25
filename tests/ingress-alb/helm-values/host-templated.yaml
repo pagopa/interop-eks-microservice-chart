@@ -1,0 +1,9 @@
+# Test case 2 – Host with template expression
+# Expected: host is rendered after template evaluation.
+
+ingress:
+  create: true
+  type: alb
+  groupName: interop-be
+  applicationPath: /api
+  host: "{{ .Values.name }}.example.com"

@@ -16,8 +16,8 @@ ingress:
   ingressClassName: nginx
   rules:
     - host: api.example.com
-      path: /
+      path: /path1
       pathType: Prefix
-    - host: admin.example.com
-      path: /
+    - host: "{{.Values.name}}.admin.example.com"
+      path: /path2
       pathType: Prefix

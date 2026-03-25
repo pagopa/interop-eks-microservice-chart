@@ -1,0 +1,6 @@
+# Test case: Invalid create property
+# Expected: Schema validation fail - create must be boolean
+
+serviceAccount:
+  create: "true"
+  roleArn:

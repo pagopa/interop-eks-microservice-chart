@@ -1,0 +1,7 @@
+# Test case: Invalid additional property
+# Expected: Schema validation fail - additionalProperties not allowed
+
+serviceAccount:
+  create: true
+  roleArn: "arn:aws:iam::123456789012:role/test-role"
+  invalidProperty: "should-not-exist"

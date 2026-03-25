@@ -25,7 +25,7 @@ spec:
   ingressClassName: {{ .Values.ingress.ingressClassName }}
   rules:
     {{- range $host, $paths := $rulesByHost }}
-    - host: {{ $host | quote }}
+    - host: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $host "context" $) | quote }}
       http:
         paths:
           {{- range $path := $paths }}

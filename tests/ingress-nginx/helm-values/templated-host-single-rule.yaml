@@ -1,0 +1,19 @@
+# Test case 7 – Single templated host, single path
+# Expected: host template is resolved using chart values.
+name: test
+namespace: test
+techStack: nodejs
+
+deployment:
+  image:
+    repository: nginx
+    tag: stable
+
+ingress:
+  create: true
+  type: nginx
+  ingressClassName: nginx
+  rules:
+    - host: "{{ .Values.name }}.example.com"
+      path: /api
+      pathType: Prefix
