@@ -2,7 +2,7 @@
   {{ fail "ingress.create and service.targetGroupArn cannot both be configured; please define just one." }}
 {{- end }}
 
-{{- if .Values.ingress.create -}}
+{{- if and .Values.ingress.create (eq .Values.ingress.type "alb") }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -32,7 +32,7 @@ spec:
                 port:
                   number: {{ .Values.service.containerPort }}
     {{- if .Values.ingress.host }}
-      host: {{ .Values.ingress.host | quote }}
+      host: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.ingress.host "context" $) | quote }}
     {{- end }}
     {{- end }}
 {{- end }}

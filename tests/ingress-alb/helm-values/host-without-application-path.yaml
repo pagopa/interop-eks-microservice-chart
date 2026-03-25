@@ -1,0 +1,8 @@
+# Test case 5 – Host configured but applicationPath missing
+# Expected: no path rule (and no host) is rendered.
+
+ingress:
+  create: true
+  type: alb
+  groupName: interop-be
+  host: api.example.com

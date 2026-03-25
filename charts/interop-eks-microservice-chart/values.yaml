@@ -48,10 +48,31 @@ service:
 
 ingress:
   # -- Enable K8s Ingress deployment generation
-  create: false
   # -- ingress.create and service.targetGroupArn must be mutually exclusive.
-  className: alb
+  create: false
+  # -- (string) Group name for ALB Ingresses, used to associate multiple ingresses to the same ALB when using AWS Load Balancer Controller; used when ingress.type is "alb"
   groupName: "interop-be"
+  # -- (int) ALB group order annotation value (`alb.ingress.kubernetes.io/group.order`); optional, used when ingress.type is "alb". Can be 0.
+  groupOrder:
+  # -- (string) Hostname for the ALB ingress rule; used when ingress.type is "alb"
+  host:
+  # -- (string) Path prefix for the ALB ingress rule; used when ingress.type is "alb"
+  applicationPath:
+  ingressClassName:
+  type:
+  # -- (list) list of annotations to apply to the Ingress resource
+  annotations: {}
+  # -- (list) List of ingress rules; required when ingress.type is "nginx", must be null (~) or omitted when type is "alb".
+  # Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific).
+  # Example:
+  #   rules:
+  #     - host: api.example.com
+  #       path: /api
+  #       pathType: Prefix
+  #     - host: api.example.com
+  #       path: /health
+  #       pathType: Exact
+  rules: ~
 
 deployment:
   # -- (bool) Enable annotation generation for referenced configmaps and secrets

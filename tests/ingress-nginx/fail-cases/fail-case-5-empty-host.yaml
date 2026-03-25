@@ -1,0 +1,21 @@
+# Fail case 5 – Rule with empty host string
+# Expected: helm template fails with an error from the
+#           ingress-rules-by-host helper because host must not be empty.
+name: test
+namespace: test
+techStack: nodejs
+
+deployment:
+  image:
+    repository: nginx
+    tag: stable
+
+
+ingress:
+  create: true
+  type: nginx
+  ingressClassName: nginx
+  rules:
+    - host: ""
+      path: /api
+      pathType: Prefix

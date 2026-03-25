@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.38.0](https://img.shields.io/badge/Version-1.38.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.40.0](https://img.shields.io/badge/Version-1.40.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -67,9 +67,15 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | externalSecrets.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
 | externalSecrets.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
 | externalSecrets.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
-| ingress.className | string | `"alb"` | ingress.create and service.targetGroupArn must be mutually exclusive. |
-| ingress.create | bool | `false` | Enable K8s Ingress deployment generation |
-| ingress.groupName | string | `"interop-be"` |  |
+| ingress.annotations | list | `{}` | list of annotations to apply to the Ingress resource |
+| ingress.applicationPath | string | `nil` | Path prefix for the ALB ingress rule; used when ingress.type is "alb" |
+| ingress.create | bool | `false` | ingress.create and service.targetGroupArn must be mutually exclusive. |
+| ingress.groupName | string | `"interop-be"` | Group name for ALB Ingresses, used to associate multiple ingresses to the same ALB when using AWS Load Balancer Controller; used when ingress.type is "alb" |
+| ingress.groupOrder | int | `nil` | ALB group order annotation value (`alb.ingress.kubernetes.io/group.order`); optional, used when ingress.type is "alb". Can be 0. |
+| ingress.host | string | `nil` | Hostname for the ALB ingress rule; used when ingress.type is "alb" |
+| ingress.ingressClassName | string | `nil` |  |
+| ingress.rules | list | `nil` | List of ingress rules; required when ingress.type is "nginx", must be null (~) or omitted when type is "alb". Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific). Example:   rules:     - host: api.example.com       path: /api       pathType: Prefix     - host: api.example.com       path: /health       pathType: Exact |
+| ingress.type | string | `nil` |  |
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
 | namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
 | service.albHealthcheck | object | `{"path":null,"port":null,"protocol":null,"successCodes":null}` | ALB healthcheck config |
@@ -329,52 +335,79 @@ resources:
 
 ## 3.  Ingress
 
-To install and enable the Ingress for a given microservice, for example agreement-management for the "qa" environment, the following block must be defined in the _values.yaml_:
+To enable Ingress for a microservice, define:
+
+```
+# /microservices/<microservice>/<env>/values.yaml
+
+ingress:
+  create: true
+```
+
+`ingress.create` and `service.targetGroupArn` are mutually exclusive.
+
+Ingress behavior depends on `ingress.type`.
+
+### 3.1 ALB ingress (`ingress.type: "alb"`)
+
+When `type` is `alb`, the chart renders `templates/ingress-alb.yaml`.
+
+Main fields:
+- `groupName` (default: `interop-be`)
+- `groupOrder` (optional; `0` is valid)
+- `host` (optional)
+- `applicationPath` (optional)
+
+Example:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
 
 ingress:
   create: true
-```
-
-To add a routing rule specific to the microservice, it is also necessary to specify the "ingress.applicationPath" parameter as follows:
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-ingress:
+  type: "alb"
+  groupName: "custom-group-name"
+  groupOrder: 1
+  host: "*.dev.interop.pagopa.it"
   applicationPath: "/api-gateway"
 ```
 
-An Ingress template will automatically be generated with the annotation "alb.ingress.kubernetes.io/group.name" set to the default value "interop-be"; it is however possible to override this value by specifying the "groupName" field as follows:
+### 3.2 NGINX ingress (`ingress.type: "nginx"`)
+
+When `type` is `nginx`, the chart renders `templates/ingress-nginx.yaml`.
+
+When `create: true` and `type: "nginx"`, these fields are required:
+- `ingressClassName`
+- `rules` (at least one entry)
+
+Each rule item must define:
+- `host` (non-empty string)
+- `path` (non-empty string)
+- `pathType` (`Prefix`, `Exact`, or `ImplementationSpecific`)
+
+Rules sharing the same host are grouped automatically under one host entry with multiple paths.
+
+Example:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
 
 ingress:
-  groupName: "custom-group-name"
+  create: true
+  type: "nginx"
+  ingressClassName: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  rules:
+    - host: "api.dev.interop.pagopa.it"
+      path: "/api"
+      pathType: Prefix
+    - host: "api.dev.interop.pagopa.it"
+      path: "/health"
+      pathType: Exact
 ```
 
-Optionally,
-
-* it is possible to define a host to override the default "*":
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-ingress:
-  host: "*.dev.interop.pagopa.it"
-```
-
-* it is possible to add the annotation "alb.ingress.kubernetes.io/group.order" to the Ingress using the following configuration in the microservice _values.yaml_, for example for "agreement-management" in "qa" environment:
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-ingress:
-  groupOrder: 1
-```
+If `ingress.type` is `alb`, `ingress.rules` can be `null` (for example `rules: ~`) or omitted.
 ---
 
 ## 4. Service
@@ -467,9 +500,44 @@ spec:
 ```
 ---
 
-## 5. Deployment Types
+## 5. ServiceAccount
 
-### 5.1. TechStack NodeJS
+By default, a ServiceAccount is automatically created for each microservice deployment. The ServiceAccount creation can be configured by setting the `serviceAccount.create` parameter in the _values.yaml_ file.
+
+### 5.1 Basic ServiceAccount Creation
+
+To create a basic ServiceAccount without AWS IAM role binding, use the following configuration:
+
+```
+# /microservices/agreement-management/qa/values.yaml
+
+serviceAccount:
+  create: true
+```
+
+This will create a ServiceAccount with minimal configuration, without any AWS-specific annotations.
+
+### 5.2 ServiceAccount with AWS IAM Role Binding
+
+To bind a Kubernetes ServiceAccount to an AWS IAM role (for IRSA - IAM Roles for Service Accounts), configure the `roleArn` parameter:
+
+```
+# /microservices/agreement-management/qa/values.yaml
+
+serviceAccount:
+  create: true
+  roleArn: "arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME"
+```
+
+When `roleArn` is provided, the chart automatically adds the `eks.amazonaws.com/role-arn` annotation to the ServiceAccount, enabling IRSA in the EKS cluster.
+
+**Note:** The `roleArn` parameter is optional. If not provided, the ServiceAccount is created without AWS IRSA annotations.
+
+---
+
+## 6. Deployment Types
+
+### 6.1. TechStack NodeJS
 
 The following describes the Deployment templates used for Microservices developed in NodeJS; to use them, the _techStack_ value must be set in the _values.yaml_ of the specific Microservice.
 For example, for the _catalog-process_ service in the _dev-refactor_ environment, the following configuration must be used:
@@ -482,7 +550,7 @@ techStack: "nodejs"
 
 This configuration is required for all Deployments described below.
 
-#### 5.1.1. <ins>Default NodeJS Microservice Deployment</ins>
+#### 6.1.1. <ins>Default NodeJS Microservice Deployment</ins>
 
 The default deployment used for Microservices developed in NodeJS is "deployment.nodejs.yaml"; to use it, the _moduleType_ value must not be set in the _values.yaml_.
 
@@ -504,7 +572,7 @@ For the main container, the following environment variables are defined:
   * REQUIRED_CONTACT_POINT_NR: mapped to the _replicas_ value defined in the _values.yaml_
   * DEV_ENDPOINTS_ENABLED: mapped to the DEV_ENDPOINTS_ENABLED key of the common ConfigMap _interob-be-commons_
 
-#### 5.1.2. <ins>Generic Consumer Deployment</ins>
+#### 6.1.2. <ins>Generic Consumer Deployment</ins>
 
 The "deployment.nodejs.generic-consumer.yaml" deployment is currently in use only for the _dev-refactor_ environment and for the following microservices:
   * authorization-updater
@@ -529,7 +597,7 @@ Unlike the default Deployment, the following environment variables are defined f
 
 This Deployment does not use the FlyWay InitContainer.
 
-#### 5.1.3. <ins>Process Microservice Deployment</ins>
+#### 6.1.3. <ins>Process Microservice Deployment</ins>
 
 The "deployment.nodejs.process-microservice.yaml" deployment is currently in use only for the _dev-refactor_ environment and for the following microservice:
   * catalog-process
@@ -585,7 +653,7 @@ For the main container, the following environment variables are defined:
   * READMODEL_DB_USERNAME: mapped to the _READONLY_USR_ key of the common ConfigMap "read-model"
   * READMODEL_DB_PASSWORD: mapped to the _READONLY_PSW_ key of the common Secret "read-model"
 
-#### 5.1.4. <ins>Read Model Writer Deployment</ins>
+#### 6.1.4. <ins>Read Model Writer Deployment</ins>
 
 The "deployment.nodejs.read-model-writer.yaml" deployment is currently in use only for the _dev-refactor_ environment and for the following microservice:
   * catalog-read-model-writer
@@ -624,7 +692,7 @@ Unlike the default Deployment, the following environment variables are defined f
 
 This Deployment does not use the FlyWay InitContainer.
 
-#### 5.1.5 Frontend Deployment
+#### 6.1.5 Frontend Deployment
 
 The "deployment.frontend.yaml" deployment is used by services with "techStack" set to "frontend";
 in addition to the fields required by a generic deployment, as described above, an additional "frontend" field can be specified,
@@ -767,13 +835,13 @@ frontend:
     - tool.js
     - env.js
 
-## 6. ExternalSecrets
+## 7. ExternalSecrets
 
 External Secrets Operator is a Kubernetes operator that allows secrets to be synchronised from external providers (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, HashiCorp Vault, etc.) into native Kubernetes Secrets.
 
 This chart creates a single ExternalSecret that can synchronise multiple secrets from different sources into a single Kubernetes Secret, simplifying secret management and referencing in deployments.
 
-### 6.1. Basic Configuration
+### 7.1. Basic Configuration
 
 To enable the creation of an ExternalSecret, set `externalSecrets.create: true`:
 
@@ -801,9 +869,9 @@ This configuration creates:
 - **1 ExternalSecret** with the same name as the microservice
 - **1 Kubernetes Secret** (`my-app-secrets`) containing all synced keys
 
-### 6.2. Main Parameters
+### 7.2. Main Parameters
 
-#### 6.2.1. secretStoreRef
+#### 7.2.1. secretStoreRef
 
 Reference to the SecretStore or ClusterSecretStore to use:
 
@@ -813,7 +881,7 @@ secretStoreRef:
   kind: SecretStore         # SecretStore or ClusterSecretStore
 ```
 
-#### 6.2.2. refreshInterval
+#### 7.2.2. refreshInterval
 
 Refresh interval for synchronisation:
 
@@ -821,7 +889,7 @@ Refresh interval for synchronisation:
 refreshInterval: "1h"  # Every hour
 ```
 
-#### 6.2.3. targetSecret
+#### 7.2.3. targetSecret
 
 Configuration of the destination Kubernetes Secret that will contain all keys:
 
@@ -832,7 +900,7 @@ targetSecret:
   deletionPolicy: Retain   # Retain, Delete
 ```
 
-#### 6.2.4. data
+#### 7.2.4. data
 
 List of individual keys to sync from different sources. All keys are aggregated into a single Secret:
 
@@ -852,7 +920,7 @@ data:
       property: jwt-secret
 ```
 
-#### 6.2.5. dataFrom
+#### 7.2.5. dataFrom
 
 `dataFrom` is optional and allows importing full key/value sets instead of mapping individual keys.
 
@@ -911,7 +979,7 @@ externalSecrets:
           name: ecr-token
 ```
 
-### 6.3. Template for Transformed Secrets
+### 7.3. Template for Transformed Secrets
 
 It is possible to transform the synced data using Go templates:
 
@@ -966,7 +1034,7 @@ externalSecrets:
         property: secret
 ```
 
-### 6.4. Usage in Deployments
+### 7.4. Usage in Deployments
 
 The Secret created by the ExternalSecret can be referenced in deployments via `envFromSecrets`:
 
@@ -1006,7 +1074,7 @@ externalSecrets:
         property: jwt-secret
 ```
 
-### 6.5. Rollout Annotations
+### 7.5. Rollout Annotations
 
 When `deployment.enableRolloutAnnotations` is enabled, deployments are automatically restarted when the ExternalSecret configuration changes. The hash (SHA256) of the ExternalSecret template is computed and inserted as an annotation in the pod template, triggering a rolling restart whenever the ExternalSecrets configuration is modified.
 
@@ -1023,7 +1091,7 @@ When `deployment.enableRolloutAnnotations` is enabled, deployments are automatic
 
 **Note**: External Secrets Operator automatically syncs secrets from the external provider according to the configured `refreshInterval`. Pod restarts occur automatically when the ExternalSecret configuration in the chart is modified.
 
-### 6.6. Aggregating Secrets from Multiple Sources
+### 7.6. Aggregating Secrets from Multiple Sources
 
 A key advantage of this implementation is the ability to aggregate secrets from different sources into a single Kubernetes Secret:
 
@@ -1064,7 +1132,7 @@ externalSecrets:
 
 Result: a single K8s Secret `aggregated-secrets` containing all keys.
 
-### 6.7. Complete Example
+### 7.7. Complete Example
 
 See the `microservices/externalsecrets-example/values.yaml` file for a complete configuration example.
 

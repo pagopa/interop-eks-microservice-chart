@@ -1,0 +1,23 @@
+# Test case 3 – Multiple hosts (each with its own path)
+# Expected: two separate rule entries in the Ingress resource,
+#           one for api.example.com and one for admin.example.com.
+name: test
+namespace: test
+techStack: nodejs
+
+deployment:
+  image:
+    repository: nginx
+    tag: stable
+
+ingress:
+  create: true
+  type: nginx
+  ingressClassName: nginx
+  rules:
+    - host: api.example.com
+      path: /path1
+      pathType: Prefix
+    - host: "{{.Values.name}}.admin.example.com"
+      path: /path2
+      pathType: Prefix

@@ -325,3 +325,37 @@ Usage:
 {{- end -}}
 {{- toYaml $out }}
 {{- end -}}
+
+{{/*
+Groups ingress rules by host.
+Input: .Values.ingress.rules
+Output (yaml):
+  <host-1>:
+    - path: /defined_path_a
+      pathType: Prefix
+    - path: /defined_path_b
+      pathType: Prefix
+  <host-2>:
+    - path: /defined_path_a
+      pathType: Prefix
+*/}}
+{{- define "interop-eks-microservice-chart.ingress-rules-by-host" -}}
+{{- $rules := . | default (list) -}}
+{{- $rulesByHost := dict -}}
+{{- range $rule := $rules }}
+  {{- $host := $rule.host | default "" -}}
+  {{- if eq $host "" }}
+    {{- fail "Error: ingress.rules[].host must be set and non-empty" -}}
+  {{- end }}
+  {{- if eq ($rule.path | default "") "" }}
+    {{- fail (printf "Error: ingress.rules[].path must be set and non-empty for host %s" $host) -}}
+  {{- end }}
+  {{- if eq ($rule.pathType | default "") "" }}
+    {{- fail (printf "Error: ingress.rules[].pathType must be set and non-empty for host %s" $host) -}}
+  {{- end }}
+  {{- $entry := dict "path" $rule.path "pathType" $rule.pathType -}}
+  {{- $existing := get $rulesByHost $host | default (list) -}}
+  {{- $_ := set $rulesByHost $host (append $existing $entry) -}}
+{{- end }}
+{{- toYaml $rulesByHost -}}
+{{- end -}}
