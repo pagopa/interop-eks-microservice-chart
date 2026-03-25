@@ -1,0 +1,6 @@
+# Test case: Invalid roleArn type
+# Expected: Schema validation fail - roleArn must be string or null
+
+serviceAccount:
+  create: true
+  roleArn: 12345

@@ -227,6 +227,22 @@
       "description": "Kubernetes namespace",
       "type": "string"
     },
+    "serviceAccount": {
+      "description": "ServiceAccount configuration",
+      "type": "object",
+      "properties": {
+        "create": {
+          "description": "Enable ServiceAccount creation",
+          "type": "boolean",
+          "default": true
+        },
+        "roleArn": {
+          "description": "ServiceAccount roleARN for AWS IAM role binding (optional)",
+          "type": ["string", "null"]
+        }
+      },
+      "additionalProperties": false
+    },
     "externalSecrets": {
       "description": "External Secrets Operator configuration",
       "type": "object",
