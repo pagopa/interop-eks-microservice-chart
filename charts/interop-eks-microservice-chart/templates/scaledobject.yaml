@@ -4,6 +4,8 @@ kind: ScaledObject
 metadata:
   name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
+  annotations:
+    autoscaling.keda.sh/paused: {{ default false .Values.autoscaling.keda.paused | quote }}
   labels:
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
 spec:

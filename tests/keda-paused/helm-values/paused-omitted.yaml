@@ -1,0 +1,4 @@
+# Test case: paused omitted
+# Expected: ScaledObject annotation autoscaling.keda.sh/paused is "false" by default
+
+# Intentionally empty override.

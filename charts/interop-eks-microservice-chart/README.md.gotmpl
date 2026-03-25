@@ -11,6 +11,8 @@ The following table lists the configurable parameters of the Interop-eks-microse
 
 {{ template "chart.valuesTable" . }}
 
+KEDA note: setting `autoscaling.keda.paused` controls the `autoscaling.keda.sh/paused` annotation on the generated ScaledObject. The annotation is always rendered and defaults to `"false"` when the field is omitted.
+
 
 ## 1. Microservice Deployment Configuration
 
