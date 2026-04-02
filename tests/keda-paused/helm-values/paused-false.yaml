@@ -1,0 +1,6 @@
+# Test case: paused=false
+# Expected: ScaledObject annotation autoscaling.keda.sh/paused is "false"
+
+autoscaling:
+  keda:
+    paused: false

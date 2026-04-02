@@ -173,6 +173,8 @@ autoscaling:
   keda:
     # -- (bool) Enable KEDA autoscaling
     create: false
+    # -- (bool) Pause KEDA autoscaling by setting autoscaling.keda.sh/paused annotation on ScaledObject
+    paused: false
     # -- (int) minimum replica count
     minReplicaCount:
     # -- (int) maximum replica count

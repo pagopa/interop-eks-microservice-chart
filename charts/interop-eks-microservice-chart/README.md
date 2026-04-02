@@ -11,11 +11,12 @@ The following table lists the configurable parameters of the Interop-eks-microse
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| autoscaling.keda | object | `{"cooldownPeriod":null,"create":false,"maxReplicaCount":null,"minReplicaCount":null,"pollingInterval":null,"triggers":null}` | KEDA autoscaling configuration |
+| autoscaling.keda | object | `{"cooldownPeriod":null,"create":false,"maxReplicaCount":null,"minReplicaCount":null,"paused":false,"pollingInterval":null,"triggers":null}` | KEDA autoscaling configuration |
 | autoscaling.keda.cooldownPeriod | int | `nil` | cooldown period in seconds |
 | autoscaling.keda.create | bool | `false` | Enable KEDA autoscaling |
 | autoscaling.keda.maxReplicaCount | int | `nil` | maximum replica count |
 | autoscaling.keda.minReplicaCount | int | `nil` | minimum replica count |
+| autoscaling.keda.paused | bool | `false` | Pause KEDA autoscaling by setting autoscaling.keda.sh/paused annotation on ScaledObject |
 | autoscaling.keda.pollingInterval | int | `nil` | metrics polling interval in seconds |
 | autoscaling.keda.triggers | list | `nil` | triggers configuration, refer to https://keda.sh/docs/2.17/scalers/ |
 | deployment.enableRolloutAnnotations | bool | `false` | Enable annotation generation for referenced configmaps and secrets |
@@ -93,6 +94,8 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | serviceAccount.create | bool | `true` | Enable ServiceAccount creation |
 | serviceAccount.roleArn | string | `nil` | ServiceAccount roleARN |
 | techStack | enum | `nil` | Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"] |
+
+KEDA note: setting `autoscaling.keda.paused` controls the `autoscaling.keda.sh/paused` annotation on the generated ScaledObject. The annotation is always rendered and defaults to `"false"` when the field is omitted.
 
 ## 1. Microservice Deployment Configuration
 
