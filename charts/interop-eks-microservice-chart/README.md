@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.36.0](https://img.shields.io/badge/Version-1.36.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.41.0](https://img.shields.io/badge/Version-1.41.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -11,11 +11,12 @@ The following table lists the configurable parameters of the Interop-eks-microse
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| autoscaling.keda | object | `{"cooldownPeriod":null,"create":false,"maxReplicaCount":null,"minReplicaCount":null,"pollingInterval":null,"triggers":null}` | KEDA autoscaling configuration |
+| autoscaling.keda | object | `{"cooldownPeriod":null,"create":false,"maxReplicaCount":null,"minReplicaCount":null,"paused":false,"pollingInterval":null,"triggers":null}` | KEDA autoscaling configuration |
 | autoscaling.keda.cooldownPeriod | int | `nil` | cooldown period in seconds |
 | autoscaling.keda.create | bool | `false` | Enable KEDA autoscaling |
 | autoscaling.keda.maxReplicaCount | int | `nil` | maximum replica count |
 | autoscaling.keda.minReplicaCount | int | `nil` | minimum replica count |
+| autoscaling.keda.paused | bool | `false` | Pause KEDA autoscaling by setting autoscaling.keda.sh/paused annotation on ScaledObject |
 | autoscaling.keda.pollingInterval | int | `nil` | metrics polling interval in seconds |
 | autoscaling.keda.triggers | list | `nil` | triggers configuration, refer to https://keda.sh/docs/2.17/scalers/ |
 | deployment.enableRolloutAnnotations | bool | `false` | Enable annotation generation for referenced configmaps and secrets |
@@ -57,9 +58,24 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.securityContext | object | `{"allowPrivilegeEscalation":false}` | Pod securityContext, applied to main container |
 | deployment.strategy | object | `{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"0%"},"type":"RollingUpdate"}` | Rollout strategy |
 | enableLookup | bool | `true` | Enable Resources lookup on K8s cluster to resolve referenced values |
-| ingress.className | string | `"alb"` | ingress.create and service.targetGroupArn must be mutually exclusive. |
-| ingress.create | bool | `false` | Enable K8s Ingress deployment generation |
-| ingress.groupName | string | `"interop-be"` |  |
+| externalSecrets.create | bool | `false` | Enable ExternalSecret creation |
+| externalSecrets.data | list | `[]` | List of individual secret keys to sync from external secret manager |
+| externalSecrets.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
+| externalSecrets.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
+| externalSecrets.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
+| externalSecrets.targetSecret | object | `{"creationPolicy":"Merge","deletionPolicy":"Retain","name":""}` | Target Kubernetes Secret configuration |
+| externalSecrets.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
+| externalSecrets.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
+| externalSecrets.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
+| ingress.annotations | list | `{}` | list of annotations to apply to the Ingress resource |
+| ingress.applicationPath | string | `nil` | Path prefix for the ALB ingress rule; used when ingress.type is "alb" |
+| ingress.create | bool | `false` | ingress.create and service.targetGroupArn must be mutually exclusive. |
+| ingress.groupName | string | `"interop-be"` | Group name for ALB Ingresses, used to associate multiple ingresses to the same ALB when using AWS Load Balancer Controller; used when ingress.type is "alb" |
+| ingress.groupOrder | int | `nil` | ALB group order annotation value (`alb.ingress.kubernetes.io/group.order`); optional, used when ingress.type is "alb". Can be 0. |
+| ingress.host | string | `nil` | Hostname for the ALB ingress rule; used when ingress.type is "alb" |
+| ingress.ingressClassName | string | `nil` |  |
+| ingress.rules | list | `nil` | List of ingress rules; required when ingress.type is "nginx", must be null (~) or omitted when type is "alb". Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific). Example:   rules:     - host: api.example.com       path: /api       pathType: Prefix     - host: api.example.com       path: /health       pathType: Exact |
+| ingress.type | string | `nil` |  |
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
 | namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
 | service.albHealthcheck | object | `{"path":null,"port":null,"protocol":null,"successCodes":null}` | ALB healthcheck config |
@@ -79,22 +95,24 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | serviceAccount.roleArn | string | `nil` | ServiceAccount roleARN |
 | techStack | enum | `nil` | Defines the technology used to develop the container. The following values are allowed: [ "nodejs", "frontend"] |
 
-## 1. Configurazione del Deployment di un MicroServizio
+KEDA note: setting `autoscaling.keda.paused` controls the `autoscaling.keda.sh/paused` annotation on the generated ScaledObject. The annotation is always rendered and defaults to `"false"` when the field is omitted.
+
+## 1. Microservice Deployment Configuration
 
 ### 1.1. Env
 
-#### 1.1.1. <ins>configmap - Referenziare la ConfigMap del MicroServizio
-Per referenziare una chiave dalla ConfigMap dello specifico microservizio, è necessario aggiungere una coppia chiave/valore nel blocco "configmap" nel file _values.yaml_ specifico per il microservizio.
-La coppia chiave/valore deve essere così definita:
-* Chiave: è mappata con il nome (name) della variabile d'ambiente utilizzata dal Deployment ed, al contempo, con la chiave definita nella ConfigMap; dunque le due chiavi coincidono;
-* Valore: è il valore reale associato alla chiave precedentemente definita
+#### 1.1.1. <ins>configmap - Referencing the MicroService ConfigMap</ins>
+To reference a key from the specific microservice ConfigMap, a key/value pair must be added in the "configmap" block in the microservice-specific _values.yaml_ file.
+The key/value pair must be defined as follows:
+* Key: it is mapped to the name of the environment variable used by the Deployment and, at the same time, to the key defined in the ConfigMap; therefore both keys are identical;
+* Value: it is the actual value associated with the previously defined key
 
-Dichiarando la sezione "configmap" nel file _values.yaml_ di uno specifico microservizio saranno applicati i seguenti automatismi:
-* sarà creata una ConfigMap con lo stesso "name" del Deployment del microservizio;
-* il campo "data" di tale ConfigMap sarà popolato con tutti le coppie chiave/valore definite in "configmap"
-* nel Deployment sarà aggiunto nella sezione "env" un riferimento per ogni coppia chiave/valore definita nella ConfigMap del microservizio
+Declaring the "configmap" section in the _values.yaml_ file of a specific microservice will apply the following automations:
+* a ConfigMap will be created with the same "name" as the microservice Deployment;
+* the "data" field of such ConfigMap will be populated with all key/value pairs defined in "configmap"
+* a reference will be added to the Deployment in the "env" section for each key/value pair defined in the microservice ConfigMap
 
-Definendo la seguente configurazione d'esempio nel _values.yaml_ del microservizio, ad esempio "agreement-management" per ambiente "qa":
+Defining the following example configuration in the microservice _values.yaml_, for example "agreement-management" for "qa" environment:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
@@ -103,7 +121,7 @@ configmap:
     ENV_FIELD_KEY: "ENV_FIELD_VALUE"
 ```
 
-sarà creata una ConfigMap dedicata al microservizio e contenente i dati indicati:
+a ConfigMap dedicated to the microservice will be created, containing the provided data:
 
 ```
 apiVersion: v1
@@ -115,7 +133,7 @@ data:
   ENV_FIELD_KEY: "ENV_FIELD_VALUE"
 ```
 
-e sarà aggiunto un riferimento nel Deployment nella sezione _env_:
+and a reference will be added to the Deployment in the _env_ section:
 
 ```
 env:
@@ -126,16 +144,16 @@ env:
         key: ENV_FIELD_KEY
 ```
 
-Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "configmap".
+There is no limit to the number of environment variables configurable in the "configmap" section.
 
-#### 1.1.2. <ins>envFromConfigmaps - Referenziare una ConfigMap esterna</ins>
+#### 1.1.2. <ins>envFromConfigmaps - Referencing an external ConfigMap</ins>
 
-Per referenziare una chiave da una ConfigMap esterna, è necessario aggiungere una coppia chiave/valore nel blocco "deployment.envFromConfigmaps" nel file _values.yaml_ specifico per il microservizio.
-La coppia chiave/valore deve essere così definita:
-* Chiave: è mappata con il nome (name) della variabile d'ambiente utilizzata dal Deployment
-* Valore: è composto da due valori separati dal carattere "."; il primo valore rappresenta il nome della ConfigMap esterna referenziata, il secondo valore è la chiave desiderata definita nella ConfigMap
+To reference a key from an external ConfigMap, a key/value pair must be added in the "deployment.envFromConfigmaps" block in the microservice-specific _values.yaml_ file.
+The key/value pair must be defined as follows:
+* Key: it is mapped to the name of the environment variable used by the Deployment
+* Value: it is composed of two values separated by the "." character; the first value is the name of the referenced external ConfigMap, the second value is the desired key defined in the ConfigMap
 
-Definendo la seguente configurazione d'esempio nel _values.yaml_ del microservizio, ad esempio "agreement-management" per ambiente "qa":
+Defining the following example configuration in the microservice _values.yaml_, for example "agreement-management" for "qa" environment:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
@@ -145,7 +163,7 @@ deployment:
     CUSTOM_LABEL: "external-configmap-name.REFERENCED_LABEL"
 ```
 
-sarà aggiunto un riferimento nel Deployment nella sezione _env_:
+a reference will be added to the Deployment in the _env_ section:
 
 ```
 env:
@@ -156,16 +174,16 @@ env:
         key: REFERENCED_LABEL
 ```
 
-Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "envFromConfigmaps".
+There is no limit to the number of environment variables configurable in the "envFromConfigmaps" section.
 
-#### 1.1.3. <ins>envFromSecrets - Referenziare un Secret esterno</ins>
+#### 1.1.3. <ins>envFromSecrets - Referencing an external Secret</ins>
 
-Per referenziare una chiave da un Secret esterno è necessario aggiungere una coppia chiave/valore nel blocco "deployment.envFromSecrets" nel file _values.yaml_ specifico per il microservizio.
-La coppia chiave/valore deve essere così definita:
-* Chiave: è mappata con il nome (name) della variabile d'ambiente utilizzata dal Deployment
-* Valore: è composto da due valori separati dal carattere "."; il primo valore rappresenta il nome del Secret esterno referenziato, il secondo valore è la chiave desiderata definita nel Secret
+To reference a key from an external Secret, a key/value pair must be added in the "deployment.envFromSecrets" block in the microservice-specific _values.yaml_ file.
+The key/value pair must be defined as follows:
+* Key: it is mapped to the name of the environment variable used by the Deployment
+* Value: it is composed of two values separated by the "." character; the first value is the name of the referenced external Secret, the second value is the desired key defined in the Secret
 
-Definendo la seguente configurazione d'esempio nel _values.yaml_ del microservizio, ad esempio "agreement-management" per ambiente "qa":
+Defining the following example configuration in the microservice _values.yaml_, for example "agreement-management" for "qa" environment:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
@@ -175,7 +193,7 @@ deployment:
     CUSTOM_LABEL: "external-secret-name.REFERENCED_LABEL"
 ```
 
-sarà aggiunto un riferimento nel Deployment nella sezione _env_:
+a reference will be added to the Deployment in the _env_ section:
 
 ```
 - name: CUSTOM_LABEL
@@ -185,12 +203,12 @@ sarà aggiunto un riferimento nel Deployment nella sezione _env_:
         key: REFERENCED_LABEL
 ```
 
-Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "envFromSecrets".
+There is no limit to the number of environment variables configurable in the "envFromSecrets" section.
 
-#### 1.1.4 <ins>env - Definire variabili d'ambiente custom</ins>
+#### 1.1.4 <ins>env - Defining custom environment variables</ins>
 
-Per definire una variabile d'ambiente custom per il Deployment è necessario aggiungere una coppia chiave/valore nel blocco "deployment.env" nel file _values.yaml_ specifico per il microservizio.
-Definendo la seguente configurazione d'esempio al file _values.yaml_ del microservizio, ad esempio "agreement-management" per ambiente "qa":
+To define a custom environment variable for the Deployment, a key/value pair must be added in the "deployment.env" block in the microservice-specific _values.yaml_ file.
+Defining the following example configuration in the microservice _values.yaml_, for example "agreement-management" for "qa" environment:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
@@ -200,7 +218,7 @@ deployment:
     ENV_NAME: "ENV_VALUE"
 ```
 
-sarà aggiunto un riferimento nel Deployment nella sezione _env_:
+a reference will be added to the Deployment in the _env_ section:
 
 ```
 - env:
@@ -208,12 +226,12 @@ sarà aggiunto un riferimento nel Deployment nella sezione _env_:
     value: "ENV_VALUE"
 ```
 
-Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "env".
+There is no limit to the number of environment variables configurable in the "env" section.
 
-#### 1.1.5 <ins>envFromFieldRef - Referenziare informazioni del Pod</ins>
+#### 1.1.5 <ins>envFromFieldRef - Referencing Pod fields</ins>
 
-Per esporre dei campi del Pod al runtime del container, è possibile utilizzare il campo "fieldRef", come da [documentazione](https://kubernetes.io/docs/concepts/workloads/pods/downward-api/#downwardapi-fieldRef) ufficiale Kubernetes.
-Un campo esposto con "fieldRef" può essere referenziato dal Deployment di un microservizio, ad esempio "agreement-management" per ambiente "qa", inserendo la seguente configurazione nel file _values.yaml_ come segue:
+To expose Pod fields at container runtime, the "fieldRef" field can be used, as per the official [Kubernetes documentation](https://kubernetes.io/docs/concepts/workloads/pods/downward-api/#downwardapi-fieldRef).
+A field exposed with "fieldRef" can be referenced in the Deployment of a microservice, for example "agreement-management" for "qa" environment, by adding the following configuration to the _values.yaml_ file:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
@@ -223,7 +241,7 @@ deployment:
     NAMESPACE: "metadata.namespace"
 ```
 
-Tale configurazione è mappata nel Deployment in questo modo:
+This configuration is mapped in the Deployment as follows:
 
 ```
 env:
@@ -233,14 +251,14 @@ env:
        fieldPath: "metadata.namespace"
 ```
 
-Non c'è limite al numero di variabili d'ambiente configurabili nella sezione "envFromFieldRef".
+There is no limit to the number of environment variables configurable in the "envFromFieldRef" section.
 
-### 1.2 Volumi
+### 1.2 Volumes
 
-Di seguito sono descritte le configurazioni da aggiungere al file _values.yaml_ del microservizio per aggiungere uno o più volume e volumeMounts.
+The following describes the configurations to add to the microservice _values.yaml_ file to add one or more volumes and volumeMounts.
 
 **Volumes**
-Seguendo la documentazione Kubernetes ufficiale in merito ai [Volumes](https://kubernetes.io/docs/concepts/storage/volumes/), per aggiungere un volume è necessario aggiornare il file _values.yaml_ del microservizio da configurare, ad esempio "agreement-management" per ambiente "qa", utilizzando la seguente sintassi:
+Following the official Kubernetes documentation on [Volumes](https://kubernetes.io/docs/concepts/storage/volumes/), to add a volume it is necessary to update the _values.yaml_ file of the microservice to configure, for example "agreement-management" for "qa" environment, using the following syntax:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
@@ -251,10 +269,10 @@ deployment:
       emptyDir: {}
 ```
 
-Il campo "volumes" può contenere la definizione di uno o più oggetti.
+The "volumes" field can contain the definition of one or more objects.
 
 **Volume Mounts**
-Per aggiungere un volumeMounts relativo ad un volume configurato, è necessario aggiornare il file _values.yaml_ del microservizio da configurare, ad esempio "agreement-management" per ambiente "qa", utilizzando la seguente sintassi:
+To add a volumeMounts entry related to a configured volume, the _values.yaml_ file of the microservice to configure must be updated, for example "agreement-management" for "qa" environment, using the following syntax:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
@@ -265,13 +283,13 @@ deployment:
       mountPath: /opt/docker/index/categories
 ```
 
-Il campo "volumeMounts" può contenere la definizione di uno o più oggetti.
+The "volumeMounts" field can contain the definition of one or more objects.
 
 ---
 
 ## 2. FlyWay init container
 
-Alcuni microservizi possono avere la necessità di utilizzare Flyway per la gestione di migrazioni del DB; al fine di soddisfare tale requisito, è possibile abilitare un Flyway init container aggiungendo ai _values.yaml_ la seguente configurazione, ad esempio per il servizio "agreement-management" nell'ambiente "qa":
+Some microservices may need to use Flyway for database migration management; to fulfil this requirement, it is possible to enable a Flyway init container by adding the following configuration to the _values.yaml_, for example for the "agreement-management" service in the "qa" environment:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
@@ -281,13 +299,13 @@ deployment:
     create: true
 ```
 
-Per un corretto avvio del container, è necessario che nel cluster / namespace in cui è rilasciato il microservizio siano presenti le ConfigMap ed i Secret di seguito elencati:
+For the container to start correctly, the following ConfigMaps and Secrets must be present in the cluster/namespace where the microservice is deployed:
 
-* ConfigMap "interop-be-db-commons" - configurazioni Db comuni, di seguito le chiavi referenziate:
+* ConfigMap "interop-be-db-commons" - common DB configurations, referenced keys listed below:
   * POSTGRES_HOST
   * POSTGRES_PORT
   * POSTGRES_DB
-* ConfigMap del microservizio - configurazione specifica del microservizio da rilasciare, di seguito i campi attesi nel file _values.yaml_ del microservizio:
+* Microservice ConfigMap - specific configuration for the microservice to deploy, expected fields in the microservice _values.yaml_ listed below:
   ```
   # /microservices/agreement-management/qa/values.yaml
 
@@ -297,11 +315,11 @@ Per un corretto avvio del container, è necessario che nel cluster / namespace i
       envFromConfigmaps:
         postgresSchema: "agreement-management.postgresSchema"
   ```
-* Secret "postgres" - secret del Db postgres, di seguito le chiavi referenziate:
+* Secret "postgres" - postgres DB secret, referenced keys listed below:
   * POSTGRES_USR
   * POSTGRES_PSW
 
-Al container è automaticamente applicata la seguente configurazione di risorse ed attualmente non può essere modificata:
+The following resource configuration is automatically applied to the container and cannot currently be modified:
 
 ```
 # /interop-eks-microservice-chart/templates/deployment.yaml
@@ -319,63 +337,90 @@ resources:
 
 ## 3.  Ingress
 
-Per installare ed abilitare l'Ingress per un dato microservizio, ad esempio agreement-management per l'ambiente "qa", è necessario definire il seguente blocco nel _values.yaml_:
+To enable Ingress for a microservice, define:
+
+```
+# /microservices/<microservice>/<env>/values.yaml
+
+ingress:
+  create: true
+```
+
+`ingress.create` and `service.targetGroupArn` are mutually exclusive.
+
+Ingress behavior depends on `ingress.type`.
+
+### 3.1 ALB ingress (`ingress.type: "alb"`)
+
+When `type` is `alb`, the chart renders `templates/ingress-alb.yaml`.
+
+Main fields:
+- `groupName` (default: `interop-be`)
+- `groupOrder` (optional; `0` is valid)
+- `host` (optional)
+- `applicationPath` (optional)
+
+Example:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
 
 ingress:
   create: true
-```
-
-Al fine di aggiungere una regola di instradamento specifica per il microservizio in esame, è necessario anche specificare il parametro "ingress.applicationPath" come segue:
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-ingress:
+  type: "alb"
+  groupName: "custom-group-name"
+  groupOrder: 1
+  host: "*.dev.interop.pagopa.it"
   applicationPath: "/api-gateway"
 ```
 
-In automatico sarà generato un Ingress template con annotazione "alb.ingress.kubernetes.io/group.name" valorizzata con il default "interop-be"; è comunque possibile effettuare l'override di tale valore specificando il campo "groupName" come segue:
+### 3.2 NGINX ingress (`ingress.type: "nginx"`)
+
+When `type` is `nginx`, the chart renders `templates/ingress-nginx.yaml`.
+
+When `create: true` and `type: "nginx"`, these fields are required:
+- `ingressClassName`
+- `rules` (at least one entry)
+
+Each rule item must define:
+- `host` (non-empty string)
+- `path` (non-empty string)
+- `pathType` (`Prefix`, `Exact`, or `ImplementationSpecific`)
+
+Rules sharing the same host are grouped automatically under one host entry with multiple paths.
+
+Example:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
 
 ingress:
-  groupName: "custom-group-name"
+  create: true
+  type: "nginx"
+  ingressClassName: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  rules:
+    - host: "api.dev.interop.pagopa.it"
+      path: "/api"
+      pathType: Prefix
+    - host: "api.dev.interop.pagopa.it"
+      path: "/health"
+      pathType: Exact
 ```
 
-Opzionalmente,
-
-* è possibile definire un host con cui eseguire l'override del default "*":
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-ingress:
-  host: "*.dev.interop.pagopa.it"
-```
-
-* è possibile aggiungere all'Ingress l'annotation "alb.ingress.kubernetes.io/group.order" utilizzando la seguente configurazione nel file _values.yaml_ del microservizio, ad essempio per "agreement-management" in ambiente "qa":
-
-```
-# /microservices/agreement-management/qa/values.yaml
-
-ingress:
-  groupOrder: 1
-```
+If `ingress.type` is `alb`, `ingress.rules` can be `null` (for example `rules: ~`) or omitted.
 ---
 
 ## 4. Service
 
-E' possibile abilitare e customizzare le seguenti annotations per il Service generato per il microservizio:
+The following annotations can be enabled and customised for the Service generated for the microservice:
 
   * alb.ingress.kubernetes.io/healthcheck-path
   * alb.ingress.kubernetes.io/healthcheck-port
   * alb.ingress.kubernetes.io/success-codes
 
-definendo nel _values.yaml_ del servizio, ad esempio "agreement-management" in ambiente "qa", i seguenti attributi:
+by defining the following attributes in the service _values.yaml_, for example "agreement-management" in "qa" environment:
 ```
 # /microservices/agreement-management/qa/values.yaml
 
@@ -385,13 +430,13 @@ healthcheck:
   successCodes: "301"
 ```
 
-Di seguito i mapping tra annotations e values:
+The following mappings apply between annotations and values:
 
-  * "alb.ingress.kubernetes.io/healthcheck-path" è popolato con il contenuto di "healthcheck.path"
-  * "alb.ingress.kubernetes.io/healthcheck-port" è popolato con il contenuto di "healthcheck.port" o, se non è presente, con "service.port"
-  * "alb.ingress.kubernetes.io/success-codes" è popolato con il contenuto di "healthcheck.successCodes"
+  * "alb.ingress.kubernetes.io/healthcheck-path" is populated with the content of "healthcheck.path"
+  * "alb.ingress.kubernetes.io/healthcheck-port" is populated with the content of "healthcheck.port" or, if not present, with "service.port"
+  * "alb.ingress.kubernetes.io/success-codes" is populated with the content of "healthcheck.successCodes"
 
-In aggiunta alle annotations, è possibile specificare delle porte custom su cui esporre il servizio applicando la seguente configurazione al file _values.yaml_ del microservizio che si sta sviluppando, ad esempio "agreement-management" in ambiente "qa"
+In addition to annotations, it is possible to specify custom ports on which to expose the service by applying the following configuration to the _values.yaml_ file of the microservice being developed, for example "agreement-management" in "qa" environment:
 
 ```
 # /microservices/agreement-management/qa/values.yaml
@@ -406,7 +451,7 @@ service:
       protocol: <port protocol 2>
 ```
 
-Con questo meccanismo, è possibile specificare una o più porte aggiuntive; tale configurazione si riflette sia sul Service che sul Deployment Kubernetes, ad esempio:
+With this mechanism, one or more additional ports can be specified; this configuration is reflected in both the Service and the Kubernetes Deployment, for example:
 
 ```
 # Agreement-management Service.yaml
@@ -457,12 +502,47 @@ spec:
 ```
 ---
 
-## 5. Tipologie di Deployment
+## 5. ServiceAccount
 
-### 5.1. TechStack NodeJS
+By default, a ServiceAccount is automatically created for each microservice deployment. The ServiceAccount creation can be configured by setting the `serviceAccount.create` parameter in the _values.yaml_ file.
 
-Di seguito sono descritti di template di Deployment utilizzati per Microservizi sviluppati in NodeJS; per poter essere utilizzati è necessario impostare il valore di *techStack* nel file _values.yaml_ dello specifico Microservizio.
-Ad esempio, per il servizio _catalog-process_ in ambiente di _dev-refactor_ è necessario utilizzare la seguente configurazione:
+### 5.1 Basic ServiceAccount Creation
+
+To create a basic ServiceAccount without AWS IAM role binding, use the following configuration:
+
+```
+# /microservices/agreement-management/qa/values.yaml
+
+serviceAccount:
+  create: true
+```
+
+This will create a ServiceAccount with minimal configuration, without any AWS-specific annotations.
+
+### 5.2 ServiceAccount with AWS IAM Role Binding
+
+To bind a Kubernetes ServiceAccount to an AWS IAM role (for IRSA - IAM Roles for Service Accounts), configure the `roleArn` parameter:
+
+```
+# /microservices/agreement-management/qa/values.yaml
+
+serviceAccount:
+  create: true
+  roleArn: "arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME"
+```
+
+When `roleArn` is provided, the chart automatically adds the `eks.amazonaws.com/role-arn` annotation to the ServiceAccount, enabling IRSA in the EKS cluster.
+
+**Note:** The `roleArn` parameter is optional. If not provided, the ServiceAccount is created without AWS IRSA annotations.
+
+---
+
+## 6. Deployment Types
+
+### 6.1. TechStack NodeJS
+
+The following describes the Deployment templates used for Microservices developed in NodeJS; to use them, the _techStack_ value must be set in the _values.yaml_ of the specific Microservice.
+For example, for the _catalog-process_ service in the _dev-refactor_ environment, the following configuration must be used:
 
 ```
 # /microservices/catalog-process/dev-refactor/values.yaml
@@ -470,37 +550,37 @@ Ad esempio, per il servizio _catalog-process_ in ambiente di _dev-refactor_ è n
 techStack: "nodejs"
 ```
 
-Questa configurazione è necessaria per tutti i Deployment di seguito descritti.
+This configuration is required for all Deployments described below.
 
-#### 5.1.1. <ins>Default NodeJS Microservice Deployment</ins>
+#### 6.1.1. <ins>Default NodeJS Microservice Deployment</ins>
 
-Il deployment di default utilizzato per Microservizi sviluppati in NodeJS è "deployment.nodejs.yaml"; per poter essere utilizzato, nel file _values.yaml_ non deve essere impostato il valore di _moduleType_.
+The default deployment used for Microservices developed in NodeJS is "deployment.nodejs.yaml"; to use it, the _moduleType_ value must not be set in the _values.yaml_.
 
-Per questo Deployment è previsto l'utilizzo del FlyWay InitContainer; di seguito sono elencate le variabili d'ambiente in uso per tale container:
+This Deployment supports the use of the FlyWay InitContainer; the environment variables used for that container are listed below:
 
-  * POSTGRES_HOST: mappata con la chiave _POSTGRES_HOST_ della ConfigMap _interop-be-db-commons_
-  * POSTGRES_PORT: mappata con la chiave _POSTGRES_PORT_ della ConfigMap _interop-be-db-commons_
-  * POSTGRES_DB: mappata con la chiave _POSTGRES_DB_ della ConfigMap _interop-be-db-commons_
-  * FLYWAY_URL: valore composto dinamicamente in base ai valori di POSTGRES_HOST, POSTGRES_PORT e POSTGRES_DB recuperati dalla ConfigMap _interop-be-db-commons_
-  * FLYWAY_CREATE_SCHEMAS: valorizzato con _true_
-  * FLYWAY_PLACEHOLDER_REPLACEMENT: valorizzato con _true_
-  * FLYWAY_SCHEMAS: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio
-  * FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: mappato con la chiave definita in _deployment.flyway.postgresSchema_ nella ConfigMap del microservizio
-  * FLYWAY_USER: mappato con la chiave _POSTGRES_USR_ del Secret comune "postgres"
-  * FLYWAY_PASSWORD: mappato con la chiave _POSTGRES_PSW_ del Secret comune "postgres"
+  * POSTGRES_HOST: mapped to the _POSTGRES_HOST_ key of the _interop-be-db-commons_ ConfigMap
+  * POSTGRES_PORT: mapped to the _POSTGRES_PORT_ key of the _interop-be-db-commons_ ConfigMap
+  * POSTGRES_DB: mapped to the _POSTGRES_DB_ key of the _interop-be-db-commons_ ConfigMap
+  * FLYWAY_URL: dynamically composed based on POSTGRES_HOST, POSTGRES_PORT and POSTGRES_DB values retrieved from the _interop-be-db-commons_ ConfigMap
+  * FLYWAY_CREATE_SCHEMAS: set to _true_
+  * FLYWAY_PLACEHOLDER_REPLACEMENT: set to _true_
+  * FLYWAY_SCHEMAS: mapped to the key defined in _deployment.flyway.postgresSchema_ in the microservice ConfigMap
+  * FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: mapped to the key defined in _deployment.flyway.postgresSchema_ in the microservice ConfigMap
+  * FLYWAY_USER: mapped to the _POSTGRES_USR_ key of the common Secret "postgres"
+  * FLYWAY_PASSWORD: mapped to the _POSTGRES_PSW_ key of the common Secret "postgres"
 
-Per il container principale, sono definite le seguenti variabili d'ambiente:
-  * NAMESPACE: mappato con il fieldRef metadata.namespace
-  * REQUIRED_CONTACT_POINT_NR: mappato con il valore _replicas_ definito nel _values.yaml_
-  * DEV_ENDPOINTS_ENABLED: mappato con la chiave DEV_ENDPOINTS_ENABLED della ConfigMap comune _interob-be-commons_
+For the main container, the following environment variables are defined:
+  * NAMESPACE: mapped to the fieldRef metadata.namespace
+  * REQUIRED_CONTACT_POINT_NR: mapped to the _replicas_ value defined in the _values.yaml_
+  * DEV_ENDPOINTS_ENABLED: mapped to the DEV_ENDPOINTS_ENABLED key of the common ConfigMap _interob-be-commons_
 
-#### 5.1.2. <ins>Generic Consumer Deployment</ins>
+#### 6.1.2. <ins>Generic Consumer Deployment</ins>
 
-Il deployment "deployment.nodejs.generic-consumer.yaml" è attualmente in uso solo per l'ambiente _dev-refactor_ e per i seguenti microservizi:
+The "deployment.nodejs.generic-consumer.yaml" deployment is currently in use only for the _dev-refactor_ environment and for the following microservices:
   * authorization-updater
   * notifier-seeder
 
-Può essere attivato impostando il valore di **moduleType** nel _values.yaml_ del microservizio, ad esempio per _authorization-updater_ in ambiente _dev-refactor_:
+It can be activated by setting the **moduleType** value in the microservice _values.yaml_, for example for _authorization-updater_ in the _dev-refactor_ environment:
 
 ```
 # /microservices/authorization-updater/dev-refactor/values.yaml
@@ -509,22 +589,22 @@ techStack: "nodejs"
 moduleType: "generic-consumer"
 ```
 
-A differenza del Deployment di default, sono definite le seguenti variabili d'ambiente per il container principale:
-  * LOG_LEVEL: mappato con il valore definito in _deployment.logLeveL_
+Unlike the default Deployment, the following environment variables are defined for the main container:
+  * LOG_LEVEL: mapped to the value defined in _deployment.logLeveL_
   ```
   deployment:
     logLeveL_: "INFO"
   ```
-  * KAFKA_BROKERS: mappato con la chiave _KAFKA_BROKERS_ della ConfigMap comune "common-kafka"
+  * KAFKA_BROKERS: mapped to the _KAFKA_BROKERS_ key of the common ConfigMap "common-kafka"
 
-Per questo Deployment non è previsto l'utilizzo del FlyWay InitContainer.
+This Deployment does not use the FlyWay InitContainer.
 
-#### 5.1.3. <ins>Process Microservice Deployment</ins>
+#### 6.1.3. <ins>Process Microservice Deployment</ins>
 
-Il deployment "deployment.nodejs.process-microservice.yaml" è attualmente in uso solo per l'ambiente _dev-refactor_ e per il seguente microservizio:
+The "deployment.nodejs.process-microservice.yaml" deployment is currently in use only for the _dev-refactor_ environment and for the following microservice:
   * catalog-process
 
-Può essere attivato impostando il valore di **moduleType** nel _values.yaml_ del microservizio, ad esempio per _catalog-process_ in ambiente _dev-refactor_:
+It can be activated by setting the **moduleType** value in the microservice _values.yaml_, for example for _catalog-process_ in the _dev-refactor_ environment:
 
 ```
 # /microservices/catalog-process/dev-refactor/values.yaml
@@ -533,54 +613,54 @@ techStack: "nodejs"
 moduleType: "process-ms"
 ```
 
-Per questo Deployment è previsto l'utilizzo del FlyWay InitContainer; a differenza del Deployment di default, sono utilizzate delle chiavi specifiche della ConfigMap comune **common-event-store**:
+This Deployment supports the use of the FlyWay InitContainer; unlike the default Deployment, specific keys from the common ConfigMap **common-event-store** are used:
 
-  * POSTGRES_HOST: mappata con la chiave _EVENTSTORE_DB_HOST_ della ConfigMap
-  * POSTGRES_PORT: mappata con la chiave _EVENTSTORE_DB_PORT_ della ConfigMap
-  * POSTGRES_DB: mappata con la chiave _EVENTSTORE_DB_NAME_ della ConfigMap
+  * POSTGRES_HOST: mapped to the _EVENTSTORE_DB_HOST_ key of the ConfigMap
+  * POSTGRES_PORT: mapped to the _EVENTSTORE_DB_PORT_ key of the ConfigMap
+  * POSTGRES_DB: mapped to the _EVENTSTORE_DB_NAME_ key of the ConfigMap
 
-Inoltre, sempre per l'init container, sono definite le seguenti variabili d'ambiente:
-  * FLYWAY_URL: valore composto dinamicamente in base ai valori di EVENTSTORE_DB_HOST, EVENTSTORE_DB_PORT e EVENTSTORE_DB_NAME recuperati dalla suddetta ConfigMap
-  * POSTGRES_DB: mappato con la chiave _EVENTSTORE_DB_NAME_ della ConfigMap comune "common-event-store"
-  * FLYWAY_USER: mappato con la chiave _POSTGRES_USR_ della ConfigMap comune "event-store"
-  * FLYWAY_PASSWORD: mappato con la chiave _POSTGRES_PSW_ del Secret comune "event-store"
-  * FLYWAY_SCHEMAS: mappato con la chiave _EVENTSTORE_DB_SCHEMA_ della ConfigMap specifica del microservizio
-  * FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: mappato con la chiave _EVENTSTORE_DB_SCHEMA_ della ConfigMap specifica del microservizio
+Furthermore, still for the init container, the following environment variables are defined:
+  * FLYWAY_URL: dynamically composed based on the values of EVENTSTORE_DB_HOST, EVENTSTORE_DB_PORT and EVENTSTORE_DB_NAME retrieved from the aforementioned ConfigMap
+  * POSTGRES_DB: mapped to the _EVENTSTORE_DB_NAME_ key of the common ConfigMap "common-event-store"
+  * FLYWAY_USER: mapped to the _POSTGRES_USR_ key of the common ConfigMap "event-store"
+  * FLYWAY_PASSWORD: mapped to the _POSTGRES_PSW_ key of the common Secret "event-store"
+  * FLYWAY_SCHEMAS: mapped to the _EVENTSTORE_DB_SCHEMA_ key of the microservice-specific ConfigMap
+  * FLYWAY_PLACEHOLDERS_APPLICATIONSCHEMA: mapped to the _EVENTSTORE_DB_SCHEMA_ key of the microservice-specific ConfigMap
 
-Per il container principale, sono definite le seguenti variabili d'ambiente:
-  * PORT: mappato con il value definito in _service.containerPort_
+For the main container, the following environment variables are defined:
+  * PORT: mapped to the value defined in _service.containerPort_
   ```
   service:
     containerPort: 8080
   ```
-  * HOST: mappato con il valore definito in _deployment.host_
+  * HOST: mapped to the value defined in _deployment.host_
   ```
   deployment:
     host: "0.0.0.0"
   ```
-  * LOG_LEVEL: mappato con il valore definito in _deployment.logLeveL_
+  * LOG_LEVEL: mapped to the value defined in _deployment.logLeveL_
   ```
   deployment:
     logLeveL_: "INFO"
   ```
-  * EVENTSTORE_DB_HOST: mappato con la chiave _EVENTSTORE_DB_HOST_ della ConfigMap comune "common-event-store"
-  * EVENTSTORE_DB_NAME: mappato con la chiave _EVENTSTORE_DB_NAME_ della ConfigMap comune "common-event-store"
-  * EVENTSTORE_DB_PORT: mappato con la chiave _EVENTSTORE_DB_PORT_ della ConfigMap comune "common-event-store"
-  * EVENTSTORE_DB_USERNAME: mappato con la chiave _POSTGRES_USR_ della ConfigMap comune "event-store"
-  * EVENTSTORE_DB_PASSWORD: mappato con la chiave _POSTGRES_PSW_ del Secret comune "event-store"
-  * EVENTSTORE_DB_USE_SSL: valorizzato con "true"
-  * READMODEL_DB_HOST: mappato con la chiave _READMODEL_DB_HOST_ della ConfigMap comune "common-read-model"
-  * READMODEL_DB_NAME: mappato con la chiave _READMODEL_DB_NAME_ della ConfigMap comune "common-read-model"
-  * READMODEL_DB_PORT: mappato con la chiave _READMODEL_DB_PORT_ della ConfigMap comune "common-read-model"
-  * READMODEL_DB_USERNAME: mappato con la chiave _READONLY_USR_ della ConfigMap comune "read-model"
-  * READMODEL_DB_PASSWORD: mappato con la chiave _READONLY_PSW_ del Secret comune "read-model"
+  * EVENTSTORE_DB_HOST: mapped to the _EVENTSTORE_DB_HOST_ key of the common ConfigMap "common-event-store"
+  * EVENTSTORE_DB_NAME: mapped to the _EVENTSTORE_DB_NAME_ key of the common ConfigMap "common-event-store"
+  * EVENTSTORE_DB_PORT: mapped to the _EVENTSTORE_DB_PORT_ key of the common ConfigMap "common-event-store"
+  * EVENTSTORE_DB_USERNAME: mapped to the _POSTGRES_USR_ key of the common ConfigMap "event-store"
+  * EVENTSTORE_DB_PASSWORD: mapped to the _POSTGRES_PSW_ key of the common Secret "event-store"
+  * EVENTSTORE_DB_USE_SSL: set to "true"
+  * READMODEL_DB_HOST: mapped to the _READMODEL_DB_HOST_ key of the common ConfigMap "common-read-model"
+  * READMODEL_DB_NAME: mapped to the _READMODEL_DB_NAME_ key of the common ConfigMap "common-read-model"
+  * READMODEL_DB_PORT: mapped to the _READMODEL_DB_PORT_ key of the common ConfigMap "common-read-model"
+  * READMODEL_DB_USERNAME: mapped to the _READONLY_USR_ key of the common ConfigMap "read-model"
+  * READMODEL_DB_PASSWORD: mapped to the _READONLY_PSW_ key of the common Secret "read-model"
 
-#### 5.1.4. <ins>Read Model Writer Deployment</ins>
+#### 6.1.4. <ins>Read Model Writer Deployment</ins>
 
-Il deployment "deployment.nodejs.read-model-writer.yaml" è attualmente in uso solo per l'ambiente _dev-refactor_ e per il seguente microservizio:
+The "deployment.nodejs.read-model-writer.yaml" deployment is currently in use only for the _dev-refactor_ environment and for the following microservice:
   * catalog-read-model-writer
 
-Può essere attivato impostando il valore di **moduleType** nel _values.yaml_ del microservizio, ad esempio per _catalog-read-model-writer_ in ambiente _dev-refactor_:
+It can be activated by setting the **moduleType** value in the microservice _values.yaml_, for example for _catalog-read-model-writer_ in the _dev-refactor_ environment:
 
 ```
 # /microservices/catalog-read-model-writer/dev-refactor/values.yaml
@@ -589,59 +669,59 @@ techStack: "nodejs"
 moduleType: "read-model-writer"
 ```
 
-A differenza del Deployment di default, sono definite le seguenti variabili d'ambiente per il container principale:
-  * PORT: mappato con il value definito in _service.containerPort_
+Unlike the default Deployment, the following environment variables are defined for the main container:
+  * PORT: mapped to the value defined in _service.containerPort_
     ```
     service:
       containerPort: 8080
     ```
-  * HOST: mappato con il valore definito in _deployment.host_
+  * HOST: mapped to the value defined in _deployment.host_
   ```
   deployment:
     host: "0.0.0.0"
   ```
-  * LOG_LEVEL: mappato con il valore definito in _deployment.logLeveL_
+  * LOG_LEVEL: mapped to the value defined in _deployment.logLeveL_
   ```
   deployment:
     logLeveL_: "INFO"
   ```
-  * KAFKA_BROKERS: mappato con la chiave _KAFKA_BROKERS_ della ConfigMap comune "common-kafka"
-  * READMODEL_DB_HOST: mappato con la chiave _READMODEL_DB_HOST_ della ConfigMap comune "common-read-model"
-  * READMODEL_DB_NAME: mappato con la chiave _READMODEL_DB_NAME_ della ConfigMap comune "common-read-model"
-  * READMODEL_DB_PORT: mappato con la chiave _READMODEL_DB_PORT_ della ConfigMap comune "common-read-model"
-  * READMODEL_DB_USERNAME: mappato con la chiave _READMODEL_DB_USERNAME_ della ConfigMap comune "common-read-model"
-  * READMODEL_DB_PASSWORD: mappato con la chiave _PROJECTION_PSW_ del Secret comune "read-model"
+  * KAFKA_BROKERS: mapped to the _KAFKA_BROKERS_ key of the common ConfigMap "common-kafka"
+  * READMODEL_DB_HOST: mapped to the _READMODEL_DB_HOST_ key of the common ConfigMap "common-read-model"
+  * READMODEL_DB_NAME: mapped to the _READMODEL_DB_NAME_ key of the common ConfigMap "common-read-model"
+  * READMODEL_DB_PORT: mapped to the _READMODEL_DB_PORT_ key of the common ConfigMap "common-read-model"
+  * READMODEL_DB_USERNAME: mapped to the _READMODEL_DB_USERNAME_ key of the common ConfigMap "common-read-model"
+  * READMODEL_DB_PASSWORD: mapped to the _PROJECTION_PSW_ key of the common Secret "read-model"
 
-Per questo Deployment non è previsto l'utilizzo del FlyWay InitContainer.
+This Deployment does not use the FlyWay InitContainer.
 
-#### 5.1.5 Frontend Deployment
+#### 6.1.5 Frontend Deployment
 
-Il deployment "deployment.frontend.yaml" è utilizzato dai servizi valorizzati con "techStack" a "frontend";
-oltre ai campi previsti da un generico deployment, come descritto in precedenza, è possibile specificare un ulteriore campo "frontend",
-in cui specificare le seguenti chiavi:
+The "deployment.frontend.yaml" deployment is used by services with "techStack" set to "frontend";
+in addition to the fields required by a generic deployment, as described above, an additional "frontend" field can be specified,
+where the following keys can be defined:
   1. env.js
   2. nginx
   3. additionalAssets
 
 #### env.js
-Il campo "env.js" ha questo formato:
+The "env.js" field has this format:
 ```
 frontend:
   env.js:
     window.pagopa_env:
       KEY: "VALUE1"
-      KEY2: "VALUE2" # Questo valore è sovrascritto dal successivo a causa della chiave duplicata
+      KEY2: "VALUE2" # This value is overridden by the next one due to the duplicate key
       KEY2: "VALUE2.1"
       fromConfigmaps:
         EVENTSTORE_DB_HOST: "common-event-store.EVENTSTORE_DB_HOST"
         EVENTSTORE_DB_NAME: "common-event-store.EVENTSTORE_DB_NAME"
 ```
-dove:
-  - "window.pagopa_env": sarà utilizzato per valorizzare la configmap associata al deployment di frontend. E' possibile utilizzare un nome diverso da "window.pagopa_env"
-  - KEY: è un chiave generica con valore in chiaro utilizzato per valorizzare il contenuto di "window.pagopa_env". E' possibile definire più di una coppia chiave/valore, eventuali chiavi duplicate saranno ignorate dando la precedenza all'ultima definita
-  - fromConfigmaps: è una chiave speciale utilizzata per definire una lista di coppie chiave valore dove quest'ultimo è composto da un prefisso, che definisce una ConfigMap da referenziare, ed un suffisso, che definisce la chiave da cercare nella ConfigMap, separati da un punto; il valore referenziato dalla accoppiata prefisso/suffisso sarà ricercato nella ConfigMap dichiarata e il valore risultante inserito in "window.pagopa_env". Le stesse regole per le chiavi descritte in precedenza, valgono anche per quelle definite in "fromConfigmaps"
+where:
+  - "window.pagopa_env": will be used to populate the configmap associated with the frontend deployment. A name other than "window.pagopa_env" can be used
+  - KEY: is a generic key with a plain value used to populate the content of "window.pagopa_env". More than one key/value pair can be defined; duplicate keys will be ignored giving precedence to the last one defined
+  - fromConfigmaps: is a special key used to define a list of key/value pairs where the value is composed of a prefix, which defines a ConfigMap to reference, and a suffix, which defines the key to look up in the ConfigMap, separated by a dot; the value referenced by the prefix/suffix pair will be looked up in the declared ConfigMap and the resulting value inserted into "window.pagopa_env". The same rules for keys described above also apply to those defined in "fromConfigmaps"
 
-L'esito della computazione del precedente snippet di codice, all'interno della ConfigMap generata per il deployment di frontend, avrà questo formato:
+The result of computing the previous code snippet, within the ConfigMap generated for the frontend deployment, will have this format:
 ```
 env.js: |-
   window.pagopa_env =
@@ -654,15 +734,15 @@ env.js: |-
 ```
 
 #### additionalAssets
-Il campo "eadditionalAssets" ha questo formato:
+The "additionalAssets" field has this format:
 ```
 frontend:
   additionalAssets:
     - tool.js
     - env.js
 ```
-E' utilizzato per definire una lista di chiavi utilizzate nel deployment di Frontend.
-Tali valori sono gestiti nel deployment per generare automaticamente dei riferimenti a volumes e volumeMounts come segue:
+It is used to define a list of keys used in the Frontend deployment.
+These values are handled in the deployment to automatically generate references to volumes and volumeMounts as follows:
 
 ```
 # Source: interop-eks-microservice-chart/templates/deployment.frontend.yaml
@@ -705,7 +785,7 @@ spec:
                 path: env.js
 ```
 
-Esempio di configurazione del values.yaml specifica solo per i deployment di Frontend:
+Example values.yaml configuration specific to Frontend deployments only:
 
 frontend:
   env.js:
@@ -715,7 +795,7 @@ frontend:
       fromConfigmaps:
         EVENTSTORE_DB_HOST: "common-event-store.EVENTSTORE_DB_HOST"
         EVENTSTORE_DB_NAME: "common-event-store.EVENTSTORE_DB_NAME"
-  # tools.js è ignorato
+  # tools.js is ignored
   tool.js:
     window.pagopa_env:
       KEY: "VALUE1"
@@ -756,3 +836,246 @@ frontend:
   additionalAssets:
     - tool.js
     - env.js
+
+## 7. ExternalSecrets
+
+External Secrets Operator is a Kubernetes operator that allows secrets to be synchronised from external providers (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, HashiCorp Vault, etc.) into native Kubernetes Secrets.
+
+This chart creates a single ExternalSecret that can synchronise multiple secrets from different sources into a single Kubernetes Secret, simplifying secret management and referencing in deployments.
+
+### 7.1. Basic Configuration
+
+To enable the creation of an ExternalSecret, set `externalSecrets.create: true`:
+
+```yaml
+externalSecrets:
+  create: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-secretsmanager
+    kind: SecretStore
+  targetSecret:
+    name: my-app-secrets  # Name of the K8s Secret that will contain all synced keys
+  data:
+    - secretKey: db-password
+      remoteRef:
+        key: /prod/database/credentials
+        property: password
+    - secretKey: api-key
+      remoteRef:
+        key: /prod/api/credentials
+        property: api-key
+```
+
+This configuration creates:
+- **1 ExternalSecret** with the same name as the microservice
+- **1 Kubernetes Secret** (`my-app-secrets`) containing all synced keys
+
+### 7.2. Main Parameters
+
+#### 7.2.1. secretStoreRef
+
+Reference to the SecretStore or ClusterSecretStore to use:
+
+```yaml
+secretStoreRef:
+  name: aws-secretsmanager  # Name of the SecretStore
+  kind: SecretStore         # SecretStore or ClusterSecretStore
+```
+
+#### 7.2.2. refreshInterval
+
+Refresh interval for synchronisation:
+
+```yaml
+refreshInterval: "1h"  # Every hour
+```
+
+#### 7.2.3. targetSecret
+
+Configuration of the destination Kubernetes Secret that will contain all keys:
+
+```yaml
+targetSecret:
+  name: my-app-secrets     # Name of the K8s Secret
+  creationPolicy: Merge    # Owner, Orphan, Merge, None
+  deletionPolicy: Retain   # Retain, Delete
+```
+
+#### 7.2.4. data
+
+List of individual keys to sync from different sources. All keys are aggregated into a single Secret:
+
+```yaml
+data:
+  - secretKey: db-password      # Key name in the K8s Secret
+    remoteRef:
+      key: /prod/db/creds      # Path in the external provider
+      property: password        # Specific property
+  - secretKey: api-key
+    remoteRef:
+      key: /prod/api/credentials
+      property: api-key
+  - secretKey: jwt-secret
+    remoteRef:
+      key: /prod/app/secrets
+      property: jwt-secret
+```
+
+### 7.3. Template for Transformed Secrets
+
+It is possible to transform the synced data using Go templates:
+
+```yaml
+externalSecrets:
+  create: true
+  secretStoreRef:
+    name: aws-secretsmanager
+    kind: SecretStore
+  targetSecret:
+    name: app-config
+    template:
+      type: Opaque
+      metadata:
+        labels:
+          app: my-app
+      data:
+        # Transform synced values into a config file
+        config.yaml: |
+          database:
+            host: {{ .db_host }}
+            port: {{ .db_port }}
+            username: {{ .db_username }}
+            password: {{ .db_password }}
+          api:
+            key: {{ .api_key }}
+            secret: {{ .api_secret }}
+  data:
+    - secretKey: db_host
+      remoteRef:
+        key: /prod/db/config
+        property: host
+    - secretKey: db_port
+      remoteRef:
+        key: /prod/db/config
+        property: port
+    - secretKey: db_username
+      remoteRef:
+        key: /prod/db/credentials
+        property: username
+    - secretKey: db_password
+      remoteRef:
+        key: /prod/db/credentials
+        property: password
+    - secretKey: api_key
+      remoteRef:
+        key: /prod/api/credentials
+        property: key
+    - secretKey: api_secret
+      remoteRef:
+        key: /prod/api/credentials
+        property: secret
+```
+
+### 7.4. Usage in Deployments
+
+The Secret created by the ExternalSecret can be referenced in deployments via `envFromSecrets`:
+
+```yaml
+deployment:
+  enableRolloutAnnotations: true
+  envFromSecrets:
+    # All keys are in the same Secret
+    DATABASE_PASSWORD: my-app-secrets.db-password
+    DATABASE_USERNAME: my-app-secrets.db-username
+    API_KEY: my-app-secrets.api-key
+    JWT_SECRET: my-app-secrets.jwt-secret
+
+externalSecrets:
+  create: true
+  secretStoreRef:
+    name: aws-secretsmanager
+    kind: SecretStore
+  targetSecret:
+    name: my-app-secrets
+  data:
+    - secretKey: db-password
+      remoteRef:
+        key: /prod/database/credentials
+        property: password
+    - secretKey: db-username
+      remoteRef:
+        key: /prod/database/credentials
+        property: username
+    - secretKey: api-key
+      remoteRef:
+        key: /prod/api/credentials
+        property: api-key
+    - secretKey: jwt-secret
+      remoteRef:
+        key: /prod/app/secrets
+        property: jwt-secret
+```
+
+### 7.5. Rollout Annotations
+
+When `deployment.enableRolloutAnnotations` is enabled, deployments are automatically restarted when the ExternalSecret configuration changes. The hash (SHA256) of the ExternalSecret template is computed and inserted as an annotation in the pod template, triggering a rolling restart whenever the ExternalSecrets configuration is modified.
+
+**Automatic workflow:**
+1. Modify the `externalSecrets` configuration in values (add/modify/remove keys in `data`, change `secretStoreRef`, etc.)
+2. Apply the chart update with `helm upgrade`
+3. The ExternalSecret template hash changes automatically
+4. Pods are automatically restarted and load the new secrets
+
+**Benefits:**
+- No manual `version` field to increment
+- Automatic rollout every time the ExternalSecrets configuration changes
+- The hash is automatically recomputed by Helm
+
+**Note**: External Secrets Operator automatically syncs secrets from the external provider according to the configured `refreshInterval`. Pod restarts occur automatically when the ExternalSecret configuration in the chart is modified.
+
+### 7.6. Aggregating Secrets from Multiple Sources
+
+A key advantage of this implementation is the ability to aggregate secrets from different sources into a single Kubernetes Secret:
+
+```yaml
+externalSecrets:
+  create: true
+  targetSecret:
+    name: aggregated-secrets
+  data:
+    # Database secrets
+    - secretKey: db-host
+      remoteRef:
+        key: /prod/database/config
+        property: host
+    - secretKey: db-password
+      remoteRef:
+        key: /prod/database/credentials
+        property: password
+
+    # API secrets
+    - secretKey: api-key
+      remoteRef:
+        key: /prod/api/credentials
+        property: key
+
+    # Cache secrets
+    - secretKey: redis-password
+      remoteRef:
+        key: /prod/cache/credentials
+        property: password
+
+    # Monitoring secrets
+    - secretKey: monitoring-token
+      remoteRef:
+        key: /prod/monitoring/tokens
+        property: app-token
+```
+
+Result: a single K8s Secret `aggregated-secrets` containing all keys.
+
+### 7.7. Complete Example
+
+See the `microservices/externalsecrets-example/values.yaml` file for a complete configuration example.
+

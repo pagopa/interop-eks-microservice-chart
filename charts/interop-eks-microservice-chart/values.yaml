@@ -48,10 +48,31 @@ service:
 
 ingress:
   # -- Enable K8s Ingress deployment generation
-  create: false
   # -- ingress.create and service.targetGroupArn must be mutually exclusive.
-  className: alb
+  create: false
+  # -- (string) Group name for ALB Ingresses, used to associate multiple ingresses to the same ALB when using AWS Load Balancer Controller; used when ingress.type is "alb"
   groupName: "interop-be"
+  # -- (int) ALB group order annotation value (`alb.ingress.kubernetes.io/group.order`); optional, used when ingress.type is "alb". Can be 0.
+  groupOrder:
+  # -- (string) Hostname for the ALB ingress rule; used when ingress.type is "alb"
+  host:
+  # -- (string) Path prefix for the ALB ingress rule; used when ingress.type is "alb"
+  applicationPath:
+  ingressClassName:
+  type:
+  # -- (list) list of annotations to apply to the Ingress resource
+  annotations: {}
+  # -- (list) List of ingress rules; required when ingress.type is "nginx", must be null (~) or omitted when type is "alb".
+  # Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific).
+  # Example:
+  #   rules:
+  #     - host: api.example.com
+  #       path: /api
+  #       pathType: Prefix
+  #     - host: api.example.com
+  #       path: /health
+  #       pathType: Exact
+  rules: ~
 
 deployment:
   # -- (bool) Enable annotation generation for referenced configmaps and secrets
@@ -152,6 +173,8 @@ autoscaling:
   keda:
     # -- (bool) Enable KEDA autoscaling
     create: false
+    # -- (bool) Pause KEDA autoscaling by setting autoscaling.keda.sh/paused annotation on ScaledObject
+    paused: false
     # -- (int) minimum replica count
     minReplicaCount:
     # -- (int) maximum replica count
@@ -162,3 +185,37 @@ autoscaling:
     cooldownPeriod:
     # -- (list) triggers configuration, refer to https://keda.sh/docs/2.17/scalers/
     triggers:
+
+externalSecrets:
+  # -- (bool) Enable ExternalSecret creation
+  create: false
+  # -- (string) Refresh interval for the secret (e.g., "1h", "30m")
+  refreshInterval: "0"
+  # -- (string) Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ]
+  refreshPolicy: "OnChange"
+  # -- (object) Reference to SecretStore or ClusterSecretStore
+  secretStoreRef:
+    name: ""
+    kind: SecretStore  # or ClusterSecretStore
+  # -- (object) Target Kubernetes Secret configuration
+  targetSecret:
+    # -- (string) Name of the target secret (defaults to microservice name)
+    name: ""
+    # -- (string) Creation policy: Owner, Orphan, Merge, None
+    creationPolicy: Merge
+    # -- (string) Deletion policy: Retain, Delete
+    deletionPolicy: Retain
+  # -- (list) List of individual secret keys to sync from external secret manager
+  data: []
+    # - secretKey: username
+    #   remoteRef:
+    #     key: /path/to/secret
+    #     property: username
+    #     version: v1                       # (string) Version identifier for the remote secret
+    #     conversionStrategy: Default
+    #     decodingStrategy: None
+    # - secretKey: password
+    #   remoteRef:
+    #     key: /path/to/secret
+    #     property: password
+    #     version: v1

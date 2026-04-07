@@ -110,6 +110,115 @@
         }
       }
     },
+    "ingress": {
+      "description": "Ingress properties",
+      "type": "object",
+      "allOf": [
+        {
+          "comment": "When create:true, type must be a non-null string from the allowed enum.",
+          "if": {
+            "properties": { "create": { "const": true } }
+          },
+          "then": {
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["alb", "nginx"]
+              }
+            }
+          }
+        },
+        {
+          "comment": "When create:true and type==nginx, ingressClassName and rules are required and must be non-empty.",
+          "if": {
+            "properties": {
+              "create": { "const": true },
+              "type":   { "const": "nginx" }
+            }
+          },
+          "then": {
+            "required": ["ingressClassName", "rules"],
+            "properties": {
+              "ingressClassName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rules": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "create": {
+          "description": "Enable ingress creation",
+          "type": "boolean",
+          "default": false
+        },
+        "type": {
+          "description": "Ingress type",
+          "type": ["string", "null"],
+          "enum": ["alb", "nginx", null]
+        },
+        "ingressClassName": {
+          "description": "Ingress class name; required when type is nginx",
+          "type": ["string", "null"]
+        },
+        "groupName": {
+          "description": "ALB ingress group name; used when type is alb",
+          "type": "string",
+          "default": "interop-be"
+        },
+        "groupOrder": {
+          "description": "ALB ingress group order annotation value; optional, used when type is alb",
+          "type": ["integer", "null"]
+        },
+        "host": {
+          "description": "Hostname for the ALB ingress rule; used when type is alb",
+          "type": ["string", "null"]
+        },
+        "applicationPath": {
+          "description": "Path prefix for the ALB ingress rule; used when type is alb",
+          "type": ["string", "null"]
+        },
+        "annotations": {
+          "description": "Annotations to apply to Ingress resource",
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "rules": {
+          "description": "List of ingress rules; used when type is nginx (null/omitted for alb). Each item must have host, path and pathType.",
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "required": ["host", "path", "pathType"],
+            "properties": {
+              "host": {
+                "description": "Host for the ingress rule",
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "description": "Path for the ingress rule",
+                "type": "string",
+                "minLength": 1
+              },
+              "pathType": {
+                "description": "Path type for the ingress rule",
+                "type": "string",
+                "enum": ["Prefix", "Exact", "ImplementationSpecific"]
+              }
+            }
+          }
+        }
+      }
+    },
     "name": {
       "description": "Service name",
       "type": "string"
@@ -117,6 +226,128 @@
     "namespace": {
       "description": "Kubernetes namespace",
       "type": "string"
+    },
+    "serviceAccount": {
+      "description": "ServiceAccount configuration",
+      "type": "object",
+      "properties": {
+        "create": {
+          "description": "Enable ServiceAccount creation",
+          "type": "boolean",
+          "default": true
+        },
+        "roleArn": {
+          "description": "ServiceAccount roleARN for AWS IAM role binding (optional)",
+          "type": ["string", "null"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "externalSecrets": {
+      "description": "External Secrets Operator configuration",
+      "type": "object",
+      "properties": {
+        "create": {
+          "description": "Enable ExternalSecret creation",
+          "type": "boolean",
+          "default": false
+        },
+        "refreshInterval": {
+          "description": "Refresh interval for the secret (e.g., '1h', '30m')",
+          "type": "string",
+          "default": "0"
+        },
+        "refreshPolicy": {
+          "description": "Refresh policy for the secret",
+          "type": "string",
+          "enum": ["OnChange", "Interval"],
+          "default": "OnChange"
+        },
+        "secretStoreRef": {
+          "description": "Reference to SecretStore or ClusterSecretStore",
+          "type": "object",
+          "properties": {
+            "name": {
+              "description": "Name of the SecretStore",
+              "type": "string"
+            },
+            "kind": {
+              "description": "Kind of the store",
+              "type": "string",
+              "enum": ["SecretStore", "ClusterSecretStore"],
+              "default": "SecretStore"
+            }
+          },
+          "required": ["name"]
+        },
+        "targetSecret": {
+          "description": "Target Kubernetes Secret configuration",
+          "type": "object",
+          "properties": {
+            "name": {
+              "description": "Name of the target secret (defaults to microservice name)",
+              "type": "string"
+            },
+            "creationPolicy": {
+              "description": "Creation policy for the target secret",
+              "type": "string",
+              "enum": ["Owner", "Orphan", "Merge", "None"],
+              "default": "Merge"
+            },
+            "deletionPolicy": {
+              "description": "Deletion policy for the target secret",
+              "type": "string",
+              "enum": ["Retain", "Delete"],
+              "default": "Retain"
+            }
+          }
+        },
+        "data": {
+          "description": "List of individual secret keys to sync from external secret manager",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "secretKey": {
+                "description": "Key name in the target Kubernetes Secret",
+                "type": "string"
+              },
+              "remoteRef": {
+                "description": "Reference to the remote secret",
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "description": "Remote secret key/path",
+                    "type": "string"
+                  },
+                  "property": {
+                    "description": "Property to extract from the remote secret",
+                    "type": "string"
+                  },
+                  "version": {
+                    "description": "Version identifier for the remote secret",
+                    "type": "string"
+                  },
+                  "conversionStrategy": {
+                    "description": "Conversion strategy",
+                    "type": "string"
+                  },
+                  "decodingStrategy": {
+                    "description": "Decoding strategy",
+                    "type": "string"
+                  }
+                },
+                "required": ["key", "property"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["secretKey", "remoteRef"],
+            "additionalProperties": false
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": true
     }
   },
   "required": [

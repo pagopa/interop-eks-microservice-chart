@@ -1,0 +1,9 @@
+# Test case 4 – Host explicitly empty
+# Expected: ALB rule is rendered without host field.
+
+ingress:
+  create: true
+  type: alb
+  groupName: interop-be
+  applicationPath: /api
+  host: ""

@@ -1,0 +1,14 @@
+# Test case 5 – Ingress disabled (create: false)
+# Expected: NO Ingress resource is rendered (kind: Ingress must be absent
+#           from the templated output).
+name: test
+namespace: test
+techStack: nodejs
+
+deployment:
+  image:
+    repository: nginx
+    tag: stable
+
+ingress:
+  create: false
