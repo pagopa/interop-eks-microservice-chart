@@ -1,0 +1,12 @@
+externalSecrets:
+  create: false
+  targetSecret:
+    name: app-secrets
+  secretStoreRef:
+    name: app-secret-store
+    kind: SecretStore
+  data:
+    - secretKey: SHOULD_NOT_BE_RENDERED
+      remoteRef:
+        key: /app/secrets
+        property: should-not-be-rendered

@@ -234,6 +234,16 @@ spec:
                   key: {{ $key }}
             {{- end }}
             {{- end }}
+            {{- if and .Values.externalSecrets .Values.externalSecrets.create .Values.externalSecrets.data }}
+            {{- $esSecretName := .Values.externalSecrets.targetSecret.name | default $root.Values.name }}
+            {{- range .Values.externalSecrets.data }}
+            - name: {{ .secretKey }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $esSecretName }}
+                  key: {{ .secretKey }}
+            {{- end }}
+            {{- end }}
             {{- if and .Values.deployment .Values.deployment.envFromFieldRef }}
             {{- range $key, $val := .Values.deployment.envFromFieldRef }}
             - name: {{ $key }}
