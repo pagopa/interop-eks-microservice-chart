@@ -294,11 +294,11 @@ ingress:
   applicationPath: "/api-gateway"
 ```
 
-### 3.2 NGINX ingress (`ingress.type: "nginx"`)
+### 3.2 Generic ingress (`ingress.type: "generic"`)
 
-When `type` is `nginx`, the chart renders `templates/ingress-nginx.yaml`.
+When `type` is `generic`, the chart renders `templates/ingress-nginx.yaml`.
 
-When `create: true` and `type: "nginx"`, these fields are required:
+When `create: true` and `type: "generic"`, these fields are required:
 - `ingressClassName`
 - `rules` (at least one entry)
 
@@ -316,7 +316,7 @@ Example:
 
 ingress:
   create: true
-  type: "nginx"
+  type: "generic"
   ingressClassName: "nginx"
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"

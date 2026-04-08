@@ -12,7 +12,7 @@ deployment:
 
 ingress:
   create: true
-  type: nginx
+  type: generic
   ingressClassName: nginx
   annotations:
     nginx.org/proxy-connect-timeout: "60s"
