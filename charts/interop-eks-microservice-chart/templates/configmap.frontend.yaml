@@ -1,5 +1,4 @@
-{{- if eq .Values.techStack "frontend" }}
-{{- if or .Values.frontend.nginx .Values.frontend.additionalAssets }}
+{{- if include "interop-eks-microservice-chart.hasFrontendConfigmap" . }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -16,5 +15,4 @@ data:
   {{- toYaml (index .Values.frontend.nginx "default.conf") | nindent 4 }}
   {{- end }}
   {{ include "interop-eks-microservice-chart.generateFrontendConfigmapData" (dict "context" $) | nindent 2 }}
-{{- end }}
 {{- end }}
