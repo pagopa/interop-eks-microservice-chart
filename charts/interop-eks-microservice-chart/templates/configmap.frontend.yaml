@@ -5,8 +5,9 @@ metadata:
   name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
 data:
-  {{- if .Values.configmap -}}
+  {{- $projected := .Values.frontend.additionalAssets | default (list) }}
   {{- range $key, $val := .Values.configmap }}
+  {{- if has $key $projected }}
   {{ $key }}: {{ include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) | quote }}
   {{- end }}
   {{- end }}
@@ -14,5 +15,7 @@ data:
   default.conf:
   {{- toYaml (index .Values.frontend.nginx "default.conf") | nindent 4 }}
   {{- end }}
+  {{- if has "env.js" $projected }}
   {{ include "interop-eks-microservice-chart.generateFrontendConfigmapData" (dict "context" $) | nindent 2 }}
+  {{- end }}
 {{- end }}
