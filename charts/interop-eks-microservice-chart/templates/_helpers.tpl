@@ -272,12 +272,10 @@ Usage:
 
 {{/* Generate frontend configmap dynamic data */}}
 {{- define "interop-eks-microservice-chart.generateFrontendConfigmapData" -}}
-{{- $givenContext :=  .context }}
+{{- $givenContext := .context }}
 {{- if and $givenContext.Values.frontend (hasKey $givenContext.Values.frontend "env.js") }}
-{{- range $key, $val := $givenContext.Values.frontend }}
-{{/* $key is env.js */}}
-{{- if eq $key "env.js" }}
-{{ $key }}: |-
+{{- $val := index $givenContext.Values.frontend "env.js" }}
+env.js: |-
 {{- /* json_key = window.pagopa_env */ -}}
 {{- range $json_key, $json_val := $val }}
 {{- $windowVar := dict }}
@@ -316,8 +314,6 @@ Usage:
 {{- end }}
 {{- end }}
 {{- $json_key | nindent 2 }} = {{- $windowVar | toPrettyJson | nindent 4 }}
-{{- end }}
-{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
