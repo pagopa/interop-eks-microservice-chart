@@ -1,0 +1,8 @@
+externalSecrets:
+  create: true
+  dataFrom:
+    - find:
+        path: my-app/
+        tags:
+          env: prod
+          team: payments

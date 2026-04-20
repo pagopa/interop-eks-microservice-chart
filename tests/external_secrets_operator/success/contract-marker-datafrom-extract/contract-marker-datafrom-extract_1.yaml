@@ -1,0 +1,7 @@
+externalSecrets:
+  create: true
+  data: []
+  dataFrom:
+  - extract:
+      key: my-secret
+      version: v1

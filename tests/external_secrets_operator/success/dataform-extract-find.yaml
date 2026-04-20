@@ -1,0 +1,8 @@
+# extract and find entries mixed in the same list
+externalSecrets:
+  dataFrom:
+  - extract:
+      key: my-app/config
+  - find:
+      name:
+        regexp: "^my-app/.*"

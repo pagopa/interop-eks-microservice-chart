@@ -1,0 +1,6 @@
+# single find entry with name regexp
+externalSecrets:
+  dataFrom:
+  - find:
+      name:
+        regexp: "^my-app/.*"

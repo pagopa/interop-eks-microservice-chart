@@ -60,6 +60,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | enableLookup | bool | `true` | Enable Resources lookup on K8s cluster to resolve referenced values |
 | externalSecrets.create | bool | `false` | Enable ExternalSecret creation |
 | externalSecrets.data | list | `[]` | List of individual secret keys to sync from external secret manager |
+| externalSecrets.dataFrom | string | `nil` |  |
 | externalSecrets.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
 | externalSecrets.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
 | externalSecrets.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
@@ -920,6 +921,65 @@ data:
     remoteRef:
       key: /prod/app/secrets
       property: jwt-secret
+```
+
+#### 7.2.5. dataFrom
+
+`dataFrom` is optional and allows importing full key/value sets instead of mapping individual keys.
+
+Each `dataFrom` entry must contain exactly one source among:
+- `extract`: import from one specific remote secret
+- `find`: search and import multiple remote secrets
+- `sourceRef`: import from an External Secrets Generator resource
+
+Optional `rewrite` rules are supported with `extract` and `find` to rename imported keys.
+
+> `data` and `dataFrom` can be used together in the same `externalSecrets` configuration.
+
+Example using `extract`:
+
+```yaml
+externalSecrets:
+  create: true
+  secretStoreRef:
+    name: aws-secretsmanager
+    kind: SecretStore
+  dataFrom:
+    - extract:
+        key: /prod/app/config
+        decodingStrategy: Auto
+```
+
+Example using `find` with `rewrite`:
+
+```yaml
+externalSecrets:
+  create: true
+  secretStoreRef:
+    name: aws-secretsmanager
+    kind: SecretStore
+  dataFrom:
+    - find:
+        path: /prod/app
+        name:
+          regexp: "^my-app-.*"
+      rewrite:
+        - regexp:
+            source: "^my-app-(.*)$"
+            target: "$1"
+```
+
+Example using `sourceRef` (generator):
+
+```yaml
+externalSecrets:
+  create: true
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: ECRAuthorizationToken
+          name: ecr-token
 ```
 
 ### 7.3. Template for Transformed Secrets

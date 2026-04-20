@@ -1,0 +1,7 @@
+# find with only tags (no name, no path)
+externalSecrets:
+  dataFrom:
+  - find:
+      tags:
+        environment: production
+        team: backend

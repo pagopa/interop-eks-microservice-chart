@@ -1,0 +1,15 @@
+# add new source
+externalSecrets:
+  create: true
+  data:
+    - secretKey: USERNAME
+      remoteRef:
+        key: my-secret
+        property: username
+        version: v1
+  dataFrom:
+    - extract:
+        key: shared-secret
+        version: v1
+    - find:
+        path: extra/

@@ -1,0 +1,6 @@
+# find.name missing required field regexp
+externalSecrets:
+  dataFrom:
+    - find:
+        name:
+          pattern: "^my-app/.*"

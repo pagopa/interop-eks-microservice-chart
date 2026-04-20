@@ -1,0 +1,7 @@
+# sourceRef.generatorRef missing required field apiVersion
+externalSecrets:
+  dataFrom:
+  - sourceRef:
+      generatorRef:
+        kind: Password
+        name: my-generator

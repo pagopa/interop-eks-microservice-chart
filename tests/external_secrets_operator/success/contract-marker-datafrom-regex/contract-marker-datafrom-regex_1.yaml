@@ -1,0 +1,7 @@
+externalSecrets:
+  create: true
+  dataFrom:
+    - find:
+        path: my-app/
+        name:
+          regexp: ".*prod.*"

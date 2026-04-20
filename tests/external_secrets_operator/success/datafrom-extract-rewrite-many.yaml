@@ -1,0 +1,12 @@
+# rewrite with multiple regexp rules
+externalSecrets:
+  dataFrom:
+  - extract:
+      key: my-app/config
+    rewrite:
+      - regexp:
+          source: "my-app/(.*)"
+          target: "$1"
+      - regexp:
+          source: "(.*)_SECRET"
+          target: "$1"
