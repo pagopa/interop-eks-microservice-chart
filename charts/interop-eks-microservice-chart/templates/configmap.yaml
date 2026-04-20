@@ -1,4 +1,4 @@
-{{- if and (ne .Values.techStack "frontend")  .Values.configmap -}}
+{{- if include "interop-eks-microservice-chart.hasBackendConfigmap" . -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
