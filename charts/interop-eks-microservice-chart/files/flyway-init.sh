@@ -33,19 +33,19 @@ if [ -n "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" ]; then
   echo "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" | tr ',' '\n' > "$tmplist"
 
   # Temporary workaround: assume INTERNAL_FLYWAY_MIGRATIONS_PATHS contains only one path (either file or directory) and resolve it directly without looping.
-  first_path=$(head -n 1 "$tmplist" | tr -d '[:space:]')
-  if [ -n "$first_path" ]; then
-    location=$(resolve_location "$first_path")
-    locations="filesystem:$location"
-  fi
+  #first_path=$(head -n 1 "$tmplist" | tr -d '[:space:]')
+  #if [ -n "$first_path" ]; then
+  #  location=$(resolve_location "$first_path")
+  #  locations="filesystem:$location"
+  #fi
 
 
-  #while IFS= read -r path; do
-  #  path=$(echo "$path" | tr -d '[:space:]')
-  #  [ -z "$path" ] && continue
-  #  location=$(resolve_location "$path")
-  #  locations="${locations:+$locations,}filesystem:$location"
-  #done < "$tmplist"
+  while IFS= read -r path; do
+    path=$(echo "$path" | tr -d '[:space:]')
+    [ -z "$path" ] && continue
+    location=$(resolve_location "$path")
+    locations="${locations:+$locations,}filesystem:$location"
+  done < "$tmplist"
 
   rm -f "$tmplist"
   if [ -n "$locations" ]; then
