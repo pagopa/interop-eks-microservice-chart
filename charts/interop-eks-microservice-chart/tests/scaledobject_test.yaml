@@ -1,0 +1,231 @@
+suite: test KEDA autoscaling
+templates:
+  - scaledobject.yaml
+tests:
+  - it: should not create scaledobject when create is false
+    set:
+      techStack: nodejs
+      name: test-service
+      namespace: test-namespace
+      autoscaling:
+        keda:
+          create: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create scaledobject with basic configuration
+    set:
+      techStack: nodejs
+      name: test-service
+      namespace: test-namespace
+      autoscaling:
+        keda:
+          create: true
+          minReplicaCount: 2
+          maxReplicaCount: 10
+          pollingInterval: 30
+          cooldownPeriod: 300
+          triggers:
+            - type: prometheus
+              metadata:
+                serverAddress: http://prometheus:9090
+                metricName: http_requests_total
+                threshold: "100"
+                query: sum(rate(http_requests_total[2m]))
+    asserts:
+      - isKind:
+          of: ScaledObject
+      - equal:
+          path: metadata.name
+          value: test-service
+      - equal:
+          path: metadata.namespace
+          value: test-namespace
+      - equal:
+          path: spec.minReplicaCount
+          value: 2
+      - equal:
+          path: spec.maxReplicaCount
+          value: 10
+      - equal:
+          path: spec.pollingInterval
+          value: 30
+      - equal:
+          path: spec.cooldownPeriod
+          value: 300
+
+  - it: should configure prometheus trigger
+    set:
+      techStack: nodejs
+      name: test-service
+      namespace: test-namespace
+      autoscaling:
+        keda:
+          create: true
+          minReplicaCount: 1
+          maxReplicaCount: 5
+          triggers:
+            - type: prometheus
+              metadata:
+                serverAddress: http://prometheus:9090
+                metricName: http_requests_total
+                threshold: "100"
+    asserts:
+      - contains:
+          path: spec.triggers
+          content:
+            type: prometheus
+            metadata:
+              serverAddress: http://prometheus:9090
+              metricName: http_requests_total
+              threshold: "100"
+
+  - it: should configure CPU trigger
+    set:
+      techStack: nodejs
+      name: test-service
+      namespace: test-namespace
+      autoscaling:
+        keda:
+          create: true
+          minReplicaCount: 2
+          maxReplicaCount: 10
+          triggers:
+            - type: cpu
+              metricType: Utilization
+              metadata:
+                value: "80"
+    asserts:
+      - contains:
+          path: spec.triggers
+          content:
+            type: cpu
+            metricType: Utilization
+            metadata:
+              value: "80"
+
+  - it: should configure memory trigger
+    set:
+      techStack: nodejs
+      name: test-service
+      namespace: test-namespace
+      autoscaling:
+        keda:
+          create: true
+          minReplicaCount: 2
+          maxReplicaCount: 10
+          triggers:
+            - type: memory
+              metricType: Utilization
+              metadata:
+                value: "80"
+    asserts:
+      - contains:
+          path: spec.triggers
+          content:
+            type: memory
+            metricType: Utilization
+            metadata:
+              value: "80"
+
+  - it: should configure SQS trigger
+    set:
+      techStack: nodejs
+      name: test-service
+      namespace: test-namespace
+      autoscaling:
+        keda:
+          create: true
+          minReplicaCount: 1
+          maxReplicaCount: 20
+          triggers:
+            - type: aws-sqs-queue
+              metadata:
+                queueURL: https://sqs.eu-central-1.amazonaws.com/123456789012/my-queue
+                queueLength: "5"
+                awsRegion: eu-central-1
+                identityOwner: operator
+    asserts:
+      - contains:
+          path: spec.triggers
+          content:
+            type: aws-sqs-queue
+            metadata:
+              queueURL: https://sqs.eu-central-1.amazonaws.com/123456789012/my-queue
+              queueLength: "5"
+              awsRegion: eu-central-1
+              identityOwner: operator
+
+  - it: should configure multiple triggers
+    set:
+      techStack: nodejs
+      name: test-service
+      namespace: test-namespace
+      autoscaling:
+        keda:
+          create: true
+          minReplicaCount: 2
+          maxReplicaCount: 10
+          triggers:
+            - type: cpu
+              metricType: Utilization
+              metadata:
+                value: "80"
+            - type: memory
+              metricType: Utilization
+              metadata:
+                value: "80"
+    asserts:
+      - isKind:
+          of: ScaledObject
+      - lengthEqual:
+          path: spec.triggers
+          count: 2
+
+  - it: should reference correct deployment
+    set:
+      techStack: nodejs
+      name: test-service
+      namespace: test-namespace
+      autoscaling:
+        keda:
+          create: true
+          minReplicaCount: 1
+          maxReplicaCount: 5
+          pollingInterval: 30
+          cooldownPeriod: 300
+          triggers:
+            - type: prometheus
+              metadata:
+                serverAddress: http://prometheus:9090
+                threshold: "100"
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: test-service
+
+  - it: should configure custom polling and cooldown
+    set:
+      techStack: nodejs
+      name: test-service
+      namespace: test-namespace
+      autoscaling:
+        keda:
+          create: true
+          minReplicaCount: 1
+          maxReplicaCount: 5
+          pollingInterval: 15
+          cooldownPeriod: 600
+          triggers:
+            - type: prometheus
+              metadata:
+                serverAddress: http://prometheus:9090
+                threshold: "100"
+    asserts:
+      - equal:
+          path: spec.pollingInterval
+          value: 15
+      - equal:
+          path: spec.cooldownPeriod
+          value: 600

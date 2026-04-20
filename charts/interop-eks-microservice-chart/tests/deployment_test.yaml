@@ -1,0 +1,193 @@
+suite: test deployment backend
+templates:
+  - deployment.yaml
+tests:
+  - it: should create a deployment with basic configuration
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      deployment:
+        replicas: 2
+        image:
+          repositoryPrefix: test.ecr.eu-central-1.amazonaws.com
+          repositoryName: test-service
+          tag: "1.0.0"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: test-service
+      - equal:
+          path: metadata.namespace
+          value: test-namespace
+      - equal:
+          path: spec.replicas
+          value: 2
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: test-service
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: test.ecr.eu-central-1.amazonaws.com/test-service:1.0.0
+
+  - it: should use digest when provided
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      deployment:
+        replicas: 1
+        image:
+          repositoryPrefix: test.ecr.eu-central-1.amazonaws.com
+          repositoryName: test-service
+          tag: "1.0.0"
+          digest: "sha256:abc123"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: test.ecr.eu-central-1.amazonaws.com/test-service:1.0.0@sha256:abc123
+
+  - it: should configure resources correctly
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      deployment:
+        replicas: 1
+        image:
+          repositoryPrefix: test.ecr.eu-central-1.amazonaws.com
+          tag: "1.0.0"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 100m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 128Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 200m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 256Mi
+
+  - it: should configure liveness and readiness probes
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      deployment:
+        replicas: 1
+        image:
+          repositoryPrefix: test.ecr.eu-central-1.amazonaws.com
+          tag: "1.0.0"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 5
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /health
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 30
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /ready
+
+  - it: should configure security context
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      deployment:
+        replicas: 1
+        image:
+          repositoryPrefix: test.ecr.eu-central-1.amazonaws.com
+          tag: "1.0.0"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+
+  - it: should configure rolling update strategy
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      deployment:
+        replicas: 1
+        image:
+          repositoryPrefix: test.ecr.eu-central-1.amazonaws.com
+          tag: "1.0.0"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: RollingUpdate
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 1
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 0
