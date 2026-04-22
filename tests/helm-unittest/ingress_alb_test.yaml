@@ -1,0 +1,75 @@
+suite: ingress alb
+templates:
+  - templates/ingress-alb.yaml
+
+tests:
+  - it: renders a static host with application path
+    values:
+      - ../values/ingress-alb/values-base.yaml
+      - ../values/ingress-alb/host-static.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.ingressClassName
+          value: alb
+      - equal:
+          path: metadata.annotations["alb.ingress.kubernetes.io/group.name"]
+          value: interop-be
+      - equal:
+          path: spec.rules[0].host
+          value: api.example.com
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /api
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8080
+
+  - it: renders a templated host after values evaluation
+    values:
+      - ../values/ingress-alb/values-base.yaml
+      - ../values/ingress-alb/host-templated.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].host
+          value: test-svc.example.com
+
+  - it: omits the host field when it is missing
+    values:
+      - ../values/ingress-alb/values-base.yaml
+      - ../values/ingress-alb/host-missing.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - notExists:
+          path: spec.rules[0].host
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /api
+
+  - it: omits the host field when it is explicitly empty
+    values:
+      - ../values/ingress-alb/values-base.yaml
+      - ../values/ingress-alb/host-empty.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - notExists:
+          path: spec.rules[0].host
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /api
+
+  - it: renders no rule entries when applicationPath is not provided
+    values:
+      - ../values/ingress-alb/values-base.yaml
+      - ../values/ingress-alb/host-without-application-path.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - notExists:
+          path: spec.rules[0]
+

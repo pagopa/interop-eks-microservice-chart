@@ -18,10 +18,10 @@ service:
 serviceAccount:
   roleArn: "arn:aws:iam::000000000:role/interop-iam-service-dev-nodejs-service"
 
-configmap: {}
-  #POSTGRES_DB_CM: "postgres_db"
-  #POSTGRES_SCHEMA: "test-namespace_myschema"
-  #EXTERNAL: "{{.Values.externalValue}}"
+configmap:
+  POSTGRES_DB_CM: "postgres_db"
+  POSTGRES_SCHEMA: "test-namespace_myschema"
+  EXTERNAL: "{{.Values.externalValue}}"
 
 deployment:
   replicas: 2
@@ -80,8 +80,8 @@ deployment:
   envFromFieldRef:
     NAMESPACE: "metadata.name"
   env:
-    #REQUIRED_CONTACT_POINT_NR: "{{.Values.deployment.replicas}}"
-    #NAMES_WELL_KNOWN_URLS: "{{.Values.name}}.WELL_KNOWN_URLS"
+    REQUIRED_CONTACT_POINT_NR: "{{.Values.deployment.replicas}}"
+    NAMES_WELL_KNOWN_URLS: "{{.Values.name}}.WELL_KNOWN_URLS"
   envFromConfigmaps:
     WELL_KNOWN_URLS: "common-jwt.WELL_KNOWN_URLS"
     AGREEMENT_MANAGEMENT_URL: "common-services-urls.AGREEMENT_MANAGEMENT_URL"
