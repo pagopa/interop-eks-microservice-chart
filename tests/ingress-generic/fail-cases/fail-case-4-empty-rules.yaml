@@ -12,6 +12,6 @@ deployment:
 
 ingress:
   create: true
-  type: nginx
+  type: generic
   ingressClassName: nginx
   rules: []

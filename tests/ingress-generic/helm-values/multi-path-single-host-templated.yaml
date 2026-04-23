@@ -5,6 +5,8 @@ name: test
 namespace: test
 techStack: nodejs
 
+locals:
+  hostName: "test.api.example.com"
 deployment:
   image:
     repository: nginx
@@ -12,12 +14,12 @@ deployment:
 
 ingress:
   create: true
-  type: nginx
+  type: generic
   ingressClassName: nginx
   rules:
-    - host: api.example.com
+    - host: "{{ .Values.locals.hostName }}"
       path: /api
       pathType: Prefix
-    - host: api.example.com
+    - host: "{{ .Values.locals.hostName }}"
       path: /health
       pathType: Exact

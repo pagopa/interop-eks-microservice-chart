@@ -11,7 +11,7 @@ deployment:
 
 ingress:
   create: true
-  type: nginx
+  type: generic
   rules:
     - host: api.example.com
       path: /api

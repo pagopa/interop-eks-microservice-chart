@@ -74,7 +74,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | ingress.groupOrder | int | `nil` | ALB group order annotation value (`alb.ingress.kubernetes.io/group.order`); optional, used when ingress.type is "alb". Can be 0. |
 | ingress.host | string | `nil` | Hostname for the ALB ingress rule; used when ingress.type is "alb" |
 | ingress.ingressClassName | string | `nil` |  |
-| ingress.rules | list | `nil` | List of ingress rules; required when ingress.type is "nginx", must be null (~) or omitted when type is "alb". Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific). Example:   rules:     - host: api.example.com       path: /api       pathType: Prefix     - host: api.example.com       path: /health       pathType: Exact |
+| ingress.rules | list | `nil` | List of ingress rules; required when ingress.type is "generic", must be null (~) or omitted when type is "alb". Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific). Example:   rules:     - host: api.example.com       path: /api       pathType: Prefix     - host: api.example.com       path: /health       pathType: Exact |
 | ingress.type | string | `nil` |  |
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
 | namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
@@ -374,11 +374,11 @@ ingress:
   applicationPath: "/api-gateway"
 ```
 
-### 3.2 NGINX ingress (`ingress.type: "nginx"`)
+### 3.2 Generic ingress (`ingress.type: "generic"`)
 
-When `type` is `nginx`, the chart renders `templates/ingress-nginx.yaml`.
+When `type` is `generic`, the chart renders `templates/ingress-nginx.yaml`.
 
-When `create: true` and `type: "nginx"`, these fields are required:
+When `create: true` and `type: "generic"`, these fields are required:
 - `ingressClassName`
 - `rules` (at least one entry)
 
@@ -396,7 +396,7 @@ Example:
 
 ingress:
   create: true
-  type: "nginx"
+  type: "generic"
   ingressClassName: "nginx"
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
