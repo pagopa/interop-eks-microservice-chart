@@ -33,6 +33,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.flywayInitContainer.executeFlywayMigrate | bool | `true` | execute Flyway migrate command to apply migrations to the database |
 | deployment.flywayInitContainer.executeFlywayRepair | bool | `false` | execute Flyway repair command to recompute applied migrations metadata; useful for whitespace changes. |
 | deployment.flywayInitContainer.image.digest | string | `nil` | if set, overrides tag with the specified digest |
+| deployment.flywayInitContainer.image.imagePullPolicy | string | `nil` | Image pull policy for the init container; if unset, the Kubernetes default applies |
 | deployment.flywayInitContainer.image.repositoryName | string | `nil` | must be set if create is true, e.g. "interop-flyway-migrations" |
 | deployment.flywayInitContainer.image.repositoryPrefix | string | `nil` |  |
 | deployment.flywayInitContainer.image.tag | string | `nil` | defaults to deployment image tag if not set |
