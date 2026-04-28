@@ -118,6 +118,9 @@ spec:
       initContainers:
         - name: migrate-db
           image: "{{ $flyway_repository_prefix }}/{{ $flyway_repository_name }}{{ $flyway_image_tag }}{{ $flyway_image_digest }}"
+          {{- if .Values.deployment.flywayInitContainer.image.imagePullPolicy }}
+          imagePullPolicy: {{ .Values.deployment.flywayInitContainer.image.imagePullPolicy }}
+          {{- end }}
           command:
             - /bin/sh
             - -c
