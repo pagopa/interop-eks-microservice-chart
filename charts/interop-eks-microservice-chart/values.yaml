@@ -62,7 +62,7 @@ ingress:
   type:
   # -- (list) list of annotations to apply to the Ingress resource
   annotations: {}
-  # -- (list) List of ingress rules; required when ingress.type is "nginx", must be null (~) or omitted when type is "alb".
+  # -- (list) List of ingress rules; required when ingress.type is "generic", must be null (~) or omitted when type is "alb".
   # Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific).
   # Example:
   #   rules:
