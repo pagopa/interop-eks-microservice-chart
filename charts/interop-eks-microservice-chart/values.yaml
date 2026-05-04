@@ -147,6 +147,8 @@ deployment:
       tag:
       # -- (string) if set, overrides tag with the specified digest
       digest:
+      # -- (string) Image pull policy for the init container; if unset, the Kubernetes default applies
+      imagePullPolicy:
     # -- (bool) execute Flyway migrate command to apply migrations to the database
     executeFlywayMigrate: true
     # -- (bool) execute Flyway repair command to recompute applied migrations metadata; useful for whitespace changes.
