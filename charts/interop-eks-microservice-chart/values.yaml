@@ -62,7 +62,7 @@ ingress:
   type:
   # -- (list) list of annotations to apply to the Ingress resource
   annotations: {}
-  # -- (list) List of ingress rules; required when ingress.type is "nginx", must be null (~) or omitted when type is "alb".
+  # -- (list) List of ingress rules; required when ingress.type is "generic", must be null (~) or omitted when type is "alb".
   # Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific).
   # Example:
   #   rules:
@@ -147,6 +147,8 @@ deployment:
       tag:
       # -- (string) if set, overrides tag with the specified digest
       digest:
+      # -- (string) Image pull policy for the init container; if unset, the Kubernetes default applies
+      imagePullPolicy:
     # -- (bool) execute Flyway migrate command to apply migrations to the database
     executeFlywayMigrate: true
     # -- (bool) execute Flyway repair command to recompute applied migrations metadata; useful for whitespace changes.
@@ -205,7 +207,10 @@ externalSecrets:
     creationPolicy: Merge
     # -- (string) Deletion policy: Retain, Delete
     deletionPolicy: Retain
-  # -- (list) List of individual secret keys to sync from external secret manager
+  # -- (list) List of individual secret keys to sync from external secret manager.
+  # When externalSecrets.create is true, each secretKey is automatically injected as an env var
+  # in the Deployment, referencing externalSecrets.targetSecret.name (defaults to the service name).
+  # This is the ExternalSecret equivalent of the top-level "configmap" field.
   data: []
     # - secretKey: username
     #   remoteRef:

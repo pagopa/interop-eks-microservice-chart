@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.41.1](https://img.shields.io/badge/Version-1.41.1-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.43.0](https://img.shields.io/badge/Version-1.43.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -33,6 +33,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.flywayInitContainer.executeFlywayMigrate | bool | `true` | execute Flyway migrate command to apply migrations to the database |
 | deployment.flywayInitContainer.executeFlywayRepair | bool | `false` | execute Flyway repair command to recompute applied migrations metadata; useful for whitespace changes. |
 | deployment.flywayInitContainer.image.digest | string | `nil` | if set, overrides tag with the specified digest |
+| deployment.flywayInitContainer.image.imagePullPolicy | string | `nil` | Image pull policy for the init container; if unset, the Kubernetes default applies |
 | deployment.flywayInitContainer.image.repositoryName | string | `nil` | must be set if create is true, e.g. "interop-flyway-migrations" |
 | deployment.flywayInitContainer.image.repositoryPrefix | string | `nil` |  |
 | deployment.flywayInitContainer.image.tag | string | `nil` | defaults to deployment image tag if not set |
@@ -59,7 +60,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.strategy | object | `{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"0%"},"type":"RollingUpdate"}` | Rollout strategy |
 | enableLookup | bool | `true` | Enable Resources lookup on K8s cluster to resolve referenced values |
 | externalSecrets.create | bool | `false` | Enable ExternalSecret creation |
-| externalSecrets.data | list | `[]` | List of individual secret keys to sync from external secret manager |
+| externalSecrets.data | list | `[]` | List of individual secret keys to sync from external secret manager. When externalSecrets.create is true, each secretKey is automatically injected as an env var in the Deployment, referencing externalSecrets.targetSecret.name (defaults to the service name). This is the ExternalSecret equivalent of the top-level "configmap" field. |
 | externalSecrets.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
 | externalSecrets.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
 | externalSecrets.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
@@ -74,7 +75,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | ingress.groupOrder | int | `nil` | ALB group order annotation value (`alb.ingress.kubernetes.io/group.order`); optional, used when ingress.type is "alb". Can be 0. |
 | ingress.host | string | `nil` | Hostname for the ALB ingress rule; used when ingress.type is "alb" |
 | ingress.ingressClassName | string | `nil` |  |
-| ingress.rules | list | `nil` | List of ingress rules; required when ingress.type is "nginx", must be null (~) or omitted when type is "alb". Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific). Example:   rules:     - host: api.example.com       path: /api       pathType: Prefix     - host: api.example.com       path: /health       pathType: Exact |
+| ingress.rules | list | `nil` | List of ingress rules; required when ingress.type is "generic", must be null (~) or omitted when type is "alb". Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific). Example:   rules:     - host: api.example.com       path: /api       pathType: Prefix     - host: api.example.com       path: /health       pathType: Exact |
 | ingress.type | string | `nil` |  |
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
 | namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
@@ -374,11 +375,11 @@ ingress:
   applicationPath: "/api-gateway"
 ```
 
-### 3.2 NGINX ingress (`ingress.type: "nginx"`)
+### 3.2 Generic ingress (`ingress.type: "generic"`)
 
-When `type` is `nginx`, the chart renders `templates/ingress-nginx.yaml`.
+When `type` is `generic`, the chart renders `templates/ingress-nginx.yaml`.
 
-When `create: true` and `type: "nginx"`, these fields are required:
+When `create: true` and `type: "generic"`, these fields are required:
 - `ingressClassName`
 - `rules` (at least one entry)
 
@@ -396,7 +397,7 @@ Example:
 
 ingress:
   create: true
-  type: "nginx"
+  type: "generic"
   ingressClassName: "nginx"
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"

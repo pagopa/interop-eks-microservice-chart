@@ -2,15 +2,10 @@
   {{ fail "ingress.create and service.targetGroupArn cannot both be configured; please define just one." }}
 {{- end }}
 
-{{- if and .Values.ingress.create (eq .Values.ingress.type "nginx") }}
+{{- if and .Values.ingress.create (eq .Values.ingress.type "generic") }}
 {{- $rulesByHost := include "interop-eks-microservice-chart.ingress-rules-by-host" .Values.ingress.rules | fromYaml | default (dict) }}
 
-{{- $defaultAnnotations := dict
-  "nginx.org/proxy-connect-timeout" "10s"
-  "nginx.org/proxy-read-timeout" "28s"
-  "nginx.org/proxy-send-timeout" "10s"
-  "nginx.org/client-max-body-size" "10m" }}
-{{- $mergedAnnotations := mergeOverwrite $defaultAnnotations ((.Values.ingress.annotations) | default dict) }}
+{{- $annotations := (.Values.ingress.annotations) | default dict }}
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -20,7 +15,7 @@ metadata:
   labels:
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
   annotations:
-    {{- toYaml $mergedAnnotations | nindent 4 }}
+    {{- toYaml $annotations | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.ingressClassName }}
   rules:

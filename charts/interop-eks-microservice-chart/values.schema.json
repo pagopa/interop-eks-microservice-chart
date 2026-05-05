@@ -124,17 +124,17 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["alb", "nginx"]
+                "enum": ["alb", "generic"]
               }
             }
           }
         },
         {
-          "comment": "When create:true and type==nginx, ingressClassName and rules are required and must be non-empty.",
+          "comment": "When create:true and type==generic, ingressClassName and rules are required and must be non-empty.",
           "if": {
             "properties": {
               "create": { "const": true },
-              "type":   { "const": "nginx" }
+              "type":   { "const": "generic" }
             }
           },
           "then": {
@@ -161,10 +161,10 @@
         "type": {
           "description": "Ingress type",
           "type": ["string", "null"],
-          "enum": ["alb", "nginx", null]
+          "enum": ["alb", "generic", null]
         },
         "ingressClassName": {
-          "description": "Ingress class name; required when type is nginx",
+          "description": "Ingress class name; required when type is generic",
           "type": ["string", "null"]
         },
         "groupName": {
@@ -193,7 +193,7 @@
           }
         },
         "rules": {
-          "description": "List of ingress rules; used when type is nginx (null/omitted for alb). Each item must have host, path and pathType.",
+          "description": "List of ingress rules; used when type is generic (null/omitted for alb). Each item must have host, path and pathType.",
           "type": ["array", "null"],
           "items": {
             "type": "object",

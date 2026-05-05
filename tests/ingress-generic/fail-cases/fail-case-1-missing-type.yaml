@@ -1,6 +1,5 @@
-# Test case 1 – Single host, single path (Prefix)
-# Expected: one Ingress resource with ingressClassName "nginx",
-#           one rule for api.example.com with path /api (Prefix).
+# Fail case 1 – Missing required field: type
+# Expected: helm lint fails with a schema validation error because ingress.type is required when ingress.create is true.
 name: test
 namespace: test
 techStack: nodejs
@@ -12,7 +11,6 @@ deployment:
 
 ingress:
   create: true
-  type: generic
   ingressClassName: nginx
   rules:
     - host: api.example.com
