@@ -14,6 +14,11 @@ service:
   targetPort: 8080
   portName: http
 
+ingress:
+  create: true
+  type: generic
+  ingressClassName: nginx
+
 deployment:
   replicas: 1
   image:

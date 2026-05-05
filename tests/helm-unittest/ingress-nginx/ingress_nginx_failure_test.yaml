@@ -1,8 +1,6 @@
 suite: ingress nginx failures
 templates:
-  - templates/ingress-nginx.yaml
-values:
-  - ingress-nginx-values-base.yaml
+  - templates/ingress-generic.yaml
 
 tests:
   - it: fails schema validation when ingress type is missing

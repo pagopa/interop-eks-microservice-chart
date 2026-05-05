@@ -1,6 +1,6 @@
 ingress:
   create: true
-  type: nginx
+  type: generic
   ingressClassName: nginx
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt

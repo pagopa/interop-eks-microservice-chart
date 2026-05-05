@@ -1,6 +1,6 @@
 suite: ingress nginx
 templates:
-  - templates/ingress-nginx.yaml
+  - templates/ingress-generic.yaml
 values:
   - ../common/base.yaml
 
