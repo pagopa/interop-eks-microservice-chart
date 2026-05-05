@@ -1,0 +1,87 @@
+suite: flyway chart test manual
+templates:
+  - templates/deployment.yaml
+values:
+  - flyway-chart-test-values-base.yaml
+
+tests:
+  - it: mounts the migrations configmap for the configmap-based flyway test
+    values:
+      - test-case-1-configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: test-flyway-configmap
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: flyway/flyway:latest
+      - equal:
+          path: spec.template.spec.initContainers[0].volumeMounts[0].mountPath
+          value: /flyway/sql
+      - equal:
+          path: spec.template.spec.volumes[0].projected.sources[0].configMap.name
+          value: flyway-migrations-configmap
+      - notContains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
+          any: true
+
+  - it: keeps directory migration paths unchanged for the custom flyway image test
+    values:
+      - test-case-2-paths-dirs.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: local/flyway-custom:test
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
+            value: filesystem:/migrations/tenant,filesystem:/migrations/product
+
+  - it: supports a single SQL file as flyway migration path
+    values:
+      - test-case-3-paths-file.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
+            value: filesystem:/migrations/account/V4__create_account.sql
+
+  - it: renders repair-and-migrate for the flyway chart repair scenario
+    values:
+      - test-case-4-repair-migrate.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_ACTION
+            value: repair-and-migrate
+
+  - it: keeps the initial incremental migration path in step 1
+    values:
+      - test-case-5-step1.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: test-flyway-incremental
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
+            value: filesystem:/migrations/tenant
+
+  - it: updates the incremental migration paths in step 2
+    values:
+      - test-case-5-step2.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: test-flyway-incremental
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
+            value: filesystem:/migrations/product,filesystem:/migrations/tenant

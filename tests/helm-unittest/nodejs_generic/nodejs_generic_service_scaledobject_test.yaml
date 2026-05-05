@@ -1,0 +1,28 @@
+suite: nodejs generic service scaledobject
+templates:
+  - templates/scaledobject.yaml
+
+tests:
+  - it: renders scaledobject with computed max replicas and cron trigger
+    values:
+      - nodejs_generic_service.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ScaledObject
+      - equal:
+          path: metadata.annotations["autoscaling.keda.sh/paused"]
+          value: "false"
+      - equal:
+          path: spec.minReplicaCount
+          value: 0
+      - equal:
+          path: spec.maxReplicaCount
+          value: 2
+      - equal:
+          path: spec.triggers[0].type
+          value: cron
+      - equal:
+          path: spec.triggers[0].metadata.desiredReplicas
+          value: "2"
