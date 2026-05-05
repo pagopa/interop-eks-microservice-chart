@@ -50,7 +50,7 @@ jobs:
           set -euo pipefail
 
           # https://github.com/helm-unittest/helm-unittest/blob/main/README.md
-          test_files=$(find "$PWD/tests/helm-unittest" -maxdepth 1 -type f -name '*_test.yaml' | sort)
+          test_files=$(find "$PWD/tests/helm-unittest" -type f -name '*_test.yaml' | sort)
 
           if [ -z "$test_files" ]; then
             echo "No helm unittest suites found in tests/helm-unittest"
