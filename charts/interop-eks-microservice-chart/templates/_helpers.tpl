@@ -245,8 +245,9 @@ Usage:
 {{/* End of generateRolloutAnnotations */}}
 
 {{- define "externalsecrets.contractMarker" -}}
-{{- if and .Values.externalSecrets .Values.externalSecrets.create .Values.externalSecrets.data }}
-{{- toJson .Values.externalSecrets.data | sha256sum }}
+{{- $data := .data }}
+{{- if $data }}
+{{- toJson $data | sha256sum }}
 {{- end -}}
 {{- end -}}
 

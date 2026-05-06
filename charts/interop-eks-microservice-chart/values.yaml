@@ -187,38 +187,75 @@ autoscaling:
     triggers:
 
 externalSecrets:
-  # -- (bool) Enable ExternalSecret creation
-  create: false
-  # -- (string) Refresh interval for the secret (e.g., "1h", "30m")
-  refreshInterval: "0"
-  # -- (string) Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ]
-  refreshPolicy: "OnChange"
-  # -- (object) Reference to SecretStore or ClusterSecretStore
-  secretStoreRef:
-    name: ""
-    kind: SecretStore  # or ClusterSecretStore
-  # -- (object) Target Kubernetes Secret configuration
-  targetSecret:
-    # -- (string) Name of the target secret (defaults to microservice name)
-    name: ""
-    # -- (string) Creation policy: Owner, Orphan, Merge, None
-    creationPolicy: Merge
-    # -- (string) Deletion policy: Retain, Delete
-    deletionPolicy: Retain
-  # -- (list) List of individual secret keys to sync from external secret manager.
-  # When externalSecrets.create is true, each secretKey is automatically injected as an env var
-  # in the Deployment, referencing externalSecrets.targetSecret.name (defaults to the service name).
-  # This is the ExternalSecret equivalent of the top-level "configmap" field.
-  data: []
-    # - secretKey: username
-    #   remoteRef:
-    #     key: /path/to/secret
-    #     property: username
-    #     version: v1                       # (string) Version identifier for the remote secret
-    #     conversionStrategy: Default
-    #     decodingStrategy: None
-    # - secretKey: password
-    #   remoteRef:
-    #     key: /path/to/secret
-    #     property: password
-    #     version: v1
+  container:
+    # -- (bool) Enable ExternalSecret creation
+    create: false
+    # -- (string) Refresh interval for the secret (e.g., "1h", "30m")
+    refreshInterval: "0"
+    # -- (string) Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ]
+    refreshPolicy: "OnChange"
+    # -- (object) Reference to SecretStore or ClusterSecretStore
+    secretStoreRef:
+      name: ""
+      kind: SecretStore  # or ClusterSecretStore
+    # -- (object) Target Kubernetes Secret configuration
+    targetSecret:
+      # -- (string) Name of the target secret (defaults to microservice name)
+      name: ""
+      # -- (string) Creation policy: Owner, Orphan, Merge, None
+      creationPolicy: Merge
+      # -- (string) Deletion policy: Retain, Delete
+      deletionPolicy: Retain
+    # -- (list) List of individual secret keys to sync from external secret manager.
+    # When externalSecrets.create is true, each secretKey is automatically injected as an env var
+    # in the Deployment, referencing externalSecrets.targetSecret.name (defaults to the service name).
+    # This is the ExternalSecret equivalent of the top-level "configmap" field.
+    data: []
+      # - secretKey: username
+      #   remoteRef:
+      #     key: /path/to/secret
+      #     property: username
+      #     version: v1                       # (string) Version identifier for the remote secret
+      #     conversionStrategy: Default
+      #     decodingStrategy: None
+      # - secretKey: password
+      #   remoteRef:
+      #     key: /path/to/secret
+      #     property: password
+      #     version: v1
+  initContainer:
+    # -- (bool) Enable ExternalSecret creation
+    create: false
+    # -- (string) Refresh interval for the secret (e.g., "1h", "30m")
+    refreshInterval: "0"
+    # -- (string) Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ]
+    refreshPolicy: "OnChange"
+    # -- (object) Reference to SecretStore or ClusterSecretStore
+    secretStoreRef:
+      name: ""
+      kind: SecretStore  # or ClusterSecretStore
+    # -- (object) Target Kubernetes Secret configuration
+    targetSecret:
+      # -- (string) Name of the target secret (defaults to microservice name)
+      name: ""
+      # -- (string) Creation policy: Owner, Orphan, Merge, None
+      creationPolicy: Merge
+      # -- (string) Deletion policy: Retain, Delete
+      deletionPolicy: Retain
+    # -- (list) List of individual secret keys to sync from external secret manager.
+    # When externalSecrets.create is true, each secretKey is automatically injected as an env var
+    # in the Deployment, referencing externalSecrets.targetSecret.name (defaults to the service name).
+    # This is the ExternalSecret equivalent of the top-level "configmap" field.
+    data: []
+      # - secretKey: username
+      #   remoteRef:
+      #     key: /path/to/secret
+      #     property: username
+      #     version: v1                       # (string) Version identifier for the remote secret
+      #     conversionStrategy: Default
+      #     decodingStrategy: None
+      # - secretKey: password
+      #   remoteRef:
+      #     key: /path/to/secret
+      #     property: password
+      #     version: v1

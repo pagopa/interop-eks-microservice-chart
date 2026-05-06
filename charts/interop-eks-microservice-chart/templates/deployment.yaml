@@ -123,6 +123,12 @@ spec:
             - -c
             - |
 {{- .Files.Get "files/flyway-init.sh" | nindent 14 }}
+          {{- if and .Values.externalSecrets .Values.externalSecrets.initContainer .Values.externalSecrets.initContainer.create (or .Values.externalSecrets.initContainer.data .Values.externalSecrets.initContainer.dataFrom) }}
+          {{- $esSecretName := .Values.externalSecrets.initContainer.targetSecret.name | default (printf "%s-flyway" $root.Values.name) }}
+          envFrom:
+            - secretRef:
+                name: {{ $esSecretName }}
+          {{- end }}
           env:
             {{- if .Values.deployment.flywayInitContainer.migrationPaths }}
             - name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
@@ -224,8 +230,8 @@ spec:
           securityContext:
             {{- toYaml .Values.deployment.securityContext | nindent 12 }}
           {{- end }}
-          {{- if and .Values.externalSecrets .Values.externalSecrets.create (or .Values.externalSecrets.data .Values.externalSecrets.dataFrom) }}
-          {{- $esSecretName := .Values.externalSecrets.targetSecret.name | default $root.Values.name }}
+          {{- if and .Values.externalSecrets .Values.externalSecrets.container .Values.externalSecrets.container.create (or .Values.externalSecrets.container.data .Values.externalSecrets.container.dataFrom) }}
+          {{- $esSecretName := .Values.externalSecrets.container.targetSecret.name | default $root.Values.name }}
           envFrom:
             - secretRef:
                 name: {{ $esSecretName }}
