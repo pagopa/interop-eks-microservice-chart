@@ -60,7 +60,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.strategy | object | `{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"0%"},"type":"RollingUpdate"}` | Rollout strategy |
 | enableLookup | bool | `true` | Enable Resources lookup on K8s cluster to resolve referenced values |
 | externalSecrets.create | bool | `false` | Enable ExternalSecret creation |
-| externalSecrets.data | list | `[]` | List of individual secret keys to sync from external secret manager. When externalSecrets.create is true, each secretKey is automatically injected as an env var in the Deployment, referencing externalSecrets.targetSecret.name (defaults to the service name). This is the ExternalSecret equivalent of the top-level "configmap" field. |
+| externalSecrets.data | list | `[]` | List of individual secret keys to sync from external secret manager |
 | externalSecrets.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
 | externalSecrets.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
 | externalSecrets.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
