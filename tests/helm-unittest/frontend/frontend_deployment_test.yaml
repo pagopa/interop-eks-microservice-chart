@@ -1,0 +1,45 @@
+suite: frontend deployment
+templates:
+  - templates/deployment.frontend.yaml
+
+values:
+  - frontend.yaml
+
+tests:
+  - it: renders the frontend deployment with expected image and mounted assets
+    set:
+      deployment.enableRolloutAnnotations: false
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: 000000000000.dkr.ecr.eu-central-1.amazonaws.com/frontend-service:latest
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /etc/nginx/conf.d/default.conf
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: /usr/share/nginx/html/ui/env.js
+      - equal:
+          path: spec.template.spec.volumes[1].configMap.items[0].key
+          value: env.js
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 80
+
+  - it: renders frontend deployment resources and preStop lifecycle
+    set:
+      deployment.enableRolloutAnnotations: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 250m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 1Gi
+      - equal:
+          path: spec.template.spec.containers[0].lifecycle.preStop.exec.command[2]
+          value: sleep 30; exit 0;

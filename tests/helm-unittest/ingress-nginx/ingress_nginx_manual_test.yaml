@@ -1,0 +1,121 @@
+suite: ingress nginx manual
+templates:
+  - templates/ingress-generic.yaml
+values:
+  - ingress-nginx-values-base.yaml
+
+tests:
+  - it: renders a single rule ingress
+    values:
+      - single-rule.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.ingressClassName
+          value: nginx
+      - equal:
+          path: spec.rules[0].host
+          value: api.example.com
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /api
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: Prefix
+
+  - it: groups multiple paths under the same static host
+    values:
+      - multi-path-single-host.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].host
+          value: api.example.com
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /api
+      - equal:
+          path: spec.rules[0].http.paths[1].path
+          value: /health
+      - equal:
+          path: spec.rules[0].http.paths[1].pathType
+          value: Exact
+
+  - it: groups multiple paths under the same templated host
+    values:
+      - multi-path-single-host-templated.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].host
+          value: test.api.example.com
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /api
+      - equal:
+          path: spec.rules[0].http.paths[1].path
+          value: /health
+
+  - it: renders distinct rules for multiple hosts including templated ones
+    values:
+      - multi-host.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].host
+          value: api.example.com
+      - equal:
+          path: spec.rules[1].host
+          value: test.admin.example.com
+      - equal:
+          path: spec.rules[1].http.paths[0].path
+          value: /path2
+
+  - it: merges custom annotations with nginx defaults
+    values:
+      - annotations.yaml
+    asserts:
+      - equal:
+          path: metadata.annotations["nginx.org/proxy-connect-timeout"]
+          value: 60s
+      - equal:
+          path: metadata.annotations["nginx.org/proxy-read-timeout"]
+          value: 60s
+      - equal:
+          path: metadata.annotations["nginx.org/rewrite-target"]
+          value: /$1
+      - equal:
+          path: metadata.annotations["ingress.kubernetes.io/ssl-redirect"]
+          value: "true"
+
+  - it: does not render ingress when creation is disabled
+    values:
+      - ingress-disabled.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders a single templated host rule
+    values:
+      - templated-host-single-rule.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].host
+          value: test.example.com
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /api
+
+  - it: groups multiple paths under a resolved templated host
+    values:
+      - templated-host-multi-path.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].host
+          value: testname.testns.example.com
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /api
+      - equal:
+          path: spec.rules[0].http.paths[1].path
+          value: /health

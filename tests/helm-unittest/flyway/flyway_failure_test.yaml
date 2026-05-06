@@ -1,0 +1,18 @@
+suite: flyway failures
+templates:
+  - templates/deployment.yaml
+
+tests:
+  - it: fails when both migrationsConfigmap and migrationPaths are configured
+    values:
+      - flyway_fail_migrationpaths_and_configmap.yaml
+    asserts:
+      - failedTemplate: {}
+          #errorPattern: 'Invalid configuration - Both migrationsConfigmap and migrationPaths in flywayInitContainer cannot be defined at the same time\.'
+
+  - it: fails when both flyway actions are disabled
+    values:
+      - flyway_fail_no_actions.yaml
+    asserts:
+      - failedTemplate: {}
+          #errorPattern: 'Invalid configuration: Both executeFlywayMigrate and executeFlywayRepair in the flywayInitContainer are false\.'
