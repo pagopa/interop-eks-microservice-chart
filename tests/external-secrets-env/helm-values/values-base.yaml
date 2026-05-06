@@ -1,0 +1,29 @@
+# Base values shared by all external-secrets-env test cases.
+
+name: test-svc
+namespace: test-ns
+techStack: nodejs
+
+serviceAccount:
+  create: false
+
+service:
+  create: true
+  containerPort: 8080
+  targetPort: 8080
+  portName: http
+
+deployment:
+  replicas: 1
+  image:
+    repositoryPrefix: "library"
+    repositoryName: busybox
+    tag: "latest"
+    imagePullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "32Mi"
+    limits:
+      cpu: "100m"
+      memory: "64Mi"

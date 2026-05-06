@@ -1,0 +1,40 @@
+# Test case: InitContainer only - externalSecrets only for Flyway init container
+# Expects: Secret and ExternalSecret for initContainer data (separate from app)
+
+externalSecrets:
+  container:
+    create: false
+    refreshInterval: "0"
+    refreshPolicy: "OnChange"
+    secretStoreRef:
+      name: ""
+      kind: SecretStore
+    targetSecret:
+      name: ""
+      creationPolicy: Merge
+      deletionPolicy: Retain
+    data: []
+  initContainer:
+    create: true
+    refreshInterval: "30m"
+    refreshPolicy: "Interval"
+    secretStoreRef:
+      name: flyway-secret-store
+      kind: SecretStore
+    targetSecret:
+      name: test-svc-flyway-secrets
+      creationPolicy: Owner
+      deletionPolicy: Delete
+    data:
+      - secretKey: FLYWAY_USER
+        remoteRef:
+          key: /flyway/credentials
+          property: username
+      - secretKey: FLYWAY_PASSWORD
+        remoteRef:
+          key: /flyway/credentials
+          property: password
+      - secretKey: DB_MIGRATION_URL
+        remoteRef:
+          key: /flyway/config
+          property: db-url
