@@ -1,0 +1,67 @@
+suite: nodejs generic service deployment
+templates:
+  - templates/deployment.yaml
+values:
+  - nodejs_generic_service.yaml
+
+tests:
+  - it: renders deployment with expected replicas, ports and probes
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.replicas
+          value: 2
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: 000000000000.dkr.ecr.eu-central-1.amazonaws.com/nodejs-service:$IMAGE_TAG_PLACEHOLDER@$IMAGE_DIGEST_PLACEHOLDER
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: myPort
+      - equal:
+          path: spec.template.spec.containers[0].ports[1].name
+          value: monitoring
+      - equal:
+          path: spec.template.spec.containers[0].ports[2].name
+          value: management
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /service/0.0/status
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: http
+
+  - it: renders templated env values, flyway init container and migration configmap volume
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REQUIRED_CONTACT_POINT_NR
+            value: "2"
+          any: true
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NAMES_WELL_KNOWN_URLS
+            value: nodejs-service.WELL_KNOWN_URLS
+          any: true
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_ACTION
+            value: repair-and-migrate
+          any: true
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: EXTERNAL_ENV
+            value: some_value
+          any: true
+      - equal:
+          path: spec.template.spec.initContainers[0].volumeMounts[0].mountPath
+          value: /flyway/sql
+      - equal:
+          path: spec.template.spec.volumes[0].projected.sources[0].configMap.name
+          value: common-db-migrations

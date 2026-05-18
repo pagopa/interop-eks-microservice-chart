@@ -1,0 +1,51 @@
+name: frontend-service
+namespace: test-namespace
+techStack: frontend
+enableLookup: false
+
+service:
+  create: true
+  portName: http
+  containerPort: 80
+  targetPort: 80
+
+serviceAccount:
+  create: true
+  roleArn: arn:aws:iam::000000000:role/frontend-service
+
+deployment:
+  enableRolloutAnnotations: true
+  replicas: 1
+  image:
+    repositoryPrefix: 000000000000.dkr.ecr.eu-central-1.amazonaws.com
+    repositoryName: frontend-service
+    imagePullPolicy: Always
+    tag: latest
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: 250m
+      memory: 1Gi
+
+frontend:
+  env.js:
+    window.pagopa_env:
+      KEY: VALUE1
+      KEY_2: VALUE2.1
+      fromConfigmaps:
+        EVENTSHORE_DB_HOST_KEY2: common-event-store.EVENTSTORE_DB_HOST
+        EVENTSTORE_DB_HOST_KEY: common-event-store.EVENTSTORE_DB_HOST
+        EVENTSTORE_DB_NAME_KEY: common-event-store.EVENTSTORE_DB_NAME
+  nginx:
+    default.conf: |-
+      server {
+        listen 80;
+        location /ui {
+          root /usr/share/nginx/html;
+          try_files $uri /ui/index.html =404;
+        }
+      }
+  additionalAssets:
+    - env.js

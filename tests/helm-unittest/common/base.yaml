@@ -1,0 +1,34 @@
+name: test-svc
+namespace: test-namespace
+techStack: nodejs
+enableLookup: false
+
+serviceAccount:
+  create: true
+
+service:
+  create: true
+  type: ClusterIP
+  portName: http
+  containerPort: 8083
+
+deployment:
+  replicas: 2
+  image:
+    repositoryPrefix: docker.io/library
+    repositoryName: nginx
+    imagePullPolicy: IfNotPresent
+    tag: "1.27.0"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+ingress:
+  create: false
+
+externalSecrets:
+  create: false

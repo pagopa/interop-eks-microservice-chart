@@ -1,0 +1,17 @@
+# Fail case 4 – Empty rules list (minItems: 1 violated)
+# Expected: helm lint fails with a schema validation error because
+#           ingress.rules must contain at least one item.
+name: test
+namespace: test
+techStack: nodejs
+
+deployment:
+  image:
+    repository: nginx
+    tag: stable
+
+ingress:
+  create: true
+  type: generic
+  ingressClassName: nginx
+  rules: []

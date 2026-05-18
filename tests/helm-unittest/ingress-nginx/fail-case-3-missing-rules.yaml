@@ -1,0 +1,15 @@
+# Fail case 3 – Missing required field: rules
+# Expected: helm lint fails with a schema validation error because ingress.rules is required when ingress.create is true.
+name: test
+namespace: test
+techStack: nodejs
+
+deployment:
+  image:
+    repository: nginx
+    tag: stable
+
+ingress:
+  create: true
+  type: generic
+  ingressClassName: nginx

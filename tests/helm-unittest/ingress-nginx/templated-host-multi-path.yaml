@@ -1,0 +1,22 @@
+# Test case 8 – Same templated host, multiple paths
+# Expected: helper groups paths under one resolved host entry.
+name: testname
+namespace: testns
+techStack: nodejs
+
+deployment:
+  image:
+    repository: nginx
+    tag: stable
+
+ingress:
+  create: true
+  type: generic
+  ingressClassName: nginx
+  rules:
+    - host: "{{ .Values.name }}.{{ .Values.namespace }}.example.com"
+      path: /api
+      pathType: Prefix
+    - host: "{{ .Values.name }}.{{ .Values.namespace }}.example.com"
+      path: /health
+      pathType: Exact

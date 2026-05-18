@@ -1,0 +1,121 @@
+suite: flyway manual
+templates:
+  - templates/deployment.yaml
+
+tests:
+  - it: renders flyway init container with a single migration path
+    values:
+      - flyway_migrationpaths_single.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: 000000000000.dkr.ecr.eu-central-1.amazonaws.com/interop-flyway-migrations:1.0.0
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
+            value: /flyway_migrationpaths_single/migrations/v1_migrations
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_ACTION
+            value: migrate
+      - notExists:
+          path: spec.template.spec.initContainers[0].volumeMounts
+      - notExists:
+          path: spec.template.spec.volumes[0]
+
+  - it: preserves multiple migration paths in the init container env
+    values:
+      - flyway_migrationpaths_multi.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
+            value: /flyway_migrationpaths_multi/migrations/v1_migrations,/flyway_migrationpaths_multi/migrations/v2_migrations,/flyway_migrationpaths_multi/migrations/patches/fix_001.sql
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: FLYWAY_SCHEMAS
+            value: public
+
+  - it: sets repair-and-migrate when both flyway actions are enabled
+    values:
+      - flyway_migrationpaths_repair_and_migrate.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_ACTION
+            value: repair-and-migrate
+
+  - it: sets repair when only flyway repair is enabled
+    values:
+      - flyway_migrationpaths_repair_only.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_ACTION
+            value: repair
+
+  - it: omits migration path env and migration volumes when default flyway locations are used
+    values:
+      - flyway_no_migrationpaths_default_locations.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
+          any: true
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_ACTION
+            value: migrate
+      - notExists:
+          path: spec.template.spec.initContainers[0].volumeMounts
+      - notExists:
+          path: spec.template.spec.volumes[0]
+
+  - it: inherits repository prefix and tag for partially customized flyway images
+    values:
+      - flyway_custom_image_partial.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: 000000000000.dkr.ecr.eu-central-1.amazonaws.com/interop-flyway-migrations:1.5.0
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
+            value: /flyway_custom_image_partial/migrations/v1_migrations,/flyway_custom_image_partial/migrations/v2_migrations
+
+  - it: uses only the digest for fully customized flyway images when both tag and digest are set
+    values:
+      - flyway_custom_image_full.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: 999999999999.dkr.ecr.us-east-1.amazonaws.com/interop-flyway-migrations-custom@sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_ACTION
+            value: migrate
+
+  - it: suppresses the flyway image tag when only the digest is configured
+    values:
+      - flyway_custom_image_digest.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: 000000000000.dkr.ecr.eu-central-1.amazonaws.com/interop-flyway-migrations@sha256:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef00000001
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
+            value: /migrations/domain_a/v1_migrations

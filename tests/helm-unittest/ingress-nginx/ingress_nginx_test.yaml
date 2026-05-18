@@ -1,0 +1,32 @@
+suite: ingress nginx
+templates:
+  - templates/ingress-generic.yaml
+values:
+  - ../common/base.yaml
+
+tests:
+  - it: does not render ingress when disabled
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nginx ingress with merged annotations and backend port
+    values:
+      - ingress-enabled.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.ingressClassName
+          value: nginx
+      - equal:
+          path: metadata.annotations["cert-manager.io/cluster-issuer"]
+          value: letsencrypt
+      - equal:
+          path: spec.rules[0].host
+          value: test.example.internal
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8083

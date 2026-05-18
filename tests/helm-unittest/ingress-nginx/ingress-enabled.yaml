@@ -1,0 +1,10 @@
+ingress:
+  create: true
+  type: generic
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+  rules:
+    - host: test.example.internal
+      path: /
+      pathType: Prefix
