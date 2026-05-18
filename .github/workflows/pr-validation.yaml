@@ -1,4 +1,4 @@
-name: 'PR pre-commit validation'
+name: 'PR validation'
 on:
   pull_request:
     types:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  helm-docs-validation:
+  pre-commit:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
@@ -30,7 +30,7 @@ jobs:
         run: |
           pre-commit run --all-files
 
-  helm-unittest-validation:
+  helm-unit-test:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
