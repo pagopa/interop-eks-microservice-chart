@@ -1,0 +1,36 @@
+# Test case: Disabled - Both container and initContainer externalSecrets are disabled
+# Expects: No Secret or ExternalSecret resources created, even if data is provided
+
+externalSecrets:
+  container:
+    create: false
+    refreshInterval: "1h"
+    refreshPolicy: "OnChange"
+    secretStoreRef:
+      name: app-secret-store
+      kind: SecretStore
+    targetSecret:
+      name: test-svc-app-secrets
+      creationPolicy: Merge
+      deletionPolicy: Retain
+    data:
+      - secretKey: SHOULD_NOT_BE_RENDERED
+        remoteRef:
+          key: /app/secrets
+          property: api-key
+  initContainer:
+    create: false
+    refreshInterval: "30m"
+    refreshPolicy: "Interval"
+    secretStoreRef:
+      name: flyway-secret-store
+      kind: SecretStore
+    targetSecret:
+      name: test-svc-flyway-secrets
+      creationPolicy: Owner
+      deletionPolicy: Delete
+    data:
+      - secretKey: SHOULD_NOT_BE_RENDERED_EITHER
+        remoteRef:
+          key: /flyway/credentials
+          property: username
