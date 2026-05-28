@@ -1,0 +1,17 @@
+suite: frontend deployment env value quoting
+templates:
+  - templates/deployment.frontend.yaml
+values:
+  - frontend.yaml
+
+tests:
+  - it: preserves embedded double quotes in deployment.env values for frontend
+    set:
+      deployment.enableRolloutAnnotations: false
+      deployment.env.QUOTED_JSON: '{"key":"value"}'
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: QUOTED_JSON
+            value: '{"key":"value"}'

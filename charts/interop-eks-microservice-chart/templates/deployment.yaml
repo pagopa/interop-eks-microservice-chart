@@ -150,7 +150,7 @@ spec:
             {{- range $key, $val := .Values.deployment.flywayInitContainer.env }}
             {{- $preprocessedEnvValue := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
             - name: "{{ $key }}"
-              value: "{{ $preprocessedEnvValue }}"
+              value: {{ $preprocessedEnvValue | quote }}
             {{- end }}
             {{- end }}
             {{- if .Values.deployment.flywayInitContainer.envFromSecrets }}
@@ -249,7 +249,7 @@ spec:
             {{- range $key, $val := .Values.deployment.env }}
             {{- $preprocessedEnvValue := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
             - name: "{{ $key }}"
-              value: "{{ $preprocessedEnvValue }}"
+              value: {{ $preprocessedEnvValue | quote }}
             {{- end }}
             {{- end }}
             {{- if and .Values.deployment .Values.deployment.envFromConfigmaps }}

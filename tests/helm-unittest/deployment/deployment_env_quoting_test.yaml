@@ -1,0 +1,22 @@
+suite: deployment env value quoting
+templates:
+  - templates/deployment.yaml
+values:
+  - ../common/base.yaml
+
+tests:
+  - it: preserves embedded double quotes in deployment.env values (e.g. JSON)
+    set:
+      deployment.env.TARGET_KNODE_URLS: '{"foo":"bar"}'
+      deployment.env.PLAIN: "hello"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TARGET_KNODE_URLS
+            value: '{"foo":"bar"}'
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PLAIN
+            value: hello
