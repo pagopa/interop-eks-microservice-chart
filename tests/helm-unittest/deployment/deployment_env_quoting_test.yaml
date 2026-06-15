@@ -1,0 +1,22 @@
+suite: deployment env value quoting
+templates:
+  - templates/deployment.yaml
+values:
+  - ../common/base.yaml
+
+tests:
+  - it: preserves embedded double quotes in deployment.env values (e.g. JSON)
+    set:
+      deployment.env.QUOTED_JSON: '{"key":"value"}'
+      deployment.env.PLAIN_STRING: "text"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: QUOTED_JSON
+            value: '{"key":"value"}'
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PLAIN_STRING
+            value: text
