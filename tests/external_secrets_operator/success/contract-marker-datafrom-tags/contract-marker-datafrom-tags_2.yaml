@@ -1,0 +1,10 @@
+# no-change: reorder tags (YAML maps have no order, hash should remain same)
+
+externalSecrets:
+  create: true
+  dataFrom:
+    - find:
+        path: my-app/
+        tags:
+          team: payments
+          env: prod

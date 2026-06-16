@@ -1,0 +1,6 @@
+# extract with invalid decodingStrategy value
+externalSecrets:
+  dataFrom:
+  - extract:
+      key: my-app/config
+      decodingStrategy: InvalidStrategy

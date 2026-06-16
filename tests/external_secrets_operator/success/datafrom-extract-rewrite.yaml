@@ -1,0 +1,10 @@
+
+# Extract with rewrite
+externalSecrets:
+  dataFrom:
+  - extract:
+      key: my-app/config
+    rewrite:
+      - regexp:
+          source: "my-app/(.*)"
+          target: "$1"

@@ -1,0 +1,4 @@
+# sourceRef missing generatorRef
+externalSecrets:
+  dataFrom:
+  - sourceRef: {}

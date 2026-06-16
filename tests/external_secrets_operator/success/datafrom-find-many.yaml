@@ -1,0 +1,9 @@
+# multiple find entries
+externalSecrets:
+  dataFrom:
+  - find:
+      name:
+        regexp: "^my-app/.*"
+  - find:
+      tags:
+        environment: production

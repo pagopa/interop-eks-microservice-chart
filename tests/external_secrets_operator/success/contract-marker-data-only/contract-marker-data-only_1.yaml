@@ -1,0 +1,8 @@
+externalSecrets:
+  create: true
+  data:
+    - secretKey: USERNAME
+      remoteRef:
+        key: my-secret
+        property: username
+        version: v1

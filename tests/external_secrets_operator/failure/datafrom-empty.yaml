@@ -1,0 +1,5 @@
+
+# empty object in dataFrom list (no extract, find or sourceRef)
+externalSecrets:
+  dataFrom:
+    - {}

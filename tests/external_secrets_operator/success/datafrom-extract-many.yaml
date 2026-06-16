@@ -1,0 +1,8 @@
+
+# multiple extract entries
+externalSecrets:
+  dataFrom:
+  - extract:
+      key: my-app/config
+  - extract:
+      key: my-app/secrets

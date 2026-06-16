@@ -1,0 +1,6 @@
+# extract with invalid metadataPolicy value
+externalSecrets:
+  dataFrom:
+  - extract:
+      key: my-app/config
+      metadataPolicy: InvalidPolicy

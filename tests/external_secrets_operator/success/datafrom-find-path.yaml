@@ -1,0 +1,6 @@
+
+# find with only path
+externalSecrets:
+  dataFrom:
+  - find:
+      path: "my-app/"

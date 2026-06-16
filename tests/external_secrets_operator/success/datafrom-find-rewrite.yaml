@@ -1,0 +1,10 @@
+# find with rewrite
+externalSecrets:
+  dataFrom:
+  - find:
+      name:
+        regexp: "^my-app/.*"
+    rewrite:
+      - regexp:
+          source: "my-app/(.*)"
+          target: "$1"

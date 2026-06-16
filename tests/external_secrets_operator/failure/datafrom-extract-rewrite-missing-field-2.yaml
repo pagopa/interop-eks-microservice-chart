@@ -1,0 +1,8 @@
+# rewrite with missing required field target
+externalSecrets:
+  dataFrom:
+  - extract:
+      key: my-app/config
+    rewrite:
+      - regexp:
+          source: "(.*)"

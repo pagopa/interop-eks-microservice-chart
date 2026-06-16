@@ -1,0 +1,8 @@
+# extract + property added in dataFrom extract, version changed from v1 to v2
+externalSecrets:
+  create: true
+  dataFrom:
+    - extract:
+        key: my-secret
+        property: db
+        version: v1

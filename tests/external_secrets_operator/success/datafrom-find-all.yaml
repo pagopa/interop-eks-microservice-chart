@@ -1,0 +1,11 @@
+# find with all optional fields
+externalSecrets:
+  dataFrom:
+  - find:
+      path: "my-app/"
+      name:
+        regexp: "^my-app/.*"
+      tags:
+        environment: production
+      conversionStrategy: Default
+      decodingStrategy: None

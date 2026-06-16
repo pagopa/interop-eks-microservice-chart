@@ -1,0 +1,6 @@
+# extract with invalid conversionStrategy value
+externalSecrets:
+  dataFrom:
+  - extract:
+      key: my-app/config
+      conversionStrategy: InvalidStrategy
