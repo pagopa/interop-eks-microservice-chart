@@ -564,7 +564,13 @@ This configuration will create a PodDisruptionBudget resource that ensures at le
 
 #### 6.2.1 minAvailable
 
-Specifies the minimum number of pods that must be available during a disruption. Can be an absolute number or a percentage:
+Specifies the minimum number of pods that must be available during a disruption, i.e. after an eviction, at least this many selected Pods must still be Ready.
+Use minAvailable when the application has a known minimum capacity or quorum requirement, for example:
+* API service: at least 2 healthy replicas must remain.
+* Kafka-like or quorum-based service: preserve quorum.
+* Stateful service with 5 replicas: require at least 3 healthy members.
+
+Can be an absolute number or a percentage:
 
 ```yaml
 podDisruptionBudget:
@@ -580,9 +586,17 @@ podDisruptionBudget:
   minAvailable: "50%"          # At least 50% of pods must remain available
 ```
 
+For a service with a large fleet of replicas, a percentage can make more sense.
+
 #### 6.2.2 maxUnavailable
 
-Specifies the maximum number of pods that can be unavailable during a disruption. Can be an absolute number or a percentage. This is an alternative to `minAvailable` and cannot be used together:
+Specifies the maximum number of pods that can be unavailable during a disruption, i.e. it specifies the upper limit of pods that can be unavailable after voluntary eviction.
+
+It's often the better choice for horizontally scalable services because it naturally adapts as replica count changes.
+For example, maxUnavailable: 1 means “one Pod at a time” whether the workload has 3, 5, or 20 replicas.
+Kubernetes explicitly recommends this pattern for cases such as a 3-member ZooKeeper StatefulSet.
+
+Can be an absolute number or a percentage. This is an alternative to `minAvailable` and cannot be used together:
 
 ```yaml
 podDisruptionBudget:
@@ -612,6 +626,40 @@ podDisruptionBudget:
   create: true
   minAvailable: 1
   unhealthyPodEvictionPolicy: "IfHealthyBudget"
+```
+
+#### 6.2.4 Percentage Rounding
+
+Percentages are rounded up.
+
+For example:
+
+```
+replicas: 3
+maxUnavailable: "30%"
+```
+
+Thirty percent of three is 0.9 and Kubernetes rounds this up to 1, so one Pod may be disrupted.
+
+Likewise:
+
+```
+replicas: 7
+minAvailable: "50%"
+```
+
+requires four Ready Pods, not three.
+
+Kubernetes warns that percentage-based maxUnavailable can effectively allow a higher percentage of disruption than the literal percentage suggests on small workloads.
+
+For small replica counts, explicit integers are usually clearer:
+```
+maxUnavailable: 1
+```
+
+rather than:
+```
+maxUnavailable: "33%"
 ```
 
 ### 6.3 Examples
