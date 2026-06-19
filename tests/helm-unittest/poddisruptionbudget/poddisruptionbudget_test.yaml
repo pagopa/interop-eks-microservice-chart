@@ -59,7 +59,7 @@ tests:
     asserts:
       - equal:
           path: spec.minAvailable
-          value: 2
+          value: "2"
       - notExists:
           path: spec.maxUnavailable
 
@@ -71,7 +71,7 @@ tests:
     asserts:
       - equal:
           path: spec.minAvailable
-          value: 0
+          value: "0"
 
   - it: renders minAvailable as percentage string
     values:
@@ -100,7 +100,7 @@ tests:
     asserts:
       - equal:
           path: spec.maxUnavailable
-          value: 11
+          value: "11"
       - notExists:
           path: spec.minAvailable
 
@@ -112,7 +112,7 @@ tests:
     asserts:
       - equal:
           path: spec.maxUnavailable
-          value: 0
+          value: "0"
 
   - it: renders maxUnavailable as percentage string
     values:
@@ -179,7 +179,7 @@ tests:
     asserts:
       - equal:
           path: spec.minAvailable
-          value: 2
+          value: "2"
       - equal:
           path: spec.unhealthyPodEvictionPolicy
           value: AlwaysAllow
@@ -195,7 +195,7 @@ tests:
     asserts:
       - equal:
           path: spec.maxUnavailable
-          value: 1
+          value: "1"
       - equal:
           path: spec.unhealthyPodEvictionPolicy
           value: IfHealthyBudget
