@@ -18,10 +18,10 @@ spec:
     matchLabels:
       {{- include "interop-eks-microservice-chart.selectorLabels" . | nindent 6 }}
   {{- if $hasMinAvailable }}
-  minAvailable: {{ .Values.podDisruptionBudget.minAvailable | quote }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
   {{- end }}
   {{- if $hasMaxUnavailable }}
-  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable | quote }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
   {{- end }}
   {{- if .Values.podDisruptionBudget.unhealthyPodEvictionPolicy }}
   unhealthyPodEvictionPolicy: {{ .Values.podDisruptionBudget.unhealthyPodEvictionPolicy }}
