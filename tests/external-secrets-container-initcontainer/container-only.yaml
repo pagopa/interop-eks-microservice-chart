@@ -1,0 +1,36 @@
+# Test case: Container only - externalSecrets only for the main app container
+# Expects: Secret and ExternalSecret for container data
+
+externalSecrets:
+  container:
+    create: true
+    refreshInterval: "1h"
+    refreshPolicy: "OnChange"
+    secretStoreRef:
+      name: app-secret-store
+      kind: SecretStore
+    targetSecret:
+      name: test-svc-app-secrets
+      creationPolicy: Merge
+      deletionPolicy: Retain
+    data:
+      - secretKey: API_KEY
+        remoteRef:
+          key: /app/secrets
+          property: api-key
+      - secretKey: DB_PASSWORD
+        remoteRef:
+          key: /app/db
+          property: password
+  initContainer:
+    create: false
+    refreshInterval: "0"
+    refreshPolicy: "OnChange"
+    secretStoreRef:
+      name: ""
+      kind: SecretStore
+    targetSecret:
+      name: ""
+      creationPolicy: Merge
+      deletionPolicy: Retain
+    data: []

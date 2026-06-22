@@ -1,0 +1,44 @@
+# Test case: Both container and initContainer - externalSecrets for both app and Flyway
+# Expects: 2 Secrets and 2 ExternalSecrets (separate, one for each container)
+
+externalSecrets:
+  container:
+    create: true
+    refreshInterval: "1h"
+    refreshPolicy: "OnChange"
+    secretStoreRef:
+      name: app-secret-store
+      kind: SecretStore
+    targetSecret:
+      name: test-svc-app-secrets
+      creationPolicy: Merge
+      deletionPolicy: Retain
+    data:
+      - secretKey: API_KEY
+        remoteRef:
+          key: /app/secrets
+          property: api-key
+      - secretKey: DB_CONNECTION_STRING
+        remoteRef:
+          key: /app/db
+          property: connection-string
+  initContainer:
+    create: true
+    refreshInterval: "30m"
+    refreshPolicy: "Interval"
+    secretStoreRef:
+      name: flyway-secret-store
+      kind: SecretStore
+    targetSecret:
+      name: test-svc-flyway-secrets
+      creationPolicy: Owner
+      deletionPolicy: Delete
+    data:
+      - secretKey: FLYWAY_USER
+        remoteRef:
+          key: /flyway/credentials
+          property: username
+      - secretKey: FLYWAY_PASSWORD
+        remoteRef:
+          key: /flyway/credentials
+          property: password

@@ -74,6 +74,12 @@ spec:
           securityContext:
             {{- toYaml .Values.deployment.securityContext | nindent 12 }}
           {{- end }}
+          {{- if and .Values.externalSecrets .Values.externalSecrets.container .Values.externalSecrets.container.create (or .Values.externalSecrets.container.data .Values.externalSecrets.container.dataFrom) }}
+          {{- $esSecretName := .Values.externalSecrets.container.targetSecret.name | default $root.Values.name }}
+          envFrom:
+            - secretRef:
+                name: {{ $esSecretName }}
+          {{- end }}
           {{- if or .Values.configmap (and .Values.deployment ( or .Values.deployment.envFromFieldRef .Values.deployment.env .Values.deployment.envFromConfigmaps .Values.deployment.envFromSecrets)) }}
           env:
             {{- if .Values.configmap }}
