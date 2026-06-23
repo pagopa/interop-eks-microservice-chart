@@ -32,3 +32,6 @@ ingress:
 
 externalSecrets:
   create: false
+
+podDisruptionBudget:
+  create: false

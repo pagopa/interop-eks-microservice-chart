@@ -348,6 +348,44 @@
         }
       },
       "additionalProperties": true
+    },
+    "podDisruptionBudget": {
+      "description": "Pod Disruption Budget configuration for high availability",
+      "type": "object",
+      "properties": {
+        "create": {
+          "description": "Enable PodDisruptionBudget creation",
+          "type": "boolean",
+          "default": false
+        },
+        "minAvailable": {
+          "description": "Minimum number of pods that must be available. Can be an absolute number or a percentage string (e.g., '30%')",
+          "type": ["integer", "string", "null"],
+          "minimum": 0
+        },
+        "maxUnavailable": {
+          "description": "Maximum number of pods that can be unavailable. Can be an absolute number or a percentage string (e.g., '10%')",
+          "type": ["integer", "string", "null"],
+          "minimum": 0
+        },
+        "unhealthyPodEvictionPolicy": {
+          "description": "Policy for evicting unhealthy pods during disruption",
+          "type": ["string", "null"]
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "comment": "Either minAvailable or maxUnavailable can be set, but not both",
+          "not": {
+            "required": ["minAvailable", "maxUnavailable"],
+            "properties": {
+              "minAvailable": { "type": ["integer", "string"] },
+              "maxUnavailable": { "type": ["integer", "string"] }
+            }
+          }
+        }
+      ]
     }
   },
   "required": [

@@ -458,9 +458,178 @@ When `roleArn` is provided, the chart automatically adds the `eks.amazonaws.com/
 
 ---
 
-## 6. Deployment Types
+## 6. Pod Disruption Budget
 
-### 6.1. TechStack NodeJS
+Pod Disruption Budget (PDB) is a Kubernetes resource that ensures high availability of applications by defining the minimum number of pods that must remain available during voluntary disruptions (e.g., cluster upgrades, node drains, maintenance operations).
+
+### 6.1 Basic Configuration
+
+To enable PodDisruptionBudget creation for a microservice, set `podDisruptionBudget.create: true` in the _values.yaml_ file:
+
+```yaml
+# /microservices/agreement-management/qa/values.yaml
+
+podDisruptionBudget:
+  create: true
+  minAvailable: 1
+```
+
+This configuration will create a PodDisruptionBudget resource that ensures at least 1 pod remains available at all times.
+
+### 6.2 Configuration Options
+
+#### 6.2.1 minAvailable
+
+Specifies the minimum number of pods that must be available during a disruption, i.e. after an eviction, at least this many selected Pods must still be Ready.
+Use minAvailable when the application has a known minimum capacity or quorum requirement, for example:
+* API service: at least 2 healthy replicas must remain.
+* Kafka-like or quorum-based service: preserve quorum.
+* Stateful service with 5 replicas: require at least 3 healthy members.
+
+Can be an absolute number or a percentage:
+
+```yaml
+podDisruptionBudget:
+  create: true
+  minAvailable: 1              # At least 1 pod must remain available
+```
+
+Or using a percentage:
+
+```yaml
+podDisruptionBudget:
+  create: true
+  minAvailable: "50%"          # At least 50% of pods must remain available
+```
+
+For a service with a large fleet of replicas, a percentage can make more sense.
+
+
+#### 6.2.2 maxUnavailable
+
+Specifies the maximum number of pods that can be unavailable during a disruption, i.e. it specifies the upper limit of pods that can be unavailable after voluntary eviction.
+
+It's often the better choice for horizontally scalable services because it naturally adapts as replica count changes.
+For example, maxUnavailable: 1 means “one Pod at a time” whether the workload has 3, 5, or 20 replicas.
+Kubernetes explicitly recommends this pattern for cases such as a 3-member ZooKeeper StatefulSet.
+
+Can be an absolute number or a percentage. This is an alternative to `minAvailable` and cannot be used together:
+
+```yaml
+podDisruptionBudget:
+  create: true
+  maxUnavailable: 1            # At most 1 pod can be unavailable
+```
+
+Or using a percentage:
+
+```yaml
+podDisruptionBudget:
+  create: true
+  maxUnavailable: "10%"        # At most 10% of pods can be unavailable
+```
+
+**Note:** Either `minAvailable` or `maxUnavailable` should be defined, but not both.
+
+#### 6.2.3 unhealthyPodEvictionPolicy
+
+Defines how unhealthy pods are considered for eviction. Allowed values are:
+
+- `IfHealthyBudget` (default): Unhealthy pods can be evicted only if the budget for healthy pods is not yet met
+- `AlwaysAllow`: Unhealthy pods can always be evicted, irrespective of the budget
+
+```yaml
+podDisruptionBudget:
+  create: true
+  minAvailable: 1
+  unhealthyPodEvictionPolicy: "IfHealthyBudget"
+```
+
+#### 6.2.4 Percentage Rounding
+
+Percentages are rounded up.
+
+For example:
+
+```
+replicas: 3
+maxUnavailable: "30%"
+```
+
+Thirty percent of three is 0.9 and Kubernetes rounds this up to 1, so one Pod may be disrupted.
+
+Likewise:
+
+```
+replicas: 7
+minAvailable: "50%"
+```
+
+requires four Ready Pods, not three.
+
+Kubernetes warns that percentage-based maxUnavailable can effectively allow a higher percentage of disruption than the literal percentage suggests on small workloads.
+
+For small replica counts, explicit integers are usually clearer:
+```
+maxUnavailable: 1
+```
+
+rather than:
+```
+maxUnavailable: "33%"
+```
+
+### 6.3 Examples
+
+#### Example 1: Ensure at least 2 pods are always available
+
+```yaml
+# /microservices/critical-service/prod/values.yaml
+
+podDisruptionBudget:
+  create: true
+  minAvailable: 2
+```
+
+This configuration ensures that at least 2 pods of the microservice remain available at all times, even during cluster maintenance or upgrades.
+
+#### Example 2: Allow at most one pod to be unavailable (percentage-based)
+
+```yaml
+# /microservices/standard-service/qa/values.yaml
+
+podDisruptionBudget:
+  create: true
+  maxUnavailable: "25%"
+```
+
+This configuration allows up to 25% of pods to be unavailable during a disruption event.
+
+#### Example 3: Allow graceful eviction of unhealthy pods
+
+```yaml
+# /microservices/resilient-service/dev/values.yaml
+
+podDisruptionBudget:
+  create: true
+  minAvailable: 1
+  unhealthyPodEvictionPolicy: "AlwaysAllow"
+```
+
+This configuration ensures at least 1 pod remains available, while still allowing unhealthy pods to be evicted to improve cluster stability.
+
+### 6.4 Use Cases
+
+- **Production deployments**: Use PDB to ensure services remain available during cluster updates
+- **Multi-replica services**: Protect against accidental disruptions when scaling down nodes
+- **Mission-critical applications**: Define strict availability requirements
+- **Graceful maintenance**: Allow safe cluster upgrades without service interruption
+
+---
+
+## 7. Deployment Types
+
+### 7.1. TechStack NodeJS
 
 The following describes the Deployment templates used for Microservices developed in NodeJS; to use them, the _techStack_ value must be set in the _values.yaml_ of the specific Microservice.
 For example, for the _catalog-process_ service in the _dev-refactor_ environment, the following configuration must be used:
@@ -474,7 +643,7 @@ techStack: "nodejs"
 This configuration is required for all Deployments described below.
 
 
-#### 6.1.1. <ins>Default NodeJS Microservice Deployment</ins>
+#### 7.1.1. <ins>Default NodeJS Microservice Deployment</ins>
 
 The default deployment used for Microservices developed in NodeJS is "deployment.nodejs.yaml"; to use it, the _moduleType_ value must not be set in the _values.yaml_.
 
@@ -497,7 +666,7 @@ For the main container, the following environment variables are defined:
   * REQUIRED_CONTACT_POINT_NR: mapped to the _replicas_ value defined in the _values.yaml_
   * DEV_ENDPOINTS_ENABLED: mapped to the DEV_ENDPOINTS_ENABLED key of the common ConfigMap _interob-be-commons_
 
-#### 6.1.2. <ins>Generic Consumer Deployment</ins>
+#### 7.1.2. <ins>Generic Consumer Deployment</ins>
 
 The "deployment.nodejs.generic-consumer.yaml" deployment is currently in use only for the _dev-refactor_ environment and for the following microservices:
   * authorization-updater
@@ -522,7 +691,7 @@ Unlike the default Deployment, the following environment variables are defined f
 
 This Deployment does not use the FlyWay InitContainer.
 
-#### 6.1.3. <ins>Process Microservice Deployment</ins>
+#### 7.1.3. <ins>Process Microservice Deployment</ins>
 
 The "deployment.nodejs.process-microservice.yaml" deployment is currently in use only for the _dev-refactor_ environment and for the following microservice:
   * catalog-process
@@ -579,7 +748,7 @@ For the main container, the following environment variables are defined:
   * READMODEL_DB_PASSWORD: mapped to the _READONLY_PSW_ key of the common Secret "read-model"
 
 
-#### 6.1.4. <ins>Read Model Writer Deployment</ins>
+#### 7.1.4. <ins>Read Model Writer Deployment</ins>
 
 The "deployment.nodejs.read-model-writer.yaml" deployment is currently in use only for the _dev-refactor_ environment and for the following microservice:
   * catalog-read-model-writer
@@ -619,7 +788,7 @@ Unlike the default Deployment, the following environment variables are defined f
 This Deployment does not use the FlyWay InitContainer.
 
 
-#### 6.1.5 Frontend Deployment
+#### 7.1.5 Frontend Deployment
 
 The "deployment.frontend.yaml" deployment is used by services with "techStack" set to "frontend";
 in addition to the fields required by a generic deployment, as described above, an additional "frontend" field can be specified,
@@ -765,7 +934,7 @@ frontend:
     - tool.js
     - env.js
 
-## 7. ExternalSecrets
+## 8. ExternalSecrets
 
 External Secrets Operator is a Kubernetes operator that allows secrets to be synchronised from external providers (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, HashiCorp Vault, etc.) into native Kubernetes Secrets.
 

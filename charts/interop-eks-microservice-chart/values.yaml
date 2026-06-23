@@ -221,3 +221,13 @@ externalSecrets:
     #     key: /path/to/secret
     #     property: password
     #     version: v1
+
+podDisruptionBudget:
+  # -- (bool) Enable PodDisruptionBudget creation
+  create: false
+  # -- (int|string) The minimum number of pods that must be available. Can be an absolute number or a percentage (e.g., "30%")
+  minAvailable:
+  # -- (int|string) The maximum number of pods that can be unavailable. Can be an absolute number or a percentage (e.g., "1" or "10%")
+  maxUnavailable:
+  # -- (string) Defines how unhealthy pods are considered for eviction. Allowed values: [ "IfHealthyBudget", "AlwaysAllow" ]
+  unhealthyPodEvictionPolicy:
