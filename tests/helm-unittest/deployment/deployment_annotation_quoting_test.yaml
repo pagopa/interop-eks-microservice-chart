@@ -1,0 +1,34 @@
+suite: deployment annotation value quoting
+templates:
+  - templates/deployment.yaml
+values:
+  - ../common/base.yaml
+
+tests:
+  - it: renders Deployment metadata annotation values as strings, even when they look like YAML bools or numbers
+    set:
+      deployment.metadata.annotations:
+        example.com/bool-like: true
+        example.com/number-like: 42
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/bool-like"]
+          value: "true"
+      - equal:
+          path: metadata.annotations["example.com/number-like"]
+          value: "42"
+      - isKind:
+          of: Deployment
+
+  - it: renders pod template annotation values as strings, even when they look like YAML bools or numbers
+    set:
+      deployment.podTemplateMetadata.annotations:
+        example.com/bool-like: true
+        example.com/number-like: 42
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["example.com/bool-like"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["example.com/number-like"]
+          value: "42"
