@@ -1,0 +1,25 @@
+# Test case 4 – Custom annotations on the Ingress resource
+# Expected: Ingress metadata.annotations contains the nginx-specific
+#           rewrite-target annotation and the ssl-redirect annotation.
+name: test
+namespace: test
+techStack: nodejs
+
+deployment:
+  image:
+    repository: nginx
+    tag: stable
+
+ingress:
+  create: true
+  type: generic
+  ingressClassName: nginx
+  annotations:
+    nginx.org/proxy-connect-timeout: "60s"
+    nginx.org/proxy-read-timeout: "60s"
+    nginx.org/rewrite-target: /$1
+    ingress.kubernetes.io/ssl-redirect: "true"
+  rules:
+    - host: api.example.com
+      path: /api(/|$)(.*)
+      pathType: ImplementationSpecific

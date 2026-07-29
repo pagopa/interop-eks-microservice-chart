@@ -1,0 +1,29 @@
+{{- if .Values.podDisruptionBudget.create }}
+{{- $hasMinAvailable := and (hasKey .Values.podDisruptionBudget "minAvailable") (ne .Values.podDisruptionBudget.minAvailable nil) }}
+{{- $hasMaxUnavailable := and (hasKey .Values.podDisruptionBudget "maxUnavailable") (ne .Values.podDisruptionBudget.maxUnavailable nil) }}
+
+{{- if and $hasMinAvailable $hasMaxUnavailable }}
+{{- fail "podDisruptionBudget.minAvailable and podDisruptionBudget.maxUnavailable are mutually exclusive" }}
+{{- end }}
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "interop-eks-microservice-chart.selectorLabels" . | nindent 6 }}
+  {{- if $hasMinAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  {{- end }}
+  {{- if $hasMaxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  {{- if .Values.podDisruptionBudget.unhealthyPodEvictionPolicy }}
+  unhealthyPodEvictionPolicy: {{ .Values.podDisruptionBudget.unhealthyPodEvictionPolicy }}
+  {{- end }}
+{{- end }}

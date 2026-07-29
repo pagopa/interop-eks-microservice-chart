@@ -1,0 +1,16 @@
+suite: flyway init container env value quoting
+templates:
+  - templates/deployment.yaml
+
+tests:
+  - it: preserves embedded double quotes in flywayInitContainer.env values
+    values:
+      - flyway_migrationpaths_single.yaml
+    set:
+      deployment.flywayInitContainer.env.QUOTED_JSON: '{"key":"value"}'
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: QUOTED_JSON
+            value: '{"key":"value"}'

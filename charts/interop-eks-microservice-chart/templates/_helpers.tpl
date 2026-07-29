@@ -118,16 +118,36 @@ Usage:
 {{- end -}}
 
 {{/*
+Truthy when templates/configmap.yaml renders a ConfigMap.
+Source of truth for the backend ConfigMap render condition.
+*/}}
+{{- define "interop-eks-microservice-chart.hasBackendConfigmap" -}}
+{{- if and (ne .Values.techStack "frontend") .Values.configmap -}}
+true
+{{- end -}}
+{{- end -}}
+
+{{/*
+Truthy when templates/configmap.frontend.yaml renders a ConfigMap.
+Source of truth for the frontend ConfigMap render condition.
+*/}}
+{{- define "interop-eks-microservice-chart.hasFrontendConfigmap" -}}
+{{- if and (eq .Values.techStack "frontend") .Values.frontend (or .Values.frontend.nginx .Values.frontend.additionalAssets) -}}
+true
+{{- end -}}
+{{- end -}}
+
+{{/*
 Generate annotations (in deployment.spec.template.metadata) for each configmap, secret and service account referenced by the deployment.
 Usage:
 {{ include "interop-eks-microservice-chart.generateRolloutAnnotations" }}
 */}}
 {{- define "interop-eks-microservice-chart.generateRolloutAnnotations" -}}
 
-{{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations .Values.configmap -}}
-{{- if eq .Values.techStack "frontend" }}
+{{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations -}}
+{{- if include "interop-eks-microservice-chart.hasFrontendConfigmap" . }}
 {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.frontend.yaml") . | sha256sum | quote }}
-{{- else }}
+{{- else if include "interop-eks-microservice-chart.hasBackendConfigmap" . }}
 {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum | quote }}
 {{- end }}
 {{- end }}
@@ -252,12 +272,10 @@ Usage:
 
 {{/* Generate frontend configmap dynamic data */}}
 {{- define "interop-eks-microservice-chart.generateFrontendConfigmapData" -}}
-{{- $givenContext :=  .context }}
+{{- $givenContext := .context }}
 {{- if and $givenContext.Values.frontend (hasKey $givenContext.Values.frontend "env.js") }}
-{{- range $key, $val := $givenContext.Values.frontend }}
-{{/* $key is env.js */}}
-{{- if eq $key "env.js" }}
-{{ $key }}: |-
+{{- $val := index $givenContext.Values.frontend "env.js" }}
+env.js: |-
 {{- /* json_key = window.pagopa_env */ -}}
 {{- range $json_key, $json_val := $val }}
 {{- $windowVar := dict }}
@@ -296,8 +314,6 @@ Usage:
 {{- end }}
 {{- end }}
 {{- $json_key | nindent 2 }} = {{- $windowVar | toPrettyJson | nindent 4 }}
-{{- end }}
-{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

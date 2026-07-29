@@ -1,0 +1,19 @@
+suite: frontend deployment metadata annotation value quoting
+templates:
+  - templates/deployment.frontend.yaml
+values:
+  - frontend.yaml
+tests:
+  - it: renders Deployment metadata annotation values as strings, even when they look like YAML bools or numbers
+    set:
+      deployment.enableRolloutAnnotations: false
+      deployment.metadata.annotations:
+        example.com/bool-like: true
+        example.com/number-like: 42
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/bool-like"]
+          value: "true"
+      - equal:
+          path: metadata.annotations["example.com/number-like"]
+          value: "42"

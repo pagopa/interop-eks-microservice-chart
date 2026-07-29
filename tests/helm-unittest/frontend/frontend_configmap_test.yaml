@@ -1,0 +1,21 @@
+suite: frontend configmap
+templates:
+  - templates/configmap.frontend.yaml
+
+tests:
+  - it: renders the frontend configmap with nginx config and generated env.js
+    values:
+      - frontend.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      - exists:
+          path: data["default.conf"]
+      - matchRegex:
+          path: data["env.js"]
+          pattern: "LOOKUP_PLACEHOLDER"
+      - matchRegex:
+          path: data["env.js"]
+          pattern: "\"KEY_2\": \"VALUE2\\.1\""
