@@ -11,7 +11,7 @@ service:
 deployment:
   replicas: 1
   image:
-    repositoryPrefix: "library"
+    repositoryPrefix: "docker.io"
     repositoryName: busybox
     tag: "latest"
     imagePullPolicy: IfNotPresent
