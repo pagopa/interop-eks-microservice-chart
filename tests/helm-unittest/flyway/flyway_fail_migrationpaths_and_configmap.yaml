@@ -1,8 +1,8 @@
-# Test case EXPECTED TO FAIL (helm lint/template deve fallire).
+# Test case EXPECTED TO FAIL (helm lint/template must fail).
 #
-# Verifica il caso limite in cui vengono valorizzati contemporaneamente
-# migrationPaths e migrationsConfigmap: la chart deve produrre un errore
-# tramite la funzione `fail` del template con il messaggio:
+# Verifies the edge case where migrationPaths and migrationsConfigmap are set
+# at the same time: the chart must raise an error
+# through the template `fail` function with message:
 #   "Invalid configuration: Both migrationsConfigmap and migrationPaths in
 #    flywayInitContainer cannot be defined at the same time."
 name: "flyway-conflict-paths-configmap-service"

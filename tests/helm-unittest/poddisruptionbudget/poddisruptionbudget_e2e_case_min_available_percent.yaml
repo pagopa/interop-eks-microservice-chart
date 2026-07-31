@@ -1,0 +1,5 @@
+name: pdb-min-percent
+namespace: pdb-e2e-min-percent
+
+podDisruptionBudget:
+  minAvailable: "50%"

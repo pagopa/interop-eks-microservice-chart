@@ -1,0 +1,34 @@
+name: pdb-e2e
+namespace: pdb-e2e
+techStack: nodejs
+enableLookup: false
+
+serviceAccount:
+  create: false
+
+service:
+  create: false
+
+deployment:
+  replicas: 2
+  image:
+    repositoryPrefix: docker.io/library
+    repositoryName: nginx
+    imagePullPolicy: IfNotPresent
+    tag: "1.27.0"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+ingress:
+  create: false
+
+externalSecrets:
+  create: false
+
+podDisruptionBudget:
+  create: true

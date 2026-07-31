@@ -1,8 +1,8 @@
-# Test case: immagine Flyway con solo digest (senza tag).
-# Verifica che quando è presente il digest, il tag venga ignorato e
-# l'immagine sia costruita nel formato:
+# Test case: Flyway image with digest only (no tag).
+# Verifies that when digest is present, tag is ignored and
+# the image is built using this format:
 #   <repositoryPrefix>/<repositoryName>@<digest>
-# senza alcun ":tag" nel riferimento all'immagine.
+# with no ":tag" in the image reference.
 name: "flyway-custom-image-digest-service"
 namespace: "test-namespace"
 techStack: "nodejs"
@@ -32,7 +32,7 @@ deployment:
     image:
       repositoryName: "interop-flyway-migrations"
       # Only digest set, no tag -> tag is suppressed by template
-      # Expected image: 000000000000.dkr.ecr.eu-central-1.amazonaws.com/interop-flyway-migrations@sha256:abc...
+      # Expected image: docker.io/interop-flyway-migrations@sha256:abc...
       digest: "sha256:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef00000001"
     executeFlywayMigrate: true
     executeFlywayRepair: false

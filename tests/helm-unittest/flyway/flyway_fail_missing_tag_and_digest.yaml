@@ -1,15 +1,11 @@
-# Test case EXPECTED TO FAIL (helm lint/template must fail).
-#
-# Verifies the edge case where both executeFlywayMigrate and executeFlywayRepair
-# are set to false: the chart must produce an error via `fail` with:
-#   "Invalid configuration: Both executeFlywayMigrate and executeFlywayRepair in
-#    the flywayInitContainer are false."
-name: "flyway-no-actions-service"
+# Test case EXPECTED TO FAIL.
+# At least one between tag and digest is required when flywayInitContainer.create is true.
+name: "flyway-missing-tag-and-digest"
 namespace: "test-namespace"
 techStack: "nodejs"
 
 serviceAccount:
-  roleArn: "arn:aws:iam::000000000:role/flyway-no-actions-service"
+  roleArn: "arn:aws:iam::000000000:role/flyway-missing-tag-and-digest"
 
 service:
   create: true
@@ -31,11 +27,13 @@ deployment:
   flywayInitContainer:
     create: true
     image:
+      repositoryPrefix: "docker.io"
       repositoryName: "interop-flyway-migrations"
-    # MISCONFIGURATION: both actions disabled -> chart must fail
-    executeFlywayMigrate: false
+      tag: ""
+      digest: ""
+    executeFlywayMigrate: true
     executeFlywayRepair: false
-    migrationPaths: "/flyway_fail_no_actions/migrations/v1_migrations"
+    migrationPaths: "/migrations/v1"
     envFromSecrets:
       FLYWAY_USER: "postgres-secret.POSTGRES_USR"
       FLYWAY_PASSWORD: "postgres-secret.POSTGRES_PSW"

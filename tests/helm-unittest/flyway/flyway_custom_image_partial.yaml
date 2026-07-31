@@ -1,9 +1,8 @@
-# Test case: immagine Flyway parzialmente custom (solo repositoryName).
-# Verifica che il repositoryPrefix venga ereditato dal container principale
-# e il tag venga ereditato dal tag del container principale quando non
-# specificato nell'immagine flyway.
-# Immagine risultante attesa:
-#   <deployment.image.repositoryPrefix>/<flyway.repositoryName>:<deployment.image.tag>
+# Test case: partially customized Flyway image (repositoryName only).
+# Verifies that when repositoryPrefix and tag are not set in
+# flywayInitContainer.image, chart defaults are used.
+# Expected resulting image:
+#   docker.io/<flyway.repositoryName>:8.2.3
 name: "flyway-custom-image-partial-service"
 namespace: "test-namespace"
 techStack: "nodejs"
@@ -31,9 +30,9 @@ deployment:
   flywayInitContainer:
     create: true
     image:
-      # repositoryPrefix not set -> inherits deployment.image.repositoryPrefix
+      # repositoryPrefix not set -> uses values.yaml default (docker.io)
       repositoryName: "interop-flyway-migrations"
-      # tag not set ->  inherits deployment.image.tag ("1.5.0")
+      # tag not set -> uses values.yaml default ("8.2.3")
     executeFlywayMigrate: true
     executeFlywayRepair: false
     migrationPaths: "/flyway_custom_image_partial/migrations/v1_migrations,/flyway_custom_image_partial/migrations/v2_migrations"

@@ -1,6 +1,6 @@
-# Test case: migrationPaths con azione repair only.
-# Verifica che quando solo executeFlywayRepair è true e executeFlywayMigrate è false,
-# INTERNAL_FLYWAY_ACTION venga impostato a "repair" nel Deployment.
+# Test case: migrationPaths with repair-only action.
+# Verifies that when only executeFlywayRepair is true and executeFlywayMigrate is false,
+# INTERNAL_FLYWAY_ACTION is set to "repair" in the Deployment.
 name: "flyway-repair-only-service"
 namespace: "test-namespace"
 techStack: "nodejs"

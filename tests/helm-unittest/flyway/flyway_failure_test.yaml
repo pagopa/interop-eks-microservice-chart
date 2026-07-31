@@ -16,3 +16,21 @@ tests:
     asserts:
       - failedTemplate: {}
           #errorPattern: 'Invalid configuration: Both executeFlywayMigrate and executeFlywayRepair in the flywayInitContainer are false\.'
+
+  - it: fails when repositoryPrefix is empty and flyway init container is enabled
+    values:
+      - flyway_fail_missing_repository_prefix.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails when repositoryName is empty and flyway init container is enabled
+    values:
+      - flyway_fail_missing_repository_name.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails when both tag and digest are empty and flyway init container is enabled
+    values:
+      - flyway_fail_missing_tag_and_digest.yaml
+    asserts:
+      - failedTemplate: {}

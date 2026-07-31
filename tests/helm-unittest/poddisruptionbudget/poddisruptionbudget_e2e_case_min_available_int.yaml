@@ -1,0 +1,5 @@
+name: pdb-min-int
+namespace: pdb-e2e-min-int
+
+podDisruptionBudget:
+  minAvailable: 2
