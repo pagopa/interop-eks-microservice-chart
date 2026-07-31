@@ -1,8 +1,8 @@
-# Test case: migrationPaths con paths multipli separati da virgola.
-# Verifica che INTERNAL_FLYWAY_MIGRATIONS_PATHS venga popolato con il valore CSV
-# passato direttamente a Flyway come -locations.
-# Mix di directory e singolo file SQL.
-# Azione Flyway: migrate only.
+# Test case: migrationPaths with multiple comma-separated paths.
+# Verifies that INTERNAL_FLYWAY_MIGRATIONS_PATHS is populated with the CSV value
+# passed directly to Flyway as -locations.
+# Mix of directories and a single SQL file.
+# Flyway action: migrate only.
 name: "flyway-multi-paths-service"
 namespace: "test-namespace"
 techStack: "nodejs"

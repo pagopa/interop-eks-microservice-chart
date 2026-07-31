@@ -1,8 +1,8 @@
-# Test case: immagine Flyway completamente custom con tutti i campi specificati.
-# Verifica che l'immagine dell'initContainer sia costruita con i valori di
+# Test case: fully customized Flyway image with all fields explicitly set.
+# Verifies that the initContainer image is built using values from
 # flywayInitContainer.image (repositoryPrefix, repositoryName, tag, digest)
-# ignorando completamente i valori del container principale.
-# NB: quando 'digest' è impostato, il 'tag' viene ignorato dal template.
+# completely ignoring main container image values.
+# Note: when 'digest' is set, 'tag' is ignored by the template.
 name: "flyway-custom-image-full-service"
 namespace: "test-namespace"
 techStack: "nodejs"

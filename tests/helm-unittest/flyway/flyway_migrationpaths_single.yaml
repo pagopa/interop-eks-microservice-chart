@@ -1,7 +1,7 @@
-# Test case: migrationPaths con un singolo path.
-# Verifica che INTERNAL_FLYWAY_MIGRATIONS_PATHS venga popolato con un singolo path
-# e che non venga montato alcun volume (nessun migrationsConfigmap).
-# Azione Flyway: migrate only.
+# Test case: migrationPaths with a single path.
+# Verifies that INTERNAL_FLYWAY_MIGRATIONS_PATHS is populated with one path
+# and no volume is mounted (no migrationsConfigmap).
+# Flyway action: migrate only.
 name: "flyway-single-path-service"
 namespace: "test-namespace"
 techStack: "nodejs"

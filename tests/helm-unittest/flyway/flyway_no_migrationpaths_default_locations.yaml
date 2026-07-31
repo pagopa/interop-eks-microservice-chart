@@ -1,8 +1,8 @@
-# Test case: flywayInitContainer senza migrationPaths né migrationsConfigmap.
-# Verifica che quando entrambi sono omessi, la variabile d'ambiente
-# INTERNAL_FLYWAY_MIGRATIONS_PATHS NON venga iniettata nel container e Flyway
-# usi le sue location di default (nessun -locations arg nello script flyway-init.sh).
-# Verifica anche che nessun volumeMount/volume per le migrazioni venga generato.
+# Test case: flywayInitContainer without migrationPaths and migrationsConfigmap.
+# Verifies that when both are omitted, the environment variable
+# INTERNAL_FLYWAY_MIGRATIONS_PATHS is NOT injected into the container and Flyway
+# uses its default locations (no -locations arg in flyway-init.sh).
+# Also verifies that no migration-related volumeMount/volume is generated.
 name: "flyway-no-paths-default-locations-service"
 namespace: "test-namespace"
 techStack: "nodejs"

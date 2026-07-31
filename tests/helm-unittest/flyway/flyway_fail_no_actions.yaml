@@ -1,7 +1,7 @@
-# Test case EXPECTED TO FAIL (helm lint/template deve fallire).
+# Test case EXPECTED TO FAIL (helm lint/template must fail).
 #
-# Verifica il caso limite in cui sia executeFlywayMigrate che executeFlywayRepair
-# sono impostati a false: la chart deve produrre un errore tramite `fail` con:
+# Verifies the edge case where both executeFlywayMigrate and executeFlywayRepair
+# are set to false: the chart must produce an error via `fail` with:
 #   "Invalid configuration: Both executeFlywayMigrate and executeFlywayRepair in
 #    the flywayInitContainer are false."
 name: "flyway-no-actions-service"

@@ -11,7 +11,7 @@ tests:
           of: Deployment
       - equal:
           path: spec.template.spec.initContainers[0].image
-          value: 000000000000.dkr.ecr.eu-central-1.amazonaws.com/interop-flyway-migrations:1.0.0
+          value: docker.io/interop-flyway-migrations:8.2.3
       - contains:
           path: spec.template.spec.initContainers[0].env
           content:
@@ -81,13 +81,13 @@ tests:
       - notExists:
           path: spec.template.spec.volumes[0]
 
-  - it: inherits repository prefix and tag for partially customized flyway images
+  - it: uses flyway defaults for missing repository prefix and tag in partially customized flyway images
     values:
       - flyway_custom_image_partial.yaml
     asserts:
       - equal:
           path: spec.template.spec.initContainers[0].image
-          value: 000000000000.dkr.ecr.eu-central-1.amazonaws.com/interop-flyway-migrations:1.5.0
+          value: docker.io/interop-flyway-migrations:8.2.3
       - contains:
           path: spec.template.spec.initContainers[0].env
           content:
@@ -113,7 +113,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.initContainers[0].image
-          value: 000000000000.dkr.ecr.eu-central-1.amazonaws.com/interop-flyway-migrations@sha256:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef00000001
+          value: docker.io/interop-flyway-migrations@sha256:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef00000001
       - contains:
           path: spec.template.spec.initContainers[0].env
           content:

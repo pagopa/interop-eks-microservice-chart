@@ -1,6 +1,6 @@
-# Test case: migrationPaths con azione repair-and-migrate.
-# Verifica che quando sia executeFlywayMigrate che executeFlywayRepair sono true,
-# INTERNAL_FLYWAY_ACTION venga impostato a "repair-and-migrate" nel Deployment.
+# Test case: migrationPaths with repair-and-migrate action.
+# Verifies that when both executeFlywayMigrate and executeFlywayRepair are true,
+# INTERNAL_FLYWAY_ACTION is set to "repair-and-migrate" in the Deployment.
 name: "flyway-repair-and-migrate-service"
 namespace: "test-namespace"
 techStack: "nodejs"
