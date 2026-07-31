@@ -1,4 +1,4 @@
-{{- if and .Values.autoscaling .Values.autoscaling.keda.create }}
+{{- if and .Values.autoscaling .Values.autoscaling.keda.create (ne (.Values.deployment.replicas | int) 0) }}
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
