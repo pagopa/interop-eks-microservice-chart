@@ -139,12 +139,12 @@ deployment:
   flywayInitContainer:
     create: false
     image:
-      # -- (string) defaults to deployment repositoryPrefix if not set
-      repositoryPrefix:
-      # -- (string) must be set if create is true, e.g. "interop-flyway-migrations"
-      repositoryName:
-      # -- (string) defaults to deployment image tag if not set
-      tag:
+      # -- (string) Flyway official image registry prefix
+      repositoryPrefix: docker.io
+      # -- (string) Flyway official image repository name
+      repositoryName: flyway/flyway
+      # -- (string) Flyway image tag; ignored when digest is set
+      tag: "8.2.3"
       # -- (string) if set, overrides tag with the specified digest
       digest:
       # -- (string) Image pull policy for the init container; if unset, the Kubernetes default applies

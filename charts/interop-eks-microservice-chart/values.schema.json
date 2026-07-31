@@ -17,6 +17,89 @@
           "repositoryPrefix"
         ]
       },
+      "flywayInitContainer": {
+        "description": "Flyway init container configuration",
+        "type": "object",
+        "properties": {
+          "create": {
+            "description": "Enable Flyway init container creation",
+            "type": "boolean",
+            "default": false
+          },
+          "image": {
+            "description": "Flyway init container image configuration",
+            "type": "object",
+            "properties": {
+              "repositoryPrefix": {
+                "description": "Flyway official image registry prefix",
+                "type": "string",
+                "default": "docker.io"
+              },
+              "repositoryName": {
+                "description": "Flyway official image repository name",
+                "type": "string",
+                "default": "flyway/flyway"
+              },
+              "tag": {
+                "description": "Flyway image tag; ignored when digest is set",
+                "type": "string",
+                "default": "8.2.3"
+              },
+              "digest": {
+                "description": "If set, overrides tag with the specified digest",
+                "type": ["string", "null"]
+              },
+              "imagePullPolicy": {
+                "description": "Image pull policy for the init container; if unset, Kubernetes default applies",
+                "type": ["string", "null"]
+              }
+            }
+          },
+          "executeFlywayMigrate": {
+            "description": "Execute Flyway migrate command to apply migrations to the database",
+            "type": "boolean",
+            "default": true
+          },
+          "executeFlywayRepair": {
+            "description": "Execute Flyway repair command to recompute applied migrations metadata",
+            "type": "boolean",
+            "default": false
+          },
+          "downloadRedshiftDriver": {
+            "description": "Enable Flyway to download Redshift JDBC driver",
+            "type": "boolean",
+            "default": false
+          },
+          "migrationsConfigmap": {
+            "description": "ConfigMap with migrations",
+            "type": ["string", "null"]
+          },
+          "migrationPaths": {
+            "description": "Comma-separated paths to migration files or directories",
+            "type": ["string", "null"]
+          },
+          "env": {
+            "description": "Environment variables for init container",
+            "type": "object",
+            "default": {}
+          },
+          "envFromConfigmaps": {
+            "description": "Environment variables sourced from ConfigMaps",
+            "type": "object",
+            "default": {}
+          },
+          "envFromSecrets": {
+            "description": "Environment variables sourced from Secrets",
+            "type": "object",
+            "default": {}
+          },
+          "envFromFieldRef": {
+            "description": "Environment variables sourced from pod fieldRef",
+            "type": "object",
+            "default": {}
+          }
+        }
+      },
       "replicas": {
         "description": "Deployment replicas",
         "type": "integer"

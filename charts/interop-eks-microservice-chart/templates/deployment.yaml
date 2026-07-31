@@ -19,7 +19,7 @@
 {{- /* If the flyway initContainer is required then compute the flyway action(s) to execute */ -}}
 {{- $flyway_action := "" -}}
 
-{{- $flyway_repository_prefix := .Values.deployment.flywayInitContainer.image.repositoryPrefix | default .Values.deployment.image.repositoryPrefix }}
+{{- $flyway_repository_prefix := .Values.deployment.flywayInitContainer.image.repositoryPrefix }}
 {{- $flyway_repository_name := .Values.deployment.flywayInitContainer.image.repositoryName }}
 
 {{- $flyway_image_digest := "" }}
@@ -31,8 +31,6 @@
 {{- if not .Values.deployment.flywayInitContainer.image.digest }}
 {{- if .Values.deployment.flywayInitContainer.image.tag }}
 {{- $flyway_image_tag = (nospace (cat ":" .Values.deployment.flywayInitContainer.image.tag)) }}
-{{- else }}
-{{- $flyway_image_tag = (nospace (cat ":" .Values.deployment.image.tag)) }}
 {{- end }}
 {{- end }}
 

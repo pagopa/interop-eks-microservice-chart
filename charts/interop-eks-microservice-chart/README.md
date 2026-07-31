@@ -34,9 +34,9 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.flywayInitContainer.executeFlywayRepair | bool | `false` | execute Flyway repair command to recompute applied migrations metadata; useful for whitespace changes. |
 | deployment.flywayInitContainer.image.digest | string | `nil` | if set, overrides tag with the specified digest |
 | deployment.flywayInitContainer.image.imagePullPolicy | string | `nil` | Image pull policy for the init container; if unset, the Kubernetes default applies |
-| deployment.flywayInitContainer.image.repositoryName | string | `nil` | must be set if create is true, e.g. "interop-flyway-migrations" |
-| deployment.flywayInitContainer.image.repositoryPrefix | string | `nil` |  |
-| deployment.flywayInitContainer.image.tag | string | `nil` | defaults to deployment image tag if not set |
+| deployment.flywayInitContainer.image.repositoryName | string | `"flyway/flyway"` | Flyway official image repository name |
+| deployment.flywayInitContainer.image.repositoryPrefix | string | `"docker.io"` | Flyway official image registry prefix |
+| deployment.flywayInitContainer.image.tag | string | `"8.2.3"` | Flyway image tag; ignored when digest is set |
 | deployment.flywayInitContainer.migrationPaths | string | `nil` | List of comma separated paths to migration files or directories containing migration files (e.g. "/migrations/a_directory,v1_migration.sql,/migrations/b_directory") |
 | deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
 | deployment.flywayInitContainer.version | string | `"8.2.3"` | Flyway container image version |
