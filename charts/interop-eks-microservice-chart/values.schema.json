@@ -20,6 +20,54 @@
       "flywayInitContainer": {
         "description": "Flyway init container configuration",
         "type": "object",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "create": { "const": true }
+              }
+            },
+            "then": {
+              "required": ["image"],
+              "properties": {
+                "image": {
+                  "type": "object",
+                  "required": ["repositoryPrefix", "repositoryName"],
+                  "properties": {
+                    "repositoryPrefix": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "repositoryName": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "anyOf": [
+                    {
+                      "required": ["tag"],
+                      "properties": {
+                        "tag": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      }
+                    },
+                    {
+                      "required": ["digest"],
+                      "properties": {
+                        "digest": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
         "properties": {
           "create": {
             "description": "Enable Flyway init container creation",
