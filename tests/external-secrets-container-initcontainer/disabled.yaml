@@ -2,7 +2,7 @@
 # Expects: No Secret or ExternalSecret resources created, even if data is provided
 
 externalSecrets:
-  container:
+  app:
     create: false
     refreshInterval: "1h"
     refreshPolicy: "OnChange"
@@ -18,7 +18,7 @@ externalSecrets:
         remoteRef:
           key: /app/secrets
           property: api-key
-  initContainer:
+  flywayInitContainer:
     create: false
     refreshInterval: "30m"
     refreshPolicy: "Interval"

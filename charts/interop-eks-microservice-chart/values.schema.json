@@ -375,15 +375,15 @@
       "additionalProperties": false
     },
     "externalSecrets": {
-      "description": "External Secrets Operator configuration - separate configuration for application container and init container",
+      "description": "External Secrets Operator configuration - separate configuration for app and Flyway init container",
       "type": "object",
       "properties": {
-        "container": {
+        "app": {
           "description": "External Secrets configuration for the main application container",
           "type": "object",
           "properties": {
             "create": {
-              "description": "Enable ExternalSecret creation for container",
+              "description": "Enable ExternalSecret creation for app container",
               "type": "boolean",
               "default": false
             },
@@ -437,7 +437,7 @@
               }
             },
             "data": {
-              "description": "List of individual secret keys to sync from external secret manager for the container",
+              "description": "List of individual secret keys to sync from external secret manager for the app container",
               "type": "array",
               "items": {
                 "type": "object",
@@ -471,7 +471,7 @@
                         "type": "string"
                       }
                     },
-                    "required": ["key", "property"],
+                    "required": ["key"],
                     "additionalProperties": false
                   }
                 },
@@ -482,12 +482,12 @@
             }
           }
         },
-        "initContainer": {
-          "description": "External Secrets configuration for the init container (e.g., Flyway)",
+        "flywayInitContainer": {
+          "description": "External Secrets configuration for the Flyway init container",
           "type": "object",
           "properties": {
             "create": {
-              "description": "Enable ExternalSecret creation for init container",
+              "description": "Enable ExternalSecret creation for Flyway init container",
               "type": "boolean",
               "default": false
             },
@@ -541,7 +541,7 @@
               }
             },
             "data": {
-              "description": "List of individual secret keys to sync from external secret manager for the init container",
+              "description": "List of individual secret keys to sync from external secret manager for the Flyway init container",
               "type": "array",
               "items": {
                 "type": "object",
@@ -575,7 +575,7 @@
                         "type": "string"
                       }
                     },
-                    "required": ["key", "property"],
+                    "required": ["key"],
                     "additionalProperties": false
                   }
                 },

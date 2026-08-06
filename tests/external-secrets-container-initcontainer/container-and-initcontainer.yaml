@@ -2,7 +2,7 @@
 # Expects: 2 Secrets and 2 ExternalSecrets (separate, one for each container)
 
 externalSecrets:
-  container:
+  app:
     create: true
     refreshInterval: "1h"
     refreshPolicy: "OnChange"
@@ -22,7 +22,7 @@ externalSecrets:
         remoteRef:
           key: /app/db
           property: connection-string
-  initContainer:
+  flywayInitContainer:
     create: true
     refreshInterval: "30m"
     refreshPolicy: "Interval"

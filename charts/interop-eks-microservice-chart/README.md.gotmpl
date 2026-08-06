@@ -942,11 +942,11 @@ This chart supports separate ExternalSecret configurations for the main applicat
 
 ### 7.1. Basic Configuration
 
-To enable the creation of an ExternalSecret for the main container, set `externalSecrets.container.create: true`:
+To enable the creation of an ExternalSecret for the main container, set `externalSecrets.app.create: true`:
 
 ```yaml
 externalSecrets:
-  container:
+  app:
     create: true
     refreshInterval: "1h"
     secretStoreRef:
@@ -969,11 +969,11 @@ This configuration creates:
 - **1 ExternalSecret** with the same name as the microservice
 - **1 Kubernetes Secret** (`my-app-secrets`) containing all synced keys
 
-To configure a dedicated ExternalSecret for the init container, use `externalSecrets.initContainer`:
+To configure a dedicated ExternalSecret for the init container, use `externalSecrets.flywayInitContainer`:
 
 ```yaml
 externalSecrets:
-  initContainer:
+  flywayInitContainer:
     create: true
     refreshInterval: "30m"
     secretStoreRef:
@@ -993,8 +993,8 @@ externalSecrets:
 ```
 
 If `targetSecret.name` is omitted, the defaults are:
-- `externalSecrets.container.targetSecret.name` -> `.Values.name`
-- `externalSecrets.initContainer.targetSecret.name` -> `.Values.name-flyway`
+- `externalSecrets.app.targetSecret.name` -> `.Values.name`
+- `externalSecrets.flywayInitContainer.targetSecret.name` -> `.Values.name-flyway`
 
 ### 7.2. Main Parameters
 
@@ -1053,7 +1053,7 @@ It is possible to transform the synced data using Go templates:
 
 ```yaml
 externalSecrets:
-  container:
+  app:
     create: true
     secretStoreRef:
       name: aws-secretsmanager
@@ -1095,7 +1095,7 @@ For the main application container:
 
 ```yaml
 externalSecrets:
-  container:
+  app:
     create: true
     secretStoreRef:
       name: aws-secretsmanager
@@ -1125,7 +1125,7 @@ For the Flyway init container:
 
 ```yaml
 externalSecrets:
-  initContainer:
+  flywayInitContainer:
     create: true
     secretStoreRef:
       name: aws-secretsmanager
@@ -1150,7 +1150,7 @@ The generated Deployment imports the full Secret with `envFrom`, so every `secre
 When `deployment.enableRolloutAnnotations` is enabled, deployments are automatically restarted when the ExternalSecret configuration changes. The hash (SHA256) of the ExternalSecret template is computed and inserted as an annotation in the pod template, triggering a rolling restart whenever the ExternalSecrets configuration is modified.
 
 **Automatic workflow:**
-1. Modify the `externalSecrets.container` or `externalSecrets.initContainer` configuration in values (add/modify/remove keys in `data`, change `secretStoreRef`, etc.)
+1. Modify the `externalSecrets.app` or `externalSecrets.flywayInitContainer` configuration in values (add/modify/remove keys in `data`, change `secretStoreRef`, etc.)
 2. Apply the chart update with `helm upgrade`
 3. The ExternalSecret template hash changes automatically
 4. Pods are automatically restarted and load the new secrets
@@ -1168,7 +1168,7 @@ A key advantage of this implementation is the ability to aggregate secrets from 
 
 ```yaml
 externalSecrets:
-  container:
+  app:
     create: true
     targetSecret:
       name: aggregated-secrets

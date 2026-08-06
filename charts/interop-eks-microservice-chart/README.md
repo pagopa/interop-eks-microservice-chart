@@ -59,24 +59,24 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.securityContext | object | `{"allowPrivilegeEscalation":false}` | Pod securityContext, applied to main container |
 | deployment.strategy | object | `{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"0%"},"type":"RollingUpdate"}` | Rollout strategy |
 | enableLookup | bool | `true` | Enable Resources lookup on K8s cluster to resolve referenced values |
-| externalSecrets.container.create | bool | `false` | Enable ExternalSecret creation |
-| externalSecrets.container.data | list | `[]` | List of individual secret keys to sync from external secret manager. When externalSecrets.create is true, each secretKey is automatically injected as an env var in the Deployment, referencing externalSecrets.targetSecret.name (defaults to the service name). This is the ExternalSecret equivalent of the top-level "configmap" field. |
-| externalSecrets.container.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
-| externalSecrets.container.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
-| externalSecrets.container.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
-| externalSecrets.container.targetSecret | object | `{"creationPolicy":"Merge","deletionPolicy":"Retain","name":""}` | Target Kubernetes Secret configuration |
-| externalSecrets.container.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
-| externalSecrets.container.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
-| externalSecrets.container.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
-| externalSecrets.initContainer.create | bool | `false` | Enable ExternalSecret creation |
-| externalSecrets.initContainer.data | list | `[]` | List of individual secret keys to sync from external secret manager. When externalSecrets.create is true, each secretKey is automatically injected as an env var in the Deployment, referencing externalSecrets.targetSecret.name (defaults to the service name). This is the ExternalSecret equivalent of the top-level "configmap" field. |
-| externalSecrets.initContainer.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
-| externalSecrets.initContainer.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
-| externalSecrets.initContainer.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
-| externalSecrets.initContainer.targetSecret | object | `{"creationPolicy":"Merge","deletionPolicy":"Retain","name":""}` | Target Kubernetes Secret configuration |
-| externalSecrets.initContainer.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
-| externalSecrets.initContainer.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
-| externalSecrets.initContainer.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
+| externalSecrets.app.create | bool | `false` | Enable ExternalSecret creation |
+| externalSecrets.app.data | list | `[]` | List of individual secret keys to sync from external secret manager. When externalSecrets.app.create is true, each secretKey is automatically injected as an env var in the Deployment, referencing externalSecrets.app.targetSecret.name (defaults to the service name). This is the ExternalSecret equivalent of the top-level "configmap" field. |
+| externalSecrets.app.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
+| externalSecrets.app.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
+| externalSecrets.app.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
+| externalSecrets.app.targetSecret | object | `{"creationPolicy":"Merge","deletionPolicy":"Retain","name":""}` | Target Kubernetes Secret configuration |
+| externalSecrets.app.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
+| externalSecrets.app.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
+| externalSecrets.app.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
+| externalSecrets.flywayInitContainer.create | bool | `false` | Enable ExternalSecret creation |
+| externalSecrets.flywayInitContainer.data | list | `[]` | List of individual secret keys to sync from external secret manager. When externalSecrets.flywayInitContainer.create is true, each secretKey is automatically injected as an env var in the Deployment, referencing externalSecrets.flywayInitContainer.targetSecret.name (defaults to the service name). This is the ExternalSecret equivalent of the top-level "configmap" field. |
+| externalSecrets.flywayInitContainer.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
+| externalSecrets.flywayInitContainer.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
+| externalSecrets.flywayInitContainer.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
+| externalSecrets.flywayInitContainer.targetSecret | object | `{"creationPolicy":"Merge","deletionPolicy":"Retain","name":""}` | Target Kubernetes Secret configuration |
+| externalSecrets.flywayInitContainer.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
+| externalSecrets.flywayInitContainer.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
+| externalSecrets.flywayInitContainer.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
 | ingress.annotations | list | `{}` | list of annotations to apply to the Ingress resource |
 | ingress.applicationPath | string | `nil` | Path prefix for the ALB ingress rule; used when ingress.type is "alb" |
 | ingress.create | bool | `false` | ingress.create and service.targetGroupArn must be mutually exclusive. |
@@ -1027,11 +1027,11 @@ This chart supports separate ExternalSecret configurations for the main applicat
 
 ### 7.1. Basic Configuration
 
-To enable the creation of an ExternalSecret for the main container, set `externalSecrets.container.create: true`:
+To enable the creation of an ExternalSecret for the main container, set `externalSecrets.app.create: true`:
 
 ```yaml
 externalSecrets:
-  container:
+  app:
     create: true
     refreshInterval: "1h"
     secretStoreRef:
@@ -1054,11 +1054,11 @@ This configuration creates:
 - **1 ExternalSecret** with the same name as the microservice
 - **1 Kubernetes Secret** (`my-app-secrets`) containing all synced keys
 
-To configure a dedicated ExternalSecret for the init container, use `externalSecrets.initContainer`:
+To configure a dedicated ExternalSecret for the init container, use `externalSecrets.flywayInitContainer`:
 
 ```yaml
 externalSecrets:
-  initContainer:
+  flywayInitContainer:
     create: true
     refreshInterval: "30m"
     secretStoreRef:
@@ -1078,8 +1078,8 @@ externalSecrets:
 ```
 
 If `targetSecret.name` is omitted, the defaults are:
-- `externalSecrets.container.targetSecret.name` -> `.Values.name`
-- `externalSecrets.initContainer.targetSecret.name` -> `.Values.name-flyway`
+- `externalSecrets.app.targetSecret.name` -> `.Values.name`
+- `externalSecrets.flywayInitContainer.targetSecret.name` -> `.Values.name-flyway`
 
 ### 7.2. Main Parameters
 
@@ -1138,7 +1138,7 @@ It is possible to transform the synced data using Go templates:
 
 ```yaml
 externalSecrets:
-  container:
+  app:
     create: true
     secretStoreRef:
       name: aws-secretsmanager
@@ -1180,7 +1180,7 @@ For the main application container:
 
 ```yaml
 externalSecrets:
-  container:
+  app:
     create: true
     secretStoreRef:
       name: aws-secretsmanager
@@ -1210,7 +1210,7 @@ For the Flyway init container:
 
 ```yaml
 externalSecrets:
-  initContainer:
+  flywayInitContainer:
     create: true
     secretStoreRef:
       name: aws-secretsmanager
@@ -1235,7 +1235,7 @@ The generated Deployment imports the full Secret with `envFrom`, so every `secre
 When `deployment.enableRolloutAnnotations` is enabled, deployments are automatically restarted when the ExternalSecret configuration changes. The hash (SHA256) of the ExternalSecret template is computed and inserted as an annotation in the pod template, triggering a rolling restart whenever the ExternalSecrets configuration is modified.
 
 **Automatic workflow:**
-1. Modify the `externalSecrets.container` or `externalSecrets.initContainer` configuration in values (add/modify/remove keys in `data`, change `secretStoreRef`, etc.)
+1. Modify the `externalSecrets.app` or `externalSecrets.flywayInitContainer` configuration in values (add/modify/remove keys in `data`, change `secretStoreRef`, etc.)
 2. Apply the chart update with `helm upgrade`
 3. The ExternalSecret template hash changes automatically
 4. Pods are automatically restarted and load the new secrets
@@ -1253,7 +1253,7 @@ A key advantage of this implementation is the ability to aggregate secrets from 
 
 ```yaml
 externalSecrets:
-  container:
+  app:
     create: true
     targetSecret:
       name: aggregated-secrets

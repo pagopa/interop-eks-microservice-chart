@@ -2,7 +2,7 @@
 # Expects: Secret and ExternalSecret for initContainer data (separate from app)
 
 externalSecrets:
-  container:
+  app:
     create: false
     refreshInterval: "0"
     refreshPolicy: "OnChange"
@@ -14,7 +14,7 @@ externalSecrets:
       creationPolicy: Merge
       deletionPolicy: Retain
     data: []
-  initContainer:
+  flywayInitContainer:
     create: true
     refreshInterval: "30m"
     refreshPolicy: "Interval"
