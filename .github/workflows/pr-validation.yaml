@@ -1,0 +1,65 @@
+name: 'PR validation'
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+permissions:
+  contents: read
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Helm Docs
+        run: |
+          wget https://github.com/norwoodj/helm-docs/releases/download/v1.14.2/helm-docs_1.14.2_Linux_x86_64.tar.gz
+          tar xzf helm-docs_1.14.2_Linux_x86_64.tar.gz
+          sudo mv helm-docs /usr/local/bin
+
+      - name: Install pre-commit
+        run: |
+          pip install pre-commit
+
+      - name: Run pre-commit
+        run: |
+          pre-commit run --all-files
+
+  helm-unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Helm CLI
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5.0.0
+        with:
+          version: v3.19.0
+
+      - name: Install helm unittest plugin
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest --version v1.0.3
+
+      - name: Run helm unittest
+        run: |
+          set -euo pipefail
+
+          # https://github.com/helm-unittest/helm-unittest/blob/main/README.md
+          test_files=$(find "$PWD/tests/helm-unittest" -type f -name '*_test.yaml' | sort)
+
+          if [ -z "$test_files" ]; then
+            echo "No helm unittest suites found in tests/helm-unittest"
+            exit 1
+          fi
+
+          args=()
+          while IFS= read -r f; do
+            args+=(-f "$f")
+          done <<< "$test_files"
+
+          helm unittest --strict "${args[@]}" ./charts/interop-eks-microservice-chart

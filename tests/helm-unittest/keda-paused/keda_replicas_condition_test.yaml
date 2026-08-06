@@ -1,0 +1,63 @@
+suite: keda replicas condition
+templates:
+  - templates/scaledobject.yaml
+values:
+  - keda-paused-values-base.yaml
+
+tests:
+  - it: does not render a ScaledObject when deployment.replicas is 0
+    values:
+      - paused-false.yaml
+    set:
+      deployment.replicas: 0
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders a ScaledObject when deployment.replicas is 1
+    values:
+      - paused-false.yaml
+    set:
+      deployment.replicas: 1
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ScaledObject
+      - equal:
+          path: spec.minReplicaCount
+          value: 1
+
+  - it: renders a ScaledObject when deployment.replicas is greater than 1
+    values:
+      - paused-false.yaml
+    set:
+      deployment.replicas: 3
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ScaledObject
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: test-keda-paused
+
+  - it: does not render a ScaledObject when autoscaling.keda.create is false
+    values:
+      - paused-false.yaml
+    set:
+      autoscaling.keda.create: false
+      deployment.replicas: 1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render a ScaledObject when autoscaling is disabled
+    values:
+      - paused-false.yaml
+    set:
+      autoscaling: null
+      deployment.replicas: 1
+    asserts:
+      - hasDocuments:
+          count: 0

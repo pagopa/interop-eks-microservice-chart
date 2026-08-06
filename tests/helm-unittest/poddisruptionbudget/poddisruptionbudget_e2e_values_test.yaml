@@ -1,0 +1,85 @@
+suite: poddisruptionbudget e2e values compatibility
+templates:
+  - templates/poddisruptionbudget.yaml
+
+# Reuse the same declarative values files used by the poddisruptionbudget-e2e script
+# to keep helm-unittest and e2e coverage aligned.
+tests:
+  - it: renders minAvailable as integer from e2e values
+    values:
+      - poddisruptionbudget_e2e_values_base.yaml
+      - poddisruptionbudget_e2e_case_min_available_int.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: pdb-min-int
+      - equal:
+          path: metadata.namespace
+          value: pdb-e2e-min-int
+      - equal:
+          path: spec.minAvailable
+          value: 2
+      - notExists:
+          path: spec.maxUnavailable
+
+  - it: renders minAvailable as percentage from e2e values
+    values:
+      - poddisruptionbudget_e2e_values_base.yaml
+      - poddisruptionbudget_e2e_case_min_available_percent.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: pdb-min-percent
+      - equal:
+          path: metadata.namespace
+          value: pdb-e2e-min-percent
+      - equal:
+          path: spec.minAvailable
+          value: 50%
+      - notExists:
+          path: spec.maxUnavailable
+
+  - it: renders maxUnavailable as integer from e2e values
+    values:
+      - poddisruptionbudget_e2e_values_base.yaml
+      - poddisruptionbudget_e2e_case_max_unavailable_int.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: pdb-max-int
+      - equal:
+          path: metadata.namespace
+          value: pdb-e2e-max-int
+      - equal:
+          path: spec.maxUnavailable
+          value: 1
+      - notExists:
+          path: spec.minAvailable
+
+  - it: renders maxUnavailable percentage and unhealthyPodEvictionPolicy from e2e values
+    values:
+      - poddisruptionbudget_e2e_values_base.yaml
+      - poddisruptionbudget_e2e_case_max_unavailable_percent_policy.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: pdb-max-percent-policy
+      - equal:
+          path: metadata.namespace
+          value: pdb-e2e-max-percent-policy
+      - equal:
+          path: spec.maxUnavailable
+          value: 25%
+      - equal:
+          path: spec.unhealthyPodEvictionPolicy
+          value: AlwaysAllow
+      - notExists:
+          path: spec.minAvailable

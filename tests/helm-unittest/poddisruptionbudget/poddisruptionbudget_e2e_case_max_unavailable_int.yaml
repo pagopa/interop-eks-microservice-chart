@@ -1,0 +1,5 @@
+name: pdb-max-int
+namespace: pdb-e2e-max-int
+
+podDisruptionBudget:
+  maxUnavailable: "1"

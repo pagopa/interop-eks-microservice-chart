@@ -1,0 +1,39 @@
+# Test case EXPECTED TO FAIL.
+# At least one between tag and digest is required when flywayInitContainer.create is true.
+name: "flyway-missing-tag-and-digest"
+namespace: "test-namespace"
+techStack: "nodejs"
+
+serviceAccount:
+  roleArn: "arn:aws:iam::000000000:role/flyway-missing-tag-and-digest"
+
+service:
+  create: true
+  containerPort: 8080
+  portName: http
+
+deployment:
+  replicas: 1
+  image:
+    repositoryPrefix: "000000000000.dkr.ecr.eu-central-1.amazonaws.com"
+    tag: "1.0.0"
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+  flywayInitContainer:
+    create: true
+    image:
+      repositoryPrefix: "docker.io"
+      repositoryName: "interop-flyway-migrations"
+      tag: ""
+      digest: ""
+    executeFlywayMigrate: true
+    executeFlywayRepair: false
+    migrationPaths: "/migrations/v1"
+    envFromSecrets:
+      FLYWAY_USER: "postgres-secret.POSTGRES_USR"
+      FLYWAY_PASSWORD: "postgres-secret.POSTGRES_PSW"

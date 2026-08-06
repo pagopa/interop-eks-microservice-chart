@@ -17,26 +17,36 @@
 {{- end }}
 
 {{- /* If the flyway initContainer is required then compute the flyway action(s) to execute */ -}}
+{{- $flyway_enabled := and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create -}}
 {{- $flyway_action := "" -}}
+{{- $flyway_repository_prefix := "" -}}
+{{- $flyway_repository_name := "" -}}
+{{- $flyway_image_digest := "" -}}
+{{- $flyway_image_tag := "" -}}
 
-{{- $flyway_repository_prefix := .Values.deployment.flywayInitContainer.image.repositoryPrefix | default .Values.deployment.image.repositoryPrefix }}
-{{- $flyway_repository_name := .Values.deployment.flywayInitContainer.image.repositoryName }}
+{{- if $flyway_enabled }}
+{{- $flyway_repository_prefix = .Values.deployment.flywayInitContainer.image.repositoryPrefix }}
+{{- $flyway_repository_name = .Values.deployment.flywayInitContainer.image.repositoryName }}
 
-{{- $flyway_image_digest := "" }}
+{{- if not $flyway_repository_prefix }}
+{{ fail "Invalid configuration: deployment.flywayInitContainer.image.repositoryPrefix must be set and non-empty when flywayInitContainer.create is true." }}
+{{- end }}
+{{- if not $flyway_repository_name }}
+{{ fail "Invalid configuration: deployment.flywayInitContainer.image.repositoryName must be set and non-empty when flywayInitContainer.create is true." }}
+{{- end }}
+{{- if and (not .Values.deployment.flywayInitContainer.image.digest) (not .Values.deployment.flywayInitContainer.image.tag) }}
+{{ fail "Invalid configuration: One of deployment.flywayInitContainer.image.tag and deployment.flywayInitContainer.image.digest must be defined when flywayInitContainer.create is true." }}
+{{- end }}
+
 {{- if .Values.deployment.flywayInitContainer.image.digest }}
 {{- $flyway_image_digest = (nospace (cat "@" .Values.deployment.flywayInitContainer.image.digest)) }}
 {{- end }}
 
-{{- $flyway_image_tag := "" }}
 {{- if not .Values.deployment.flywayInitContainer.image.digest }}
 {{- if .Values.deployment.flywayInitContainer.image.tag }}
 {{- $flyway_image_tag = (nospace (cat ":" .Values.deployment.flywayInitContainer.image.tag)) }}
-{{- else }}
-{{- $flyway_image_tag = (nospace (cat ":" .Values.deployment.image.tag)) }}
 {{- end }}
 {{- end }}
-
-{{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
 {{- if and .Values.deployment.flywayInitContainer.migrationsConfigmap .Values.deployment.flywayInitContainer.migrationPaths }}
 {{ fail "Invalid configuration - Both migrationsConfigmap and migrationPaths in flywayInitContainer cannot be defined at the same time." }}
 {{- end }}
@@ -69,7 +79,7 @@ metadata:
     {{- with .Values.deployment.metadata.annotations }}
     {{- range $key, $val := . -}}
     {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
-    {{ $key }}: {{ $renderedVal }}
+    {{ $key }}: {{ $renderedVal | quote }}
     {{- end }}
     {{- end }}
 spec:
@@ -102,7 +112,7 @@ spec:
         {{- with .Values.deployment.podTemplateMetadata.annotations }}
         {{- range $key, $val := . -}}
         {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
-        {{ $key }}: {{ $renderedVal }}
+        {{ $key }}: {{ $renderedVal | quote }}
         {{- end }}
         {{- end }}
 
@@ -114,10 +124,13 @@ spec:
       {{- if and .Values.deployment .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
       terminationGracePeriodSeconds: {{add1 .Values.deployment.preStopHookGracefulTermination.durationSeconds }}
       {{- end }}
-      {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
+      {{- if $flyway_enabled }}
       initContainers:
         - name: migrate-db
           image: "{{ $flyway_repository_prefix }}/{{ $flyway_repository_name }}{{ $flyway_image_tag }}{{ $flyway_image_digest }}"
+          {{- if .Values.deployment.flywayInitContainer.image.imagePullPolicy }}
+          imagePullPolicy: {{ .Values.deployment.flywayInitContainer.image.imagePullPolicy }}
+          {{- end }}
           command:
             - /bin/sh
             - -c
@@ -153,7 +166,7 @@ spec:
             {{- range $key, $val := .Values.deployment.flywayInitContainer.env }}
             {{- $preprocessedEnvValue := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
             - name: "{{ $key }}"
-              value: "{{ $preprocessedEnvValue }}"
+              value: {{ $preprocessedEnvValue | quote }}
             {{- end }}
             {{- end }}
             {{- if .Values.deployment.flywayInitContainer.envFromSecrets }}
@@ -258,7 +271,7 @@ spec:
             {{- range $key, $val := .Values.deployment.env }}
             {{- $preprocessedEnvValue := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
             - name: "{{ $key }}"
-              value: "{{ $preprocessedEnvValue }}"
+              value: {{ $preprocessedEnvValue | quote }}
             {{- end }}
             {{- end }}
             {{- if and .Values.deployment .Values.deployment.envFromConfigmaps }}
@@ -289,9 +302,9 @@ spec:
           volumeMounts:
             {{- toYaml .Values.deployment.volumeMounts | nindent 12 }}
           {{- end }}
-      {{- if and .Values.deployment (or .Values.deployment.volumes (and .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create)) }}
+      {{- if and .Values.deployment (or .Values.deployment.volumes $flyway_enabled) }}
       volumes:
-        {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+        {{- if and $flyway_enabled .Values.deployment.flywayInitContainer.migrationsConfigmap }}
         - name: migrations-files
           projected:
             sources:

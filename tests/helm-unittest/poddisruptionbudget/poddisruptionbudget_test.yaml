@@ -1,0 +1,228 @@
+suite: poddisruptionbudget
+templates:
+  - templates/poddisruptionbudget.yaml
+values:
+  - ../common/base.yaml
+release:
+  name: test
+
+tests:
+  - it: does not render PodDisruptionBudget when disabled
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render when create is false
+    set:
+      podDisruptionBudget.create: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders single document when enabled
+    values:
+      - poddisruptionbudget_base.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: has correct metadata name and namespace
+    values:
+      - poddisruptionbudget_base.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: test-svc
+      - equal:
+          path: metadata.namespace
+          value: test-namespace
+
+
+  - it: includes selector labels
+    values:
+      - poddisruptionbudget_base.yaml
+    asserts:
+      - isNotEmpty:
+          path: spec.selector.matchLabels
+      - equal:
+          path: metadata.labels.app
+          value: test-svc
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: test-svc
+
+  - it: renders minAvailable as integer
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.minAvailable: 2
+    asserts:
+      - equal:
+          path: spec.minAvailable
+          value: 2
+      - notExists:
+          path: spec.maxUnavailable
+
+  - it: renders minAvailable as zero
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.minAvailable: 0
+    asserts:
+      - equal:
+          path: spec.minAvailable
+          value: 0
+
+  - it: renders minAvailable as percentage string
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.minAvailable: "30%"
+    asserts:
+      - equal:
+          path: spec.minAvailable
+          value: "30%"
+
+  - it: omits minAvailable when null
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.minAvailable: null
+    asserts:
+      - notExists:
+          path: spec.minAvailable
+
+  - it: renders maxUnavailable as integer
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.maxUnavailable: 11
+    asserts:
+      - equal:
+          path: spec.maxUnavailable
+          value: 11
+      - notExists:
+          path: spec.minAvailable
+
+  - it: renders maxUnavailable as zero
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.maxUnavailable: 0
+    asserts:
+      - equal:
+          path: spec.maxUnavailable
+          value: 0
+
+  - it: renders maxUnavailable as percentage string
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.maxUnavailable: "10%"
+    asserts:
+      - equal:
+          path: spec.maxUnavailable
+          value: "10%"
+
+  - it: omits maxUnavailable when null
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.maxUnavailable: null
+    asserts:
+      - notExists:
+          path: spec.maxUnavailable
+
+  - it: renders unhealthyPodEvictionPolicy as IfHealthyBudget
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.unhealthyPodEvictionPolicy: IfHealthyBudget
+    asserts:
+      - equal:
+          path: spec.unhealthyPodEvictionPolicy
+          value: IfHealthyBudget
+
+  - it: renders unhealthyPodEvictionPolicy as AlwaysAllow
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.unhealthyPodEvictionPolicy: AlwaysAllow
+    asserts:
+      - equal:
+          path: spec.unhealthyPodEvictionPolicy
+          value: AlwaysAllow
+
+  - it: omits unhealthyPodEvictionPolicy when null
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.unhealthyPodEvictionPolicy: null
+    asserts:
+      - notExists:
+          path: spec.unhealthyPodEvictionPolicy
+
+  - it: omits unhealthyPodEvictionPolicy when not specified
+    values:
+      - poddisruptionbudget_base.yaml
+    asserts:
+      - notExists:
+          path: spec.unhealthyPodEvictionPolicy
+
+  # Combination tests
+  - it: renders with minAvailable and unhealthyPodEvictionPolicy together
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.minAvailable: 2
+      podDisruptionBudget.unhealthyPodEvictionPolicy: AlwaysAllow
+    asserts:
+      - equal:
+          path: spec.minAvailable
+          value: 2
+      - equal:
+          path: spec.unhealthyPodEvictionPolicy
+          value: AlwaysAllow
+      - notExists:
+          path: spec.maxUnavailable
+
+  - it: renders with maxUnavailable and unhealthyPodEvictionPolicy together
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.maxUnavailable: 1
+      podDisruptionBudget.unhealthyPodEvictionPolicy: IfHealthyBudget
+    asserts:
+      - equal:
+          path: spec.maxUnavailable
+          value: 1
+      - equal:
+          path: spec.unhealthyPodEvictionPolicy
+          value: IfHealthyBudget
+      - notExists:
+          path: spec.minAvailable
+
+  - it: renders with neither minAvailable nor maxUnavailable specified
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.minAvailable: null
+      podDisruptionBudget.maxUnavailable: null
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: PodDisruptionBudget
+      - notExists:
+          path: spec.minAvailable
+      - notExists:
+          path: spec.maxUnavailable
+
+  - it: fails when both minAvailable and maxUnavailable are set
+    values:
+      - poddisruptionbudget_base.yaml
+    set:
+      podDisruptionBudget.minAvailable: 1
+      podDisruptionBudget.maxUnavailable: 1
+    asserts:
+      - failedTemplate: {}

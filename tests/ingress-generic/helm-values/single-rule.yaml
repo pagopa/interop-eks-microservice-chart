@@ -1,0 +1,20 @@
+# Test case 1 – Single host, single path (Prefix)
+# Expected: one Ingress resource with ingressClassName "nginx",
+#           one rule for api.example.com with path /api (Prefix).
+name: test
+namespace: test
+techStack: nodejs
+
+deployment:
+  image:
+    repository: nginx
+    tag: stable
+
+ingress:
+  create: true
+  type: generic
+  ingressClassName: nginx
+  rules:
+    - host: api.example.com
+      path: /api
+      pathType: Prefix

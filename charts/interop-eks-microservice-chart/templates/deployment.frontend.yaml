@@ -23,6 +23,13 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
+  annotations:
+    {{- with .Values.deployment.metadata.annotations }}
+    {{- range $key, $val := . -}}
+    {{- $renderedVal := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
+    {{ $key }}: {{ $renderedVal | quote }}
+    {{- end }}
+    {{- end }}
 spec:
   replicas: {{ .Values.deployment.replicas }}
   selector:
@@ -103,7 +110,7 @@ spec:
             {{- range $key, $val := .Values.deployment.env }}
             {{- $preprocessedEnvValue := include "interop-eks-microservice-chart.render-template" (dict "value" $val "context" $) }}
             - name: "{{ $key }}"
-              value: "{{ $preprocessedEnvValue }}"
+              value: {{ $preprocessedEnvValue | quote }}
             {{- end }}
             {{- end }}
             {{- if and .Values.deployment .Values.deployment.envFromConfigmaps }}

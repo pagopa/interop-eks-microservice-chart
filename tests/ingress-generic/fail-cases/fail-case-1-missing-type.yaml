@@ -1,0 +1,18 @@
+# Fail case 1 – Missing required field: type
+# Expected: helm lint fails with a schema validation error because ingress.type is required when ingress.create is true.
+name: test
+namespace: test
+techStack: nodejs
+
+deployment:
+  image:
+    repository: nginx
+    tag: stable
+
+ingress:
+  create: true
+  ingressClassName: nginx
+  rules:
+    - host: api.example.com
+      path: /api
+      pathType: Prefix

@@ -1,0 +1,6 @@
+name: pdb-max-percent-policy
+namespace: pdb-e2e-max-percent-policy
+
+podDisruptionBudget:
+  maxUnavailable: 25%
+  unhealthyPodEvictionPolicy: AlwaysAllow

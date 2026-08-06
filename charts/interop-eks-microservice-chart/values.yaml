@@ -62,7 +62,7 @@ ingress:
   type:
   # -- (list) list of annotations to apply to the Ingress resource
   annotations: {}
-  # -- (list) List of ingress rules; required when ingress.type is "nginx", must be null (~) or omitted when type is "alb".
+  # -- (list) List of ingress rules; required when ingress.type is "generic", must be null (~) or omitted when type is "alb".
   # Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific).
   # Example:
   #   rules:
@@ -139,14 +139,16 @@ deployment:
   flywayInitContainer:
     create: false
     image:
-      # -- (string) defaults to deployment repositoryPrefix if not set
-      repositoryPrefix:
-      # -- (string) must be set if create is true, e.g. "interop-flyway-migrations"
-      repositoryName:
-      # -- (string) defaults to deployment image tag if not set
-      tag:
+      # -- (string) Flyway official image registry prefix
+      repositoryPrefix: docker.io
+      # -- (string) Flyway official image repository name
+      repositoryName: flyway/flyway
+      # -- (string) Flyway image tag; ignored when digest is set
+      tag: "8.2.3"
       # -- (string) if set, overrides tag with the specified digest
       digest:
+      # -- (string) Image pull policy for the init container; if unset, the Kubernetes default applies
+      imagePullPolicy:
     # -- (bool) execute Flyway migrate command to apply migrations to the database
     executeFlywayMigrate: true
     # -- (bool) execute Flyway repair command to recompute applied migrations metadata; useful for whitespace changes.
@@ -259,3 +261,13 @@ externalSecrets:
       #     key: /path/to/secret
       #     property: password
       #     version: v1
+
+podDisruptionBudget:
+  # -- (bool) Enable PodDisruptionBudget creation
+  create: false
+  # -- (int|string) The minimum number of pods that must be available. Can be an absolute number or a percentage (e.g., "30%")
+  minAvailable:
+  # -- (int|string) The maximum number of pods that can be unavailable. Can be an absolute number or a percentage (e.g., "1" or "10%")
+  maxUnavailable:
+  # -- (string) Defines how unhealthy pods are considered for eviction. Allowed values: [ "IfHealthyBudget", "AlwaysAllow" ]
+  unhealthyPodEvictionPolicy:
