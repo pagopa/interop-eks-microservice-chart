@@ -480,6 +480,17 @@
       },
       "additionalProperties": true
     },
+    "migrations": {
+      "description": "Preferred catalog of Flyway migrations keyed by ConfigMap name. The selected key must match deployment.flywayInitContainer.migrationsConfigmap.",
+      "type": "object",
+      "default": {},
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      }
+    },
     "podDisruptionBudget": {
       "description": "Pod Disruption Budget configuration for high availability",
       "type": "object",

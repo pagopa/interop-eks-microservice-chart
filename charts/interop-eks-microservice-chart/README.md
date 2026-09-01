@@ -48,6 +48,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.image.tag | string | `nil` | Image tag |
 | deployment.metadata.annotations | object | `nil` | Additional annotations to apply to Deployment metadata |
 | deployment.metadata.labels | object | `nil` | Additional labels to apply to Deployment metadata |
+| deployment.migrations | object | `{}` | Preferred catalog of Flyway migrations keyed by ConfigMap name. The selected key must match deployment.flywayInitContainer.migrationsConfigmap. Example: migrations:   flyway-digest-tracking:     V1__Init.sql: |-       CREATE SCHEMA IF NOT EXISTS "${NAMESPACE}_digest_tracking"; |
 | deployment.podTemplateMetadata.annotations | object | `nil` | Additional annotations to apply to Pod `spec.template.metadata` |
 | deployment.podTemplateMetadata.labels | object | `nil` | Additional labels to apply to Pod `spec.template.metadata` |
 | deployment.postStartHook.command | array | `nil` | Command to run in the postStart hook |
