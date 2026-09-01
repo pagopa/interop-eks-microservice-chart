@@ -150,6 +150,10 @@ Usage:
 {{- else if include "interop-eks-microservice-chart.hasBackendConfigmap" . }}
 {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum | quote }}
 {{- end }}
+{{- $flywayConfigmapRendered := include (print $.Template.BasePath "/configmap.flyway.yaml") . }}
+{{- if and .Values.deployment.flywayInitContainer.migrationsConfigmap $flywayConfigmapRendered }}
+{{ .Values.deployment.flywayInitContainer.migrationsConfigmap }}/flywayConfigmap.sha256: {{ $flywayConfigmapRendered | sha256sum | quote }}
+{{- end }}
 {{- end }}
 
 {{- if and .Values.deployment .Values.deployment.envFromConfigmaps .Values.deployment.enableRolloutAnnotations }}
