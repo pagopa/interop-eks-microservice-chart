@@ -37,6 +37,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.flywayInitContainer.image.repositoryName | string | `"flyway/flyway"` | Flyway official image repository name |
 | deployment.flywayInitContainer.image.repositoryPrefix | string | `"docker.io"` | Flyway official image registry prefix |
 | deployment.flywayInitContainer.image.tag | string | `"8.2.3"` | Flyway image tag; ignored when digest is set |
+| deployment.flywayInitContainer.migrationDomain | string | `nil` |  |
 | deployment.flywayInitContainer.migrationPaths | string | `nil` | List of comma separated paths to migration files or directories containing migration files (e.g. "/migrations/a_directory,v1_migration.sql,/migrations/b_directory") |
 | deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
 | deployment.flywayInitContainer.version | string | `"8.2.3"` | Flyway container image version |
@@ -48,7 +49,6 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.image.tag | string | `nil` | Image tag |
 | deployment.metadata.annotations | object | `nil` | Additional annotations to apply to Deployment metadata |
 | deployment.metadata.labels | object | `nil` | Additional labels to apply to Deployment metadata |
-| deployment.migrations | object | `{}` | Preferred catalog of Flyway migrations keyed by ConfigMap name. The selected key must match deployment.flywayInitContainer.migrationsConfigmap. Example: migrations:   flyway-digest-tracking:     V1__Init.sql: |-       CREATE SCHEMA IF NOT EXISTS "${NAMESPACE}_digest_tracking"; |
 | deployment.podTemplateMetadata.annotations | object | `nil` | Additional annotations to apply to Pod `spec.template.metadata` |
 | deployment.podTemplateMetadata.labels | object | `nil` | Additional labels to apply to Pod `spec.template.metadata` |
 | deployment.postStartHook.command | array | `nil` | Command to run in the postStart hook |
@@ -78,6 +78,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | ingress.ingressClassName | string | `nil` |  |
 | ingress.rules | list | `nil` | List of ingress rules; required when ingress.type is "generic", must be null (~) or omitted when type is "alb". Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific). Example:   rules:     - host: api.example.com       path: /api       pathType: Prefix     - host: api.example.com       path: /health       pathType: Exact |
 | ingress.type | string | `nil` |  |
+| migrations | object | `{}` | Catalog of Flyway migrations keyed by ConfigMap name. The selected key must match deployment.flywayInitContainer.migrationsDomain. Example: migrations:   flyway-digest-tracking:     V1__Init.sql: |-       CREATE SCHEMA IF NOT EXISTS "${NAMESPACE}_digest_tracking"; |
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
 | namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
 | podDisruptionBudget.create | bool | `false` | Enable PodDisruptionBudget creation |
