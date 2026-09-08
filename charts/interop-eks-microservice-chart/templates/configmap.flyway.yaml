@@ -1,19 +1,19 @@
 {{- $flywayEnabled := and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create -}}
-{{- $migrationsConfigmap := "" -}}
-{{- if and $flywayEnabled .Values.deployment.flywayInitContainer.migrationsConfigmap -}}
-{{- $migrationsConfigmap = .Values.deployment.flywayInitContainer.migrationsConfigmap -}}
+{{- $migrationDomain := "" -}}
+{{- if and $flywayEnabled .Values.deployment.flywayInitContainer.migrationDomain -}}
+{{- $migrationDomain = .Values.deployment.flywayInitContainer.migrationDomain -}}
 {{- end -}}
 {{- $migrationsRoot := .Values.migrations | default dict -}}
-{{- $allFlywayConfigmaps := .Values.migrations | default dict -}}
 {{- $selectedMigrations := dict -}}
-{{- if and $migrationsConfigmap (hasKey $migrationsRoot $migrationsConfigmap) -}}
-{{- $selectedMigrations = index $migrationsRoot $migrationsConfigmap -}}
+{{- if and $migrationDomain (not (hasKey $migrationsRoot $migrationDomain)) -}}
+{{ fail (printf "Invalid configuration: deployment.flywayInitContainer.migrationDomain '%s' not found in root migrations map." $migrationDomain) }}
 {{- end -}}
-{{- if and $flywayEnabled $migrationsConfigmap (gt (len $selectedMigrations) 0) }}
+{{- if and $flywayEnabled $migrationDomain -}}
+{{- $selectedMigrations = index $migrationsRoot $migrationDomain -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $migrationsConfigmap }}
+  name: {{ $migrationDomain }}
   namespace: {{ .Values.namespace }}
 data:
   {{- range $key, $val := $selectedMigrations }}

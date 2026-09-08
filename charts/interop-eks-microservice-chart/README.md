@@ -37,7 +37,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.flywayInitContainer.image.repositoryName | string | `"flyway/flyway"` | Flyway official image repository name |
 | deployment.flywayInitContainer.image.repositoryPrefix | string | `"docker.io"` | Flyway official image registry prefix |
 | deployment.flywayInitContainer.image.tag | string | `"8.2.3"` | Flyway image tag; ignored when digest is set |
-| deployment.flywayInitContainer.migrationDomain | string | `nil` |  |
+| deployment.flywayInitContainer.migrationDomain | string | `nil` | Domain key used to select migrations from root migrations map |
 | deployment.flywayInitContainer.migrationPaths | string | `nil` | List of comma separated paths to migration files or directories containing migration files (e.g. "/migrations/a_directory,v1_migration.sql,/migrations/b_directory") |
 | deployment.flywayInitContainer.migrationsConfigmap | string | `nil` | Configmap with migrations |
 | deployment.flywayInitContainer.version | string | `"8.2.3"` | Flyway container image version |
@@ -78,7 +78,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | ingress.ingressClassName | string | `nil` |  |
 | ingress.rules | list | `nil` | List of ingress rules; required when ingress.type is "generic", must be null (~) or omitted when type is "alb". Each item must contain: host (string), path (string), pathType (Prefix|Exact|ImplementationSpecific). Example:   rules:     - host: api.example.com       path: /api       pathType: Prefix     - host: api.example.com       path: /health       pathType: Exact |
 | ingress.type | string | `nil` |  |
-| migrations | object | `{}` | Catalog of Flyway migrations keyed by ConfigMap name. The selected key must match deployment.flywayInitContainer.migrationsDomain. Example: migrations:   flyway-digest-tracking:     V1__Init.sql: |-       CREATE SCHEMA IF NOT EXISTS "${NAMESPACE}_digest_tracking"; |
+| migrations | object | `{}` | Catalog of Flyway migrations keyed by migration domain. The selected key must match deployment.flywayInitContainer.migrationDomain. Example: migrations:   flyway-digest-tracking:     V1__Init.sql: |-       CREATE SCHEMA IF NOT EXISTS "${NAMESPACE}_digest_tracking"; |
 | name | string | `nil` | Name of the service that will be deployed on K8s cluster |
 | namespace | string | `nil` | Namespace hosting the service that will be deployed on K8s cluster |
 | podDisruptionBudget.create | bool | `false` | Enable PodDisruptionBudget creation |
@@ -304,6 +304,40 @@ Some microservices may need to use Flyway for database migration management; to 
 deployment:
   flywayInitContainer:
     create: true
+```
+
+### 2.1 Migrations source selection
+
+Two mutually exclusive options are supported to provide Flyway SQL migrations:
+
+* `deployment.flywayInitContainer.migrationDomain`: selects a key from root-level `migrations` and renders a dedicated ConfigMap automatically.
+* `deployment.flywayInitContainer.migrationsConfigmap`: uses an existing ConfigMap already present in the namespace.
+
+`migrationDomain` and `migrationsConfigmap` cannot be set together.
+
+Example using `migrationDomain`:
+
+```yaml
+deployment:
+  flywayInitContainer:
+    create: true
+    migrationDomain: agreement-domain
+
+migrations:
+  agreement-domain:
+    V1__Init.sql: |-
+      CREATE TABLE IF NOT EXISTS public.agreement(id UUID PRIMARY KEY);
+    V2__Patch.sql: |-
+      ALTER TABLE public.agreement ADD COLUMN created_at TIMESTAMP;
+```
+
+Example using existing `migrationsConfigmap`:
+
+```yaml
+deployment:
+  flywayInitContainer:
+    create: true
+    migrationsConfigmap: existing-migrations-configmap
 ```
 
 For the container to start correctly, the following ConfigMaps and Secrets must be present in the cluster/namespace where the microservice is deployed:

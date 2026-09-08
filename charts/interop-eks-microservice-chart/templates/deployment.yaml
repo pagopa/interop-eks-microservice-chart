@@ -23,6 +23,7 @@
 {{- $flyway_repository_name := "" -}}
 {{- $flyway_image_digest := "" -}}
 {{- $flyway_image_tag := "" -}}
+{{- $flyway_migrations_configmap := "" -}}
 
 {{- if $flyway_enabled }}
 {{- $flyway_repository_prefix = .Values.deployment.flywayInitContainer.image.repositoryPrefix }}
@@ -47,8 +48,24 @@
 {{- $flyway_image_tag = (nospace (cat ":" .Values.deployment.flywayInitContainer.image.tag)) }}
 {{- end }}
 {{- end }}
+{{- if and .Values.deployment.flywayInitContainer.migrationDomain .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+{{ fail "Invalid configuration: migrationDomain and migrationsConfigmap in flywayInitContainer cannot be defined at the same time." }}
+{{- end }}
+{{- if and .Values.deployment.flywayInitContainer.migrationDomain .Values.deployment.flywayInitContainer.migrationPaths }}
+{{ fail "Invalid configuration: migrationDomain and migrationPaths in flywayInitContainer cannot be defined at the same time." }}
+{{- end }}
 {{- if and .Values.deployment.flywayInitContainer.migrationsConfigmap .Values.deployment.flywayInitContainer.migrationPaths }}
-{{ fail "Invalid configuration - Both migrationsConfigmap and migrationPaths in flywayInitContainer cannot be defined at the same time." }}
+{{ fail "Invalid configuration: migrationsConfigmap and migrationPaths in flywayInitContainer cannot be defined at the same time." }}
+{{- end }}
+
+{{- if .Values.deployment.flywayInitContainer.migrationDomain }}
+{{- $migrationsRoot := .Values.migrations | default dict -}}
+{{- if not (hasKey $migrationsRoot .Values.deployment.flywayInitContainer.migrationDomain) }}
+{{ fail (printf "Invalid configuration: deployment.flywayInitContainer.migrationDomain '%s' not found in root migrations map." .Values.deployment.flywayInitContainer.migrationDomain) }}
+{{- end }}
+{{- $flyway_migrations_configmap = .Values.deployment.flywayInitContainer.migrationDomain -}}
+{{- else if .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+{{- $flyway_migrations_configmap = .Values.deployment.flywayInitContainer.migrationsConfigmap -}}
 {{- end }}
 
 {{- if and .Values.deployment.flywayInitContainer.executeFlywayMigrate .Values.deployment.flywayInitContainer.executeFlywayRepair -}}
@@ -174,7 +191,7 @@ spec:
                   key: {{ index $secretAddress 1 }}
             {{- end }}
             {{- end }}
-          {{- if .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+          {{- if $flyway_migrations_configmap }}
           volumeMounts:
             - name: migrations-files
               mountPath: "/flyway/sql"
@@ -292,12 +309,12 @@ spec:
           {{- end }}
       {{- if and .Values.deployment (or .Values.deployment.volumes $flyway_enabled) }}
       volumes:
-        {{- if and $flyway_enabled .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+        {{- if and $flyway_enabled $flyway_migrations_configmap }}
         - name: migrations-files
           projected:
             sources:
               - configMap:
-                  name: {{ .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+                  name: {{ $flyway_migrations_configmap }}
         {{- end }}
         {{ if .Values.deployment.volumes }}
         {{- toYaml .Values.deployment.volumes | nindent 8 }}

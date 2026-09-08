@@ -66,6 +66,21 @@
                 }
               }
             }
+          },
+          {
+            "not": {
+              "required": ["migrationDomain", "migrationsConfigmap"],
+              "properties": {
+                "migrationDomain": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "migrationsConfigmap": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
           }
         ],
         "properties": {
@@ -117,6 +132,10 @@
             "description": "Enable Flyway to download Redshift JDBC driver",
             "type": "boolean",
             "default": false
+          },
+          "migrationDomain": {
+            "description": "Domain key used to select migrations from root migrations map",
+            "type": ["string", "null"]
           },
           "migrationsConfigmap": {
             "description": "ConfigMap with migrations",
@@ -481,7 +500,7 @@
       "additionalProperties": true
     },
     "migrations": {
-      "description": "Preferred catalog of Flyway migrations keyed by ConfigMap name. The selected key must match deployment.flywayInitContainer.migrationsConfigmap.",
+      "description": "Catalog of Flyway migrations keyed by migration domain. The selected key must match deployment.flywayInitContainer.migrationDomain.",
       "type": "object",
       "default": {},
       "additionalProperties": {
@@ -530,6 +549,33 @@
       ]
     }
   },
+  "allOf": [
+    {
+      "not": {
+        "required": ["deployment"],
+        "properties": {
+          "deployment": {
+            "required": ["flywayInitContainer"],
+            "properties": {
+              "flywayInitContainer": {
+                "required": ["migrationDomain", "migrationsConfigmap"],
+                "properties": {
+                  "migrationDomain": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "migrationsConfigmap": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "required": [
     "name",
     "namespace",
