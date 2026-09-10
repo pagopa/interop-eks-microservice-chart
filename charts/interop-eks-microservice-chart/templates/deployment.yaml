@@ -137,7 +137,7 @@ spec:
             - |
 {{- .Files.Get "files/flyway-init.sh" | nindent 14 }}
           {{- if and .Values.externalSecrets .Values.externalSecrets.flywayInitContainer .Values.externalSecrets.flywayInitContainer.create (or .Values.externalSecrets.flywayInitContainer.data .Values.externalSecrets.flywayInitContainer.dataFrom) }}
-          {{- $esSecretName := .Values.externalSecrets.flywayInitContainer.targetSecret.name | default (printf "%s-flyway" $root.Values.name) }}
+          {{- $esSecretName := include "interop-eks-microservice-chart.render-template" (dict "value" (.Values.externalSecrets.flywayInitContainer.targetSecret.name | default (printf "%s-flyway" $root.Values.name)) "context" $) }}
           envFrom:
             - secretRef:
                 name: {{ $esSecretName }}
@@ -244,7 +244,7 @@ spec:
             {{- toYaml .Values.deployment.securityContext | nindent 12 }}
           {{- end }}
           {{- if and .Values.externalSecrets .Values.externalSecrets.app .Values.externalSecrets.app.create (or .Values.externalSecrets.app.data .Values.externalSecrets.app.dataFrom) }}
-          {{- $esSecretName := .Values.externalSecrets.app.targetSecret.name | default $root.Values.name }}
+          {{- $esSecretName := include "interop-eks-microservice-chart.render-template" (dict "value" (.Values.externalSecrets.app.targetSecret.name | default $root.Values.name) "context" $) }}
           envFrom:
             - secretRef:
                 name: {{ $esSecretName }}
