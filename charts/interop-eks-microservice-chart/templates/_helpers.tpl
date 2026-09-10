@@ -258,9 +258,14 @@ Usage:
 {{ $.Values.name }}/serviceAccount.sha256: {{ include (print $.Template.BasePath "/serviceaccount.yaml") . | sha256sum | quote }}
 {{- end -}}
 
-{{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations .Values.externalSecrets.create }}
+{{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations .Values.externalSecrets.app .Values.externalSecrets.app.create }}
 {{ .Values.name }}/externalSecret.sha256: {{ include (print $.Template.BasePath "/externalSecret.yaml") . | sha256sum | quote }}
 {{- end -}}
+
+{{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations .Values.externalSecrets.flywayInitContainer .Values.externalSecrets.flywayInitContainer.create }}
+{{ .Values.name }}/externalSecretFlywayInitContainer.sha256: {{ include (print $.Template.BasePath "/externalSecret.flyway.yaml") . | sha256sum | quote }}
+{{- end -}}
+
 {{- end }}
 {{/* End of generateRolloutAnnotations */}}
 
