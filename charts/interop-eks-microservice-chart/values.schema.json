@@ -129,24 +129,68 @@
           "env": {
             "description": "Environment variables for init container",
             "type": "object",
+            "propertyNames": {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
             "default": {}
           },
           "envFromConfigmaps": {
             "description": "Environment variables sourced from ConfigMaps",
             "type": "object",
+            "propertyNames": {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
             "default": {}
           },
           "envFromSecrets": {
             "description": "Environment variables sourced from Secrets",
             "type": "object",
+            "propertyNames": {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
             "default": {}
           },
           "envFromFieldRef": {
             "description": "Environment variables sourced from pod fieldRef",
             "type": "object",
+            "propertyNames": {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
             "default": {}
           }
         }
+      },
+      "env": {
+        "description": "Environment variables for main container",
+        "type": "object",
+        "propertyNames": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "default": {}
+      },
+      "envFromConfigmaps": {
+        "description": "Main container environment variables sourced from ConfigMaps",
+        "type": "object",
+        "propertyNames": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "default": {}
+      },
+      "envFromSecrets": {
+        "description": "Main container environment variables sourced from Secrets",
+        "type": "object",
+        "propertyNames": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "default": {}
+      },
+      "envFromFieldRef": {
+        "description": "Main container environment variables sourced from pod fieldRef",
+        "type": "object",
+        "propertyNames": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "default": {}
       },
       "replicas": {
         "description": "Deployment replicas",
@@ -185,6 +229,14 @@
         "resources",
         "replicas"
       ]
+    },
+    "configmap": {
+      "description": "ConfigMap key/value entries used by deployment env injection",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+      },
+      "default": {}
     },
     "techStack": {
       "description": "Technology used to develop the service",
@@ -444,7 +496,8 @@
                 "properties": {
                   "secretKey": {
                     "description": "Key name in the target Kubernetes Secret",
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
                   },
                   "remoteRef": {
                     "description": "Reference to the remote secret",
@@ -548,7 +601,8 @@
                 "properties": {
                   "secretKey": {
                     "description": "Key name in the target Kubernetes Secret",
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
                   },
                   "remoteRef": {
                     "description": "Reference to the remote secret",

@@ -276,6 +276,37 @@ Usage:
 {{- end -}}
 {{- end -}}
 
+{{/* Validate a single environment variable name. */}}
+{{- define "interop-eks-microservice-chart.validateEnvVarName" -}}
+{{- $scope := .scope | default "values" -}}
+{{- $path := .path | default "key" -}}
+{{- $name := .name | default "" -}}
+{{- if not (regexMatch "^[A-Za-z_][A-Za-z0-9_]*$" $name) -}}
+{{- fail (printf "Invalid configuration: %s.%s='%s' is not a valid environment variable name. Allowed pattern: ^[A-Za-z_][A-Za-z0-9_]*$" $scope $path $name) -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Validate all keys of a map used as env var names. */}}
+{{- define "interop-eks-microservice-chart.validateEnvVarNamesFromMapKeys" -}}
+{{- $scope := .scope | default "values" -}}
+{{- $path := .path | default "map" -}}
+{{- $entries := .entries | default dict -}}
+{{- range $key, $_ := $entries }}
+{{- include "interop-eks-microservice-chart.validateEnvVarName" (dict "scope" $scope "path" (printf "%s[%s]" $path $key) "name" $key) -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Validate ExternalSecret secretKey values used by envFrom. */}}
+{{- define "interop-eks-microservice-chart.validateEnvVarNamesFromExternalSecretData" -}}
+{{- $scope := .scope | default "externalSecrets" -}}
+{{- $path := .path | default "data" -}}
+{{- $entries := .entries | default (list) -}}
+{{- range $idx, $entry := $entries }}
+{{- $secretKey := get $entry "secretKey" | default "" -}}
+{{- include "interop-eks-microservice-chart.validateEnvVarName" (dict "scope" $scope "path" (printf "%s[%d].secretKey" $path $idx) "name" $secretKey) -}}
+{{- end -}}
+{{- end -}}
+
 {{/* Generate frontend configmap dynamic data */}}
 {{- define "interop-eks-microservice-chart.generateFrontendConfigmapData" -}}
 {{- $givenContext := .context }}

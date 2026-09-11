@@ -16,6 +16,46 @@
 {{ fail "One of deployment.image.tag and deployment.image.digest must be defined." }}
 {{- end }}
 
+{{- if .Values.configmap }}
+{{- include "interop-eks-microservice-chart.validateEnvVarNamesFromMapKeys" (dict "scope" "values" "path" "configmap" "entries" .Values.configmap) -}}
+{{- end }}
+
+{{- if and .Values.deployment .Values.deployment.env }}
+{{- include "interop-eks-microservice-chart.validateEnvVarNamesFromMapKeys" (dict "scope" "values" "path" "deployment.env" "entries" .Values.deployment.env) -}}
+{{- end }}
+
+{{- if and .Values.deployment .Values.deployment.envFromConfigmaps }}
+{{- include "interop-eks-microservice-chart.validateEnvVarNamesFromMapKeys" (dict "scope" "values" "path" "deployment.envFromConfigmaps" "entries" .Values.deployment.envFromConfigmaps) -}}
+{{- end }}
+
+{{- if and .Values.deployment .Values.deployment.envFromSecrets }}
+{{- include "interop-eks-microservice-chart.validateEnvVarNamesFromMapKeys" (dict "scope" "values" "path" "deployment.envFromSecrets" "entries" .Values.deployment.envFromSecrets) -}}
+{{- end }}
+
+{{- if and .Values.deployment .Values.deployment.envFromFieldRef }}
+{{- include "interop-eks-microservice-chart.validateEnvVarNamesFromMapKeys" (dict "scope" "values" "path" "deployment.envFromFieldRef" "entries" .Values.deployment.envFromFieldRef) -}}
+{{- end }}
+
+{{- if and .Values.externalSecrets .Values.externalSecrets.app .Values.externalSecrets.app.create .Values.externalSecrets.app.data }}
+{{- include "interop-eks-microservice-chart.validateEnvVarNamesFromExternalSecretData" (dict "scope" "values" "path" "externalSecrets.app.data" "entries" .Values.externalSecrets.app.data) -}}
+{{- end }}
+
+{{- if and .Values.externalSecrets .Values.externalSecrets.flywayInitContainer .Values.externalSecrets.flywayInitContainer.create .Values.externalSecrets.flywayInitContainer.data }}
+{{- include "interop-eks-microservice-chart.validateEnvVarNamesFromExternalSecretData" (dict "scope" "values" "path" "externalSecrets.flywayInitContainer.data" "entries" .Values.externalSecrets.flywayInitContainer.data) -}}
+{{- end }}
+
+{{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create }}
+{{- if .Values.deployment.flywayInitContainer.env }}
+{{- include "interop-eks-microservice-chart.validateEnvVarNamesFromMapKeys" (dict "scope" "values" "path" "deployment.flywayInitContainer.env" "entries" .Values.deployment.flywayInitContainer.env) -}}
+{{- end }}
+{{- if .Values.deployment.flywayInitContainer.envFromConfigmaps }}
+{{- include "interop-eks-microservice-chart.validateEnvVarNamesFromMapKeys" (dict "scope" "values" "path" "deployment.flywayInitContainer.envFromConfigmaps" "entries" .Values.deployment.flywayInitContainer.envFromConfigmaps) -}}
+{{- end }}
+{{- if .Values.deployment.flywayInitContainer.envFromSecrets }}
+{{- include "interop-eks-microservice-chart.validateEnvVarNamesFromMapKeys" (dict "scope" "values" "path" "deployment.flywayInitContainer.envFromSecrets" "entries" .Values.deployment.flywayInitContainer.envFromSecrets) -}}
+{{- end }}
+{{- end }}
+
 {{- /* If the flyway initContainer is required then compute the flyway action(s) to execute */ -}}
 {{- $flyway_enabled := and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.create -}}
 {{- $flyway_action := "" -}}
