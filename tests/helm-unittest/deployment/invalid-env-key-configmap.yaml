@@ -1,0 +1,2 @@
+configmap:
+  this-is-not-valid: value
