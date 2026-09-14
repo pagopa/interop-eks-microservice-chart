@@ -11,6 +11,11 @@ The following table lists the configurable parameters of the Interop-eks-microse
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| argocd.enableMonitoring | bool | `false` | Enable the management of monitoring resources using a Job with ArgoCD PostSync hook |
+| argocd.monitoringRepository | string | `nil` | GitHub repository containing the terraform/k8s-monitoring-argocd-application Terraform state |
+| argocd.monitoringRepositoryRef | string | `"main"` | GitHub branch or tag to checkout |
+| argocd.monitoringServiceAccountName | string | `nil` | ServiceAccount with the IRSA annotation granting the Job the permission to manage AWS monitoring resources |
+| argocd.monitoringWorkloadKind | string | `"Deployment"` | Kind of workload to monitor |
 | autoscaling.keda | object | `{"cooldownPeriod":null,"create":false,"maxReplicaCount":null,"minReplicaCount":null,"paused":false,"pollingInterval":null,"triggers":null}` | KEDA autoscaling configuration |
 | autoscaling.keda.cooldownPeriod | int | `nil` | cooldown period in seconds |
 | autoscaling.keda.create | bool | `false` | Enable KEDA autoscaling |

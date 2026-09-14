@@ -1,0 +1,59 @@
+{{- if and .Values.argocd .Values.argocd.enableMonitoring }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.name }}-tf-apply-monitoring
+  namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded #To check what does this value do
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.monitoringServiceAccountName "context" $) }}
+      containers:
+        - name: {{ .Values.name }}-tf-apply-monitoring
+          image: alpine:3.20
+          env:
+            - name: ENV
+              value: {{ .Values.namespace | quote }}
+            - name: TF_VAR_argocd_workload_name
+              value: {{ .Values.name | quote }}
+            - name: TF_VAR_argocd_workload_kind
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.monitoringWorkloadKind "context" $) | quote }}
+            - name: MONITORING_REPO_URL
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.monitoringRepository "context" $) | quote }}
+            - name: MONITORING_REPO_REF
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.monitoringRepositoryRef "context" $) | quote }}
+          command: ["/bin/sh", "-eu", "-c"]
+          args:
+            - |
+              apk add --no-cache git curl unzip bash aws-cli >/dev/null
+
+              git clone --depth 1 https://github.com/tfutils/tfenv.git /opt/tfenv
+              export PATH="/opt/tfenv/bin:$PATH"
+
+              git clone --branch "$MONITORING_REPO_REF" "$MONITORING_REPO_URL"
+              cd "$(basename "$MONITORING_REPO_URL" .git)"/terraform
+
+              TF_VERSION="$(cat ./.terraform-version)"
+              tfenv install "$TF_VERSION"
+              tfenv use "$TF_VERSION"
+
+              cd k8s-monitoring-argocd-application
+
+              terraform init \
+              -backend-config="./env/${ENV}/backend.tfvars" \
+              -backend-config="key=${ENV}-es1/interop-core-deployment/argocd-applications/${TF_VAR_argocd_workload_name}/monitoring.tfstate"
+
+              terraform apply -var-file="./env/${ENV}/terraform.tfvars" -auto-approve
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi
+{{- end }}

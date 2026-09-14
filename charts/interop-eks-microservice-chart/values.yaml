@@ -74,6 +74,18 @@ ingress:
   #       pathType: Exact
   rules: ~
 
+argocd:
+  # -- (bool) Enable the management of monitoring resources using a Job with ArgoCD PostSync hook
+  enableMonitoring: false
+  # -- (string) GitHub repository containing the terraform/k8s-monitoring-argocd-application Terraform state
+  monitoringRepository:
+  # -- (string) GitHub branch or tag to checkout
+  monitoringRepositoryRef: main
+  # -- (string) ServiceAccount with the IRSA annotation granting the Job the permission to manage AWS monitoring resources
+  monitoringServiceAccountName:
+  # -- (string) Kind of workload to monitor
+  monitoringWorkloadKind: Deployment
+
 deployment:
   # -- (bool) Enable annotation generation for referenced configmaps and secrets
   enableRolloutAnnotations: false
