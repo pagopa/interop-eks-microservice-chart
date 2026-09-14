@@ -46,7 +46,7 @@ spec:
 
               terraform init \
               -backend-config="./env/${ENV}/backend.tfvars" \
-              -backend-config="key=${ENV}-es1/interop-core-deployment/argocd-applications/${TF_VAR_argocd_workload_name}/monitoring.tfstate"
+              -backend-config="key=${ENV}-es1/interop-core-deployment/argocd-applications/monitoring/${TF_VAR_argocd_workload_name}.tfstate"
 
               terraform apply -var-file="./env/${ENV}/terraform.tfvars" -auto-approve
           resources:
