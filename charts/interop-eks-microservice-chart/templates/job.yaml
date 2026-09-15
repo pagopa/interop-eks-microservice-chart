@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Values.namespace }}
   annotations:
     argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded #To check what does this value do
 spec:
   backoffLimit: 2
   template:
@@ -17,8 +17,6 @@ spec:
         - name: {{ .Values.name }}-tf-apply-monitoring
           image: alpine:3.20
           env:
-            - name: ENV
-              value: {{ .Values.local.env | quote }}
             - name: TF_VAR_argocd_workload_name
               value: {{ .Values.name | quote }}
             - name: TF_VAR_argocd_workload_kind
@@ -27,6 +25,8 @@ spec:
               value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.projectRepositoryURL "context" $) | quote }}
             - name: PROJECT_REPO_REF
               value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.projectRepositoryRef "context" $) | quote }}
+            - name: TF_ENV
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.tfEnv "context" $) | quote }}
           command: ["/bin/sh", "-eu", "-c"]
           args:
             - |
@@ -47,10 +47,10 @@ spec:
               REPO_NAME="$(basename "${PROJECT_REPOSITORY_URL%.git}")"
 
               terraform init \
-              -backend-config="./env/${ENV}/backend.tfvars" \
-              -backend-config="key=${ENV}-es1/${REPO_NAME}/argocd-applications/monitoring/${TF_VAR_argocd_workload_name}.tfstate"
+              -backend-config="./env/${TF_ENV}/backend.tfvars" \
+              -backend-config="key=${TF_ENV}-es1/${REPO_NAME}/argocd-applications/monitoring/${TF_VAR_argocd_workload_name}.tfstate"
 
-              terraform apply -var-file="./env/${ENV}/terraform.tfvars" -auto-approve
+              terraform apply -var-file="./env/${TF_ENV}/terraform.tfvars" -auto-approve
           resources:
             requests:
               cpu: 1000m
