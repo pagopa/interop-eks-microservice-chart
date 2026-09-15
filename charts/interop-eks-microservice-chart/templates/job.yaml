@@ -1,4 +1,4 @@
-{{- if and .Values.argocd .Values.argocd.enableMonitoring }}
+{{- if and .Values.argocd .Values.argocd.appMonitoring .Values.argocd.appMonitoring.enable }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -12,21 +12,21 @@ spec:
   template:
     spec:
       restartPolicy: Never
-      serviceAccountName: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.monitoringServiceAccountName "context" $) }}
+      serviceAccountName: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.serviceAccountName "context" $) }}
       containers:
         - name: {{ .Values.name }}-tf-apply-monitoring
           image: alpine:3.20
           env:
             - name: ENV
-              value: {{ .Values.namespace | quote }}
+              value: {{ .Values.local.env | quote }}
             - name: TF_VAR_argocd_workload_name
               value: {{ .Values.name | quote }}
             - name: TF_VAR_argocd_workload_kind
-              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.monitoringWorkloadKind "context" $) | quote }}
-            - name: MONITORING_REPO_URL
-              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.monitoringRepository "context" $) | quote }}
-            - name: MONITORING_REPO_REF
-              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.monitoringRepositoryRef "context" $) | quote }}
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.workloadKind "context" $) | quote }}
+            - name: PROJECT_REPOSITORY_URL
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.projectRepositoryURL "context" $) | quote }}
+            - name: PROJECT_REPO_REF
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.projectRepositoryRef "context" $) | quote }}
           command: ["/bin/sh", "-eu", "-c"]
           args:
             - |
@@ -35,8 +35,8 @@ spec:
               git clone --depth 1 https://github.com/tfutils/tfenv.git /opt/tfenv
               export PATH="/opt/tfenv/bin:$PATH"
 
-              git clone --branch "$MONITORING_REPO_REF" "$MONITORING_REPO_URL"
-              cd "$(basename "$MONITORING_REPO_URL" .git)"/terraform
+              git clone --branch "$PROJECT_REPO_REF" "$PROJECT_REPOSITORY_URL"
+              cd "$(basename "$PROJECT_REPOSITORY_URL" .git)"/terraform
 
               TF_VERSION="$(cat ./.terraform-version)"
               tfenv install "$TF_VERSION"
@@ -44,16 +44,18 @@ spec:
 
               cd k8s-monitoring-argocd-application
 
+              REPO_NAME="$(basename "${PROJECT_REPOSITORY_URL%.git}")"
+
               terraform init \
               -backend-config="./env/${ENV}/backend.tfvars" \
-              -backend-config="key=${ENV}-es1/interop-core-deployment/argocd-applications/monitoring/${TF_VAR_argocd_workload_name}.tfstate"
+              -backend-config="key=${ENV}-es1/${REPO_NAME}/argocd-applications/monitoring/${TF_VAR_argocd_workload_name}.tfstate"
 
               terraform apply -var-file="./env/${ENV}/terraform.tfvars" -auto-approve
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: 1000m
+              memory: 1Gi
             limits:
-              cpu: 200m
-              memory: 512Mi
+              cpu: 1000m
+              memory: 1Gi
 {{- end }}
