@@ -23,7 +23,7 @@ spec:
               value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.workloadKind "context" $) | quote }}
             - name: PROJECT_REPOSITORY_URL
               value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.projectRepositoryURL "context" $) | quote }}
-            - name: PROJECT_REPO_REF
+            - name: PROJECT_REPOSITORY_REF
               value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.projectRepositoryRef "context" $) | quote }}
             - name: TF_ENV
               value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.tfEnv "context" $) | quote }}
@@ -37,7 +37,7 @@ spec:
               git clone --depth 1 https://github.com/tfutils/tfenv.git /opt/tfenv
               export PATH="/opt/tfenv/bin:$PATH"
 
-              git clone --branch "$PROJECT_REPO_REF" "$PROJECT_REPOSITORY_URL"
+              git clone --branch "$PROJECT_REPOSITORY_REF" "$PROJECT_REPOSITORY_URL"
               cd "$(basename "$PROJECT_REPOSITORY_URL" .git)"/terraform
 
               TF_VERSION="$(cat ./.terraform-version)"
