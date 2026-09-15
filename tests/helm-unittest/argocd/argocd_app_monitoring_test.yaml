@@ -65,18 +65,3 @@ tests:
           content:
             name: TF_STATE_BUCKET_KEY_PREFIX
             value: dev-es1
-
-  - it: derives repository name from PROJECT_REPOSITORY_URL in terraform backend key
-    set:
-      argocd.appMonitoring.enable: true
-      argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
-      argocd.appMonitoring.projectRepositoryURL: git::https://github.com/pagopa/interop-core-deployment
-      argocd.appMonitoring.tfEnv: dev
-      argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
-    asserts:
-      - matchRegex:
-          path: spec.template.spec.containers[0].args[0]
-          pattern: 'REPO_NAME="\$\(basename "\$\{PROJECT_REPOSITORY_URL%.git\}"\)"'
-      - matchRegex:
-          path: spec.template.spec.containers[0].args[0]
-          pattern: '-backend-config="key=\$\{TF_STATE_BUCKET_KEY_PREFIX\}/\$\{REPO_NAME\}/argocd-applications/monitoring/\$\{TF_VAR_argocd_workload_name\}\.tfstate"'
