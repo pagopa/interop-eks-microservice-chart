@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Values.namespace }}
   annotations:
     argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded #To check what does this value do
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
   backoffLimit: 2
   template:
