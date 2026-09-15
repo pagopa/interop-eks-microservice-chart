@@ -121,6 +121,8 @@ The key/value pair must be defined as follows:
 * Key: it is mapped to the name of the environment variable used by the Deployment and, at the same time, to the key defined in the ConfigMap; therefore both keys are identical;
 * Value: it is the actual value associated with the previously defined key
 
+Note: names used as Kubernetes environment variables are validated with the pattern `^[A-Za-z_][A-Za-z0-9_]*$`. For this reason, names such as `KEY-1`, `STA-GE`, or `MY-VAR` are rejected, while valid examples are `KEY_1`, `STAGE`, or `MY_VAR`.
+
 Declaring the "configmap" section in the _values.yaml_ file of a specific microservice will apply the following automations:
 * a ConfigMap will be created with the same "name" as the microservice Deployment;
 * the "data" field of such ConfigMap will be populated with all key/value pairs defined in "configmap"
@@ -903,6 +905,8 @@ where:
   - KEY: is a generic key with a plain value used to populate the content of "window.pagopa_env". More than one key/value pair can be defined; duplicate keys will be ignored giving precedence to the last one defined
   - fromConfigmaps: is a special key used to define a list of key/value pairs where the value is composed of a prefix, which defines a ConfigMap to reference, and a suffix, which defines the key to look up in the ConfigMap, separated by a dot; the value referenced by the prefix/suffix pair will be looked up in the declared ConfigMap and the resulting value inserted into "window.pagopa_env". The same rules for keys described above also apply to those defined in "fromConfigmaps"
 
+This section is about the generated frontend JavaScript object, not Kubernetes container environment variables. Therefore the validation rule `^[A-Za-z_][A-Za-z0-9_]*$` applies to `deployment.env`, `configmap`, and `externalSecrets.*.data`, but not to the JS object keys inside `window.pagopa_env`. If a JS property contains a hyphen (for example `STA-GE`), it must be accessed via bracket notation such as `window.pagopa_env["STA-GE"]`.
+
 The result of computing the previous code snippet, within the ConfigMap generated for the frontend deployment, will have this format:
 ```
 env.js: |-
@@ -1040,11 +1044,11 @@ externalSecrets:
     targetSecret:
       name: my-app-secrets  # Name of the K8s Secret that will contain all synced keys
     data:
-      - secretKey: db-password
+      - secretKey: DB_PASSWORD
         remoteRef:
           key: /prod/database/credentials
           property: password
-      - secretKey: api-key
+      - secretKey: API_KEY
         remoteRef:
           key: /prod/api/credentials
           property: api-key
@@ -1114,19 +1118,20 @@ targetSecret:
 
 #### 7.2.4. data
 
-List of individual keys to sync from different sources. All keys are aggregated into a single Secret:
+List of individual keys to sync from different sources. All keys are aggregated into a single Secret.
+Because the values are then injected with `envFrom`, each `secretKey` must also satisfy the same Kubernetes env var rule: `^[A-Za-z_][A-Za-z0-9_]*$`.
 
 ```yaml
 data:
-  - secretKey: db-password      # Key name in the K8s Secret
+  - secretKey: DB_PASSWORD      # Key name in the K8s Secret / env var name
     remoteRef:
       key: /prod/db/creds      # Path in the external provider
       property: password        # Specific property
-  - secretKey: api-key
+  - secretKey: API_KEY
     remoteRef:
       key: /prod/api/credentials
       property: api-key
-  - secretKey: jwt-secret
+  - secretKey: JWT_SECRET
     remoteRef:
       key: /prod/app/secrets
       property: jwt-secret
@@ -1146,27 +1151,27 @@ externalSecrets:
     targetSecret:
       name: app-config
     data:
-      - secretKey: db_host
+      - secretKey: DB_HOST
         remoteRef:
           key: /prod/db/config
           property: host
-      - secretKey: db_port
+      - secretKey: DB_PORT
         remoteRef:
           key: /prod/db/config
           property: port
-      - secretKey: db_username
+      - secretKey: DB_USERNAME
         remoteRef:
           key: /prod/db/credentials
           property: username
-      - secretKey: db_password
+      - secretKey: DB_PASSWORD
         remoteRef:
           key: /prod/db/credentials
           property: password
-      - secretKey: api_key
+      - secretKey: API_KEY
         remoteRef:
           key: /prod/api/credentials
           property: key
-      - secretKey: api_secret
+      - secretKey: API_SECRET
         remoteRef:
           key: /prod/api/credentials
           property: secret
@@ -1259,29 +1264,29 @@ externalSecrets:
       name: aggregated-secrets
     data:
       # Database secrets
-      - secretKey: db-host
+      - secretKey: DB_HOST
         remoteRef:
           key: /prod/database/config
           property: host
-      - secretKey: db-password
+      - secretKey: DB_PASSWORD
         remoteRef:
           key: /prod/database/credentials
           property: password
 
       # API secrets
-      - secretKey: api-key
+      - secretKey: API_KEY
         remoteRef:
           key: /prod/api/credentials
           property: key
 
       # Cache secrets
-      - secretKey: redis-password
+      - secretKey: REDIS_PASSWORD
         remoteRef:
           key: /prod/cache/credentials
           property: password
 
       # Monitoring secrets
-      - secretKey: monitoring-token
+      - secretKey: MONITORING_TOKEN
         remoteRef:
           key: /prod/monitoring/tokens
           property: app-token
