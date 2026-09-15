@@ -1,0 +1,3 @@
+deployment:
+  envFromConfigmaps:
+    this-is-not-valid: test-cm.KEY

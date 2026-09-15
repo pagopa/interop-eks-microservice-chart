@@ -1,0 +1,81 @@
+suite: deployment env key validation
+templates:
+  - templates/deployment.yaml
+values:
+  - ../common/base.yaml
+
+tests:
+  - it: passes when deployment.env key is valid and value contains hyphen
+    set:
+      deployment.env.KEY_1: sample-value
+    asserts:
+      - hasDocuments:
+          count: 1
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: KEY_1
+            value: sample-value
+
+  - it: passes when deployment.envFromSecrets key is valid and referenced secret key contains hyphen
+    set:
+      deployment.envFromSecrets.KEY_1: test-secret.sample-value
+    asserts:
+      - hasDocuments:
+          count: 1
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: KEY_1
+            valueFrom:
+              secretKeyRef:
+                name: test-secret
+                key: sample-value
+
+  - it: fails when configmap key is not a valid env var name
+    values:
+      - invalid-env-key-configmap.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails when deployment.env key is not a valid env var name
+    values:
+      - invalid-env-key-deployment-env.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails when deployment.envFromConfigmaps key is not a valid env var name
+    values:
+      - invalid-env-key-deployment-envfromconfigmaps.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails when deployment.envFromSecrets key is not a valid env var name
+    values:
+      - invalid-env-key-deployment-envfromsecrets.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails when deployment.envFromFieldRef key is not a valid env var name
+    values:
+      - invalid-env-key-deployment-envfromfieldref.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails when deployment.flywayInitContainer.env key is not a valid env var name
+    values:
+      - invalid-env-key-flyway-env.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails when deployment.flywayInitContainer.envFromConfigmaps key is not a valid env var name
+    values:
+      - invalid-env-key-flyway-envfromconfigmaps.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails when deployment.flywayInitContainer.envFromSecrets key is not a valid env var name
+    values:
+      - invalid-env-key-flyway-envfromsecrets.yaml
+    asserts:
+      - failedTemplate: {}

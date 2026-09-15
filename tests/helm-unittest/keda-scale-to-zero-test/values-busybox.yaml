@@ -1,0 +1,79 @@
+# Test values for KEDA scale-to-zero configuration with busybox
+# This tests the scenario where replicas=0 with KEDA autoscaling enabled
+
+name: "busybox-test"
+namespace: test-ns
+techStack: nodejs
+
+serviceAccount:
+  create: true
+
+#service:
+#  create: true
+#  type: ClusterIP
+#  containerPort: 8080
+#  targetPort: 8080
+#  monitoringPort: 9095
+
+deployment:
+  replicas: 0
+  metadata:
+    annotations: {}
+    labels: {}
+  podTemplateMetadata:
+    annotations:
+      # New annotation to specify replicas count when paused
+      autoscaling.keda.sh/paused-replicas: "0"
+    labels: {}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0%
+  securityContext:
+    allowPrivilegeEscalation: false
+  image:
+    imagePullPolicy: IfNotPresent
+    repositoryPrefix: "docker.io"
+    repositoryName: busybox
+    tag: "1.35"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  command:
+    - sh
+    - -c
+    - sleep infinity
+
+# KEDA autoscaling configuration
+autoscaling:
+  keda:
+    create: false
+    minReplicaCount: 0
+    maxReplicaCount: 3
+    pollingInterval: 30
+    cooldownPeriod: 300
+    triggers:
+      # CPU trigger
+      - type: cpu
+        metadata:
+          type: Utilization
+          value: "80"
+      # Memory trigger
+      - type: memory
+        metadata:
+          type: Utilization
+          value: "80"
+
+podDisruptionBudget:
+  create: false
+
+externalSecrets:
+  app:
+    create: false
+  flywayInitContainer:
+    create: false
