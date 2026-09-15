@@ -27,6 +27,8 @@ spec:
               value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.projectRepositoryRef "context" $) | quote }}
             - name: TF_ENV
               value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.tfEnv "context" $) | quote }}
+            - name: TF_STATE_BUCKET_KEY_PREFIX
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.tfStateBucketKeyPrefix "context" $) | quote }}
           command: ["/bin/sh", "-eu", "-c"]
           args:
             - |
@@ -48,7 +50,7 @@ spec:
 
               terraform init \
               -backend-config="./env/${TF_ENV}/backend.tfvars" \
-              -backend-config="key=${TF_ENV}-es1/${REPO_NAME}/argocd-applications/monitoring/${TF_VAR_argocd_workload_name}.tfstate"
+              -backend-config="key=${TF_STATE_BUCKET_KEY_PREFIX}/${REPO_NAME}/argocd-applications/monitoring/${TF_VAR_argocd_workload_name}.tfstate"
 
               terraform apply -var-file="./env/${TF_ENV}/terraform.tfvars" -auto-approve
           resources:

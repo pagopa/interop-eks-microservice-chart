@@ -86,8 +86,10 @@ argocd:
     serviceAccountName:
     # -- (string) Kind of workload to monitor
     workloadKind: Deployment
-    # -- (string) Terraform environment to use for managing Terraform backend configuration and state
+    # -- (string) Terraform environment to use for managing monitoring resources
     tfEnv:
+    # -- (string) Bucket key prefix storing the Terraform state file
+    tfStateBucketKeyPrefix:
 
 deployment:
   # -- (bool) Enable annotation generation for referenced configmaps and secrets
