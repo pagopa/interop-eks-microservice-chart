@@ -1,0 +1,39 @@
+# Base values shared by all keda-paused test cases.
+# Each test case file overrides only autoscaling.keda.paused.
+
+name: test-keda-paused
+namespace: test-ns
+techStack: nodejs
+
+service:
+  create: false
+
+deployment:
+  replicas: 1
+  image:
+    repositoryPrefix: "docker.io"
+    repositoryName: busybox
+    tag: "latest"
+    imagePullPolicy: IfNotPresent
+  # create a command that keeps the container running for a long time, so we can test scaling behavior
+  command: ["/bin/sh", "-c", "while true; do echo 'Hello, World!'; sleep 300; done"]
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "32Mi"
+    limits:
+      cpu: "100m"
+      memory: "64Mi"
+
+autoscaling:
+  keda:
+    create: true
+    minReplicaCount: 1
+    maxReplicaCount: 1
+    pollingInterval: 30
+    cooldownPeriod: 60
+    triggers:
+      - type: cpu
+        metricType: Utilization
+        metadata:
+          value: "50"

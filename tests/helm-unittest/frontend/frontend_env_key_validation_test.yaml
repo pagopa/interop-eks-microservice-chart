@@ -1,0 +1,12 @@
+suite: frontend env key validation
+templates:
+  - templates/deployment.frontend.yaml
+values:
+  - frontend.yaml
+
+tests:
+  - it: fails when frontend deployment env key is not a valid env var name
+    values:
+      - frontend_invalid_env_key.yaml
+    asserts:
+      - failedTemplate: {}

@@ -275,15 +275,52 @@ Usage:
 {{ $.Values.name }}/serviceAccount.sha256: {{ include (print $.Template.BasePath "/serviceaccount.yaml") . | sha256sum | quote }}
 {{- end -}}
 
-{{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations .Values.externalSecrets.create }}
+{{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations .Values.externalSecrets.app .Values.externalSecrets.app.create }}
 {{ .Values.name }}/externalSecret.sha256: {{ include (print $.Template.BasePath "/externalSecret.yaml") . | sha256sum | quote }}
 {{- end -}}
+
+{{- if and .Values.deployment .Values.deployment.enableRolloutAnnotations .Values.externalSecrets.flywayInitContainer .Values.externalSecrets.flywayInitContainer.create }}
+{{ .Values.name }}/externalSecretFlywayInitContainer.sha256: {{ include (print $.Template.BasePath "/externalSecret.flyway.yaml") . | sha256sum | quote }}
+{{- end -}}
+
 {{- end }}
 {{/* End of generateRolloutAnnotations */}}
 
 {{- define "externalsecrets.contractMarker" -}}
-{{- if and .Values.externalSecrets .Values.externalSecrets.create .Values.externalSecrets.data }}
-{{- toJson .Values.externalSecrets.data | sha256sum }}
+{{- $data := .data }}
+{{- if $data }}
+{{- toJson $data | sha256sum }}
+{{- end -}}
+{{- end -}}
+
+{{/* Validate a single environment variable name. */}}
+{{- define "interop-eks-microservice-chart.validateEnvVarName" -}}
+{{- $scope := .scope | default "values" -}}
+{{- $path := .path | default "key" -}}
+{{- $name := .name | default "" -}}
+{{- if not (regexMatch "^[A-Za-z_][A-Za-z0-9_]*$" $name) -}}
+{{- fail (printf "Invalid configuration: %s.%s='%s' is not a valid environment variable name. Allowed pattern: ^[A-Za-z_][A-Za-z0-9_]*$" $scope $path $name) -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Validate all keys of a map used as env var names. */}}
+{{- define "interop-eks-microservice-chart.validateEnvVarNamesFromMapKeys" -}}
+{{- $scope := .scope | default "values" -}}
+{{- $path := .path | default "map" -}}
+{{- $entries := .entries | default dict -}}
+{{- range $key, $_ := $entries }}
+{{- include "interop-eks-microservice-chart.validateEnvVarName" (dict "scope" $scope "path" (printf "%s[%s]" $path $key) "name" $key) -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Validate ExternalSecret secretKey values used by envFrom. */}}
+{{- define "interop-eks-microservice-chart.validateEnvVarNamesFromExternalSecretData" -}}
+{{- $scope := .scope | default "externalSecrets" -}}
+{{- $path := .path | default "data" -}}
+{{- $entries := .entries | default (list) -}}
+{{- range $idx, $entry := $entries }}
+{{- $secretKey := get $entry "secretKey" | default "" -}}
+{{- include "interop-eks-microservice-chart.validateEnvVarName" (dict "scope" $scope "path" (printf "%s[%d].secretKey" $path $idx) "name" $secretKey) -}}
 {{- end -}}
 {{- end -}}
 

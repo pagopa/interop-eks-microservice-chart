@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.46.0](https://img.shields.io/badge/Version-1.46.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.47.0](https://img.shields.io/badge/Version-1.47.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -60,15 +60,24 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | deployment.securityContext | object | `{"allowPrivilegeEscalation":false}` | Pod securityContext, applied to main container |
 | deployment.strategy | object | `{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"0%"},"type":"RollingUpdate"}` | Rollout strategy |
 | enableLookup | bool | `true` | Enable Resources lookup on K8s cluster to resolve referenced values |
-| externalSecrets.create | bool | `false` | Enable ExternalSecret creation |
-| externalSecrets.data | list | `[]` | List of individual secret keys to sync from external secret manager |
-| externalSecrets.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
-| externalSecrets.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
-| externalSecrets.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
-| externalSecrets.targetSecret | object | `{"creationPolicy":"Merge","deletionPolicy":"Retain","name":""}` | Target Kubernetes Secret configuration |
-| externalSecrets.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
-| externalSecrets.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
-| externalSecrets.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
+| externalSecrets.app.create | bool | `false` | Enable ExternalSecret creation |
+| externalSecrets.app.data | list | `[]` | List of individual secret keys to sync from external secret manager. When externalSecrets.app.create is true, each secretKey is automatically injected as an env var in the Deployment, referencing externalSecrets.app.targetSecret.name (defaults to the service name). This is the ExternalSecret equivalent of the top-level "configmap" field. |
+| externalSecrets.app.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
+| externalSecrets.app.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
+| externalSecrets.app.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
+| externalSecrets.app.targetSecret | object | `{"creationPolicy":"Merge","deletionPolicy":"Retain","name":""}` | Target Kubernetes Secret configuration |
+| externalSecrets.app.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
+| externalSecrets.app.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
+| externalSecrets.app.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
+| externalSecrets.flywayInitContainer.create | bool | `false` | Enable ExternalSecret creation |
+| externalSecrets.flywayInitContainer.data | list | `[]` | List of individual secret keys to sync from external secret manager. When externalSecrets.flywayInitContainer.create is true, each secretKey is automatically injected as an env var in the Deployment, referencing externalSecrets.flywayInitContainer.targetSecret.name (defaults to the service name). This is the ExternalSecret equivalent of the top-level "configmap" field. |
+| externalSecrets.flywayInitContainer.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
+| externalSecrets.flywayInitContainer.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
+| externalSecrets.flywayInitContainer.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
+| externalSecrets.flywayInitContainer.targetSecret | object | `{"creationPolicy":"Merge","deletionPolicy":"Retain","name":""}` | Target Kubernetes Secret configuration |
+| externalSecrets.flywayInitContainer.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
+| externalSecrets.flywayInitContainer.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
+| externalSecrets.flywayInitContainer.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
 | ingress.annotations | list | `{}` | list of annotations to apply to the Ingress resource |
 | ingress.applicationPath | string | `nil` | Path prefix for the ALB ingress rule; used when ingress.type is "alb" |
 | ingress.create | bool | `false` | ingress.create and service.targetGroupArn must be mutually exclusive. |
@@ -113,6 +122,8 @@ To reference a key from the specific microservice ConfigMap, a key/value pair mu
 The key/value pair must be defined as follows:
 * Key: it is mapped to the name of the environment variable used by the Deployment and, at the same time, to the key defined in the ConfigMap; therefore both keys are identical;
 * Value: it is the actual value associated with the previously defined key
+
+Note: names used as Kubernetes environment variables are validated with the pattern `^[A-Za-z_][A-Za-z0-9_]*$`. For this reason, names such as `KEY-1`, `STA-GE`, or `MY-VAR` are rejected, while valid examples are `KEY_1`, `STAGE`, or `MY_VAR`.
 
 Declaring the "configmap" section in the _values.yaml_ file of a specific microservice will apply the following automations:
 * a ConfigMap will be created with the same "name" as the microservice Deployment;
@@ -930,6 +941,8 @@ where:
   - KEY: is a generic key with a plain value used to populate the content of "window.pagopa_env". More than one key/value pair can be defined; duplicate keys will be ignored giving precedence to the last one defined
   - fromConfigmaps: is a special key used to define a list of key/value pairs where the value is composed of a prefix, which defines a ConfigMap to reference, and a suffix, which defines the key to look up in the ConfigMap, separated by a dot; the value referenced by the prefix/suffix pair will be looked up in the declared ConfigMap and the resulting value inserted into "window.pagopa_env". The same rules for keys described above also apply to those defined in "fromConfigmaps"
 
+This section is about the generated frontend JavaScript object, not Kubernetes container environment variables. Therefore the validation rule `^[A-Za-z_][A-Za-z0-9_]*$` applies to `deployment.env`, `configmap`, and `externalSecrets.*.data`, but not to the JS object keys inside `window.pagopa_env`. If a JS property contains a hyphen (for example `STA-GE`), it must be accessed via bracket notation such as `window.pagopa_env["STA-GE"]`.
+
 The result of computing the previous code snippet, within the ConfigMap generated for the frontend deployment, will have this format:
 ```
 env.js: |-
@@ -1050,35 +1063,63 @@ frontend:
 
 External Secrets Operator is a Kubernetes operator that allows secrets to be synchronised from external providers (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, HashiCorp Vault, etc.) into native Kubernetes Secrets.
 
-This chart creates a single ExternalSecret that can synchronise multiple secrets from different sources into a single Kubernetes Secret, simplifying secret management and referencing in deployments.
+This chart supports separate ExternalSecret configurations for the main application container and the init container. Each section can synchronise multiple secrets from different sources into its own Kubernetes Secret, so application runtime secrets and Flyway secrets can remain isolated.
 
 ### 7.1. Basic Configuration
 
-To enable the creation of an ExternalSecret, set `externalSecrets.create: true`:
+To enable the creation of an ExternalSecret for the main container, set `externalSecrets.app.create: true`:
 
 ```yaml
 externalSecrets:
-  create: true
-  refreshInterval: "1h"
-  secretStoreRef:
-    name: aws-secretsmanager
-    kind: SecretStore
-  targetSecret:
-    name: my-app-secrets  # Name of the K8s Secret that will contain all synced keys
-  data:
-    - secretKey: db-password
-      remoteRef:
-        key: /prod/database/credentials
-        property: password
-    - secretKey: api-key
-      remoteRef:
-        key: /prod/api/credentials
-        property: api-key
+  app:
+    create: true
+    refreshInterval: "1h"
+    secretStoreRef:
+      name: aws-secretsmanager
+      kind: SecretStore
+    targetSecret:
+      name: my-app-secrets  # Name of the K8s Secret that will contain all synced keys
+    data:
+      - secretKey: DB_PASSWORD
+        remoteRef:
+          key: /prod/database/credentials
+          property: password
+      - secretKey: API_KEY
+        remoteRef:
+          key: /prod/api/credentials
+          property: api-key
 ```
 
 This configuration creates:
 - **1 ExternalSecret** with the same name as the microservice
 - **1 Kubernetes Secret** (`my-app-secrets`) containing all synced keys
+
+To configure a dedicated ExternalSecret for the init container, use `externalSecrets.flywayInitContainer`:
+
+```yaml
+externalSecrets:
+  flywayInitContainer:
+    create: true
+    refreshInterval: "30m"
+    secretStoreRef:
+      name: aws-secretsmanager
+      kind: SecretStore
+    targetSecret:
+      name: my-app-flyway-secrets
+    data:
+      - secretKey: FLYWAY_USER
+        remoteRef:
+          key: /prod/database/flyway
+          property: username
+      - secretKey: FLYWAY_PASSWORD
+        remoteRef:
+          key: /prod/database/flyway
+          property: password
+```
+
+If `targetSecret.name` is omitted, the defaults are:
+- `externalSecrets.app.targetSecret.name` -> `.Values.name`
+- `externalSecrets.flywayInitContainer.targetSecret.name` -> `.Values.name-flyway`
 
 ### 7.2. Main Parameters
 
@@ -1113,19 +1154,20 @@ targetSecret:
 
 #### 7.2.4. data
 
-List of individual keys to sync from different sources. All keys are aggregated into a single Secret:
+List of individual keys to sync from different sources. All keys are aggregated into a single Secret.
+Because the values are then injected with `envFrom`, each `secretKey` must also satisfy the same Kubernetes env var rule: `^[A-Za-z_][A-Za-z0-9_]*$`.
 
 ```yaml
 data:
-  - secretKey: db-password      # Key name in the K8s Secret
+  - secretKey: DB_PASSWORD      # Key name in the K8s Secret / env var name
     remoteRef:
       key: /prod/db/creds      # Path in the external provider
       property: password        # Specific property
-  - secretKey: api-key
+  - secretKey: API_KEY
     remoteRef:
       key: /prod/api/credentials
       property: api-key
-  - secretKey: jwt-secret
+  - secretKey: JWT_SECRET
     remoteRef:
       key: /prod/app/secrets
       property: jwt-secret
@@ -1137,101 +1179,104 @@ It is possible to transform the synced data using Go templates:
 
 ```yaml
 externalSecrets:
-  create: true
-  secretStoreRef:
-    name: aws-secretsmanager
-    kind: SecretStore
-  targetSecret:
-    name: app-config
-    template:
-      type: Opaque
-      metadata:
-        labels:
-          app: my-app
-      data:
-        # Transform synced values into a config file
-        config.yaml: |
-          database:
-            host: {{ .db_host }}
-            port: {{ .db_port }}
-            username: {{ .db_username }}
-            password: {{ .db_password }}
-          api:
-            key: {{ .api_key }}
-            secret: {{ .api_secret }}
-  data:
-    - secretKey: db_host
-      remoteRef:
-        key: /prod/db/config
-        property: host
-    - secretKey: db_port
-      remoteRef:
-        key: /prod/db/config
-        property: port
-    - secretKey: db_username
-      remoteRef:
-        key: /prod/db/credentials
-        property: username
-    - secretKey: db_password
-      remoteRef:
-        key: /prod/db/credentials
-        property: password
-    - secretKey: api_key
-      remoteRef:
-        key: /prod/api/credentials
-        property: key
-    - secretKey: api_secret
-      remoteRef:
-        key: /prod/api/credentials
-        property: secret
+  app:
+    create: true
+    secretStoreRef:
+      name: aws-secretsmanager
+      kind: SecretStore
+    targetSecret:
+      name: app-config
+    data:
+      - secretKey: DB_HOST
+        remoteRef:
+          key: /prod/db/config
+          property: host
+      - secretKey: DB_PORT
+        remoteRef:
+          key: /prod/db/config
+          property: port
+      - secretKey: DB_USERNAME
+        remoteRef:
+          key: /prod/db/credentials
+          property: username
+      - secretKey: DB_PASSWORD
+        remoteRef:
+          key: /prod/db/credentials
+          property: password
+      - secretKey: API_KEY
+        remoteRef:
+          key: /prod/api/credentials
+          property: key
+      - secretKey: API_SECRET
+        remoteRef:
+          key: /prod/api/credentials
+          property: secret
 ```
 
 ### 7.4. Usage in Deployments
 
-The Secret created by the ExternalSecret can be referenced in deployments via `envFromSecrets`:
+The Secret created by the ExternalSecret is automatically referenced in deployments via `envFrom.secretRef`.
+
+For the main application container:
 
 ```yaml
-deployment:
-  enableRolloutAnnotations: true
-  envFromSecrets:
-    # All keys are in the same Secret
-    DATABASE_PASSWORD: my-app-secrets.db-password
-    DATABASE_USERNAME: my-app-secrets.db-username
-    API_KEY: my-app-secrets.api-key
-    JWT_SECRET: my-app-secrets.jwt-secret
-
 externalSecrets:
-  create: true
-  secretStoreRef:
-    name: aws-secretsmanager
-    kind: SecretStore
-  targetSecret:
-    name: my-app-secrets
-  data:
-    - secretKey: db-password
-      remoteRef:
-        key: /prod/database/credentials
-        property: password
-    - secretKey: db-username
-      remoteRef:
-        key: /prod/database/credentials
-        property: username
-    - secretKey: api-key
-      remoteRef:
-        key: /prod/api/credentials
-        property: api-key
-    - secretKey: jwt-secret
-      remoteRef:
-        key: /prod/app/secrets
-        property: jwt-secret
+  app:
+    create: true
+    secretStoreRef:
+      name: aws-secretsmanager
+      kind: SecretStore
+    targetSecret:
+      name: my-app-secrets
+    data:
+      - secretKey: DATABASE_PASSWORD
+        remoteRef:
+          key: /prod/database/credentials
+          property: password
+      - secretKey: DATABASE_USERNAME
+        remoteRef:
+          key: /prod/database/credentials
+          property: username
+      - secretKey: API_KEY
+        remoteRef:
+          key: /prod/api/credentials
+          property: api-key
+      - secretKey: JWT_SECRET
+        remoteRef:
+          key: /prod/app/secrets
+          property: jwt-secret
 ```
+
+For the Flyway init container:
+
+```yaml
+externalSecrets:
+  flywayInitContainer:
+    create: true
+    secretStoreRef:
+      name: aws-secretsmanager
+      kind: SecretStore
+    targetSecret:
+      name: my-app-flyway-secrets
+    data:
+      - secretKey: FLYWAY_USER
+        remoteRef:
+          key: /prod/database/flyway
+          property: username
+      - secretKey: FLYWAY_PASSWORD
+        remoteRef:
+          key: /prod/database/flyway
+          property: password
+```
+
+The generated Deployment imports the full Secret with `envFrom`, so every `secretKey` becomes an environment variable with the same name.
 
 ### 7.5. Rollout Annotations
 
 When `deployment.enableRolloutAnnotations` is enabled, deployments are automatically restarted when the ExternalSecret configuration changes. The hash (SHA256) of the ExternalSecret template is computed and inserted as an annotation in the pod template, triggering a rolling restart whenever the ExternalSecrets configuration is modified.
 
 **Automatic workflow:**
-1. Modify the `externalSecrets` configuration in values (add/modify/remove keys in `data`, change `secretStoreRef`, etc.)
+1. Modify the `externalSecrets.app` or `externalSecrets.flywayInitContainer` configuration in values (add/modify/remove keys in `data`, change `secretStoreRef`, etc.)
 2. Apply the chart update with `helm upgrade`
 3. The ExternalSecret template hash changes automatically
 4. Pods are automatically restarted and load the new secrets
@@ -1249,37 +1294,38 @@ A key advantage of this implementation is the ability to aggregate secrets from 
 
 ```yaml
 externalSecrets:
-  create: true
-  targetSecret:
-    name: aggregated-secrets
-  data:
-    # Database secrets
-    - secretKey: db-host
-      remoteRef:
-        key: /prod/database/config
-        property: host
-    - secretKey: db-password
-      remoteRef:
-        key: /prod/database/credentials
-        property: password
+  app:
+    create: true
+    targetSecret:
+      name: aggregated-secrets
+    data:
+      # Database secrets
+      - secretKey: DB_HOST
+        remoteRef:
+          key: /prod/database/config
+          property: host
+      - secretKey: DB_PASSWORD
+        remoteRef:
+          key: /prod/database/credentials
+          property: password
 
-    # API secrets
-    - secretKey: api-key
-      remoteRef:
-        key: /prod/api/credentials
-        property: key
+      # API secrets
+      - secretKey: API_KEY
+        remoteRef:
+          key: /prod/api/credentials
+          property: key
 
-    # Cache secrets
-    - secretKey: redis-password
-      remoteRef:
-        key: /prod/cache/credentials
-        property: password
+      # Cache secrets
+      - secretKey: REDIS_PASSWORD
+        remoteRef:
+          key: /prod/cache/credentials
+          property: password
 
-    # Monitoring secrets
-    - secretKey: monitoring-token
-      remoteRef:
-        key: /prod/monitoring/tokens
-        property: app-token
+      # Monitoring secrets
+      - secretKey: MONITORING_TOKEN
+        remoteRef:
+          key: /prod/monitoring/tokens
+          property: app-token
 ```
 
 Result: a single K8s Secret `aggregated-secrets` containing all keys.

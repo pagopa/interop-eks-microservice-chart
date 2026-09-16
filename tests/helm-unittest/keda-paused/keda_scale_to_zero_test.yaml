@@ -1,0 +1,47 @@
+suite: keda scale-to-zero with paused-replicas annotation
+templates:
+  - templates/scaledobject.yaml
+values:
+  - keda-paused-values-base.yaml
+
+tests:
+  - it: does not render a ScaledObject when deployment.replicas is 0
+    values:
+      - paused-true.yaml
+    set:
+      deployment.replicas: 0
+      autoscaling.keda.minReplicaCount: 0
+      autoscaling.keda.maxReplicaCount: 3
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders a ScaledObject with non-zero replicas
+    values:
+      - paused-true.yaml
+    set:
+      deployment.replicas: 2
+      autoscaling.keda.minReplicaCount: 1
+      autoscaling.keda.maxReplicaCount: 5
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.annotations["autoscaling.keda.sh/paused"]
+          value: "true"
+      - equal:
+          path: spec.minReplicaCount
+          value: 1
+      - equal:
+          path: spec.maxReplicaCount
+          value: 5
+
+  - it: defaults paused annotation to false when omitted
+    values:
+      - paused-omitted.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.annotations["autoscaling.keda.sh/paused"]
+          value: "false"
