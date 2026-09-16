@@ -119,3 +119,24 @@ tests:
           content:
             name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
             value: /migrations/domain_a/v1_migrations
+
+  - it: mounts migrations ConfigMap selected by migrationDomain
+    values:
+      - flyway_migrationdomain_catalog.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_MIGRATIONS_PATHS
+          any: true
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: INTERNAL_FLYWAY_ACTION
+            value: migrate
+      - equal:
+          path: spec.template.spec.initContainers[0].volumeMounts[0].name
+          value: migrations-files
+      - equal:
+          path: spec.template.spec.volumes[0].projected.sources[0].configMap.name
+          value: domain-a

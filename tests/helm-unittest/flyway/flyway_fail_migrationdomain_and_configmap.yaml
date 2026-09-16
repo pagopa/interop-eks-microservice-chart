@@ -1,0 +1,42 @@
+# Test case EXPECTED TO FAIL (helm lint/template must fail).
+# Verifies migrationDomain and migrationsConfigmap are mutually exclusive.
+name: "flyway-conflict-domain-configmap-service"
+namespace: "test-namespace"
+techStack: "nodejs"
+
+serviceAccount:
+  roleArn: "arn:aws:iam::000000000:role/flyway-conflict-domain-configmap-service"
+
+service:
+  create: true
+  containerPort: 8080
+  portName: http
+
+deployment:
+  replicas: 1
+  image:
+    repositoryPrefix: "000000000000.dkr.ecr.eu-central-1.amazonaws.com"
+    tag: "1.0.0"
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+  flywayInitContainer:
+    create: true
+    image:
+      repositoryName: "interop-flyway-migrations"
+    executeFlywayMigrate: true
+    executeFlywayRepair: false
+    migrationDomain: "domain-a"
+    migrationsConfigmap: "common-db-migrations"
+    envFromSecrets:
+      FLYWAY_USER: "postgres-secret.POSTGRES_USR"
+      FLYWAY_PASSWORD: "postgres-secret.POSTGRES_PSW"
+
+migrations:
+  domain-a:
+    V1__Init.sql: |-
+      CREATE TABLE IF NOT EXISTS test_table(id INT PRIMARY KEY);

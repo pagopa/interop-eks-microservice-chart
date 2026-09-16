@@ -157,6 +157,8 @@ deployment:
     version: "8.2.3"
     # -- (bool) Enable Flyway to download Redshift jdbc driver
     downloadRedshiftDriver: false
+    # -- (string) Domain key used to select migrations from root migrations map
+    migrationDomain:
     # -- Configmap with migrations
     migrationsConfigmap:
     # -- (string) List of comma separated paths to migration files or directories containing migration files (e.g. "/migrations/a_directory,v1_migration.sql,/migrations/b_directory")
@@ -187,6 +189,15 @@ autoscaling:
     cooldownPeriod:
     # -- (list) triggers configuration, refer to https://keda.sh/docs/2.17/scalers/
     triggers:
+
+# -- Catalog of Flyway migrations keyed by migration domain.
+# The selected key must match deployment.flywayInitContainer.migrationDomain.
+# Example:
+# migrations:
+#   flyway-digest-tracking:
+#     V1__Init.sql: |-
+#       CREATE SCHEMA IF NOT EXISTS "${NAMESPACE}_digest_tracking";
+migrations: {}
 
 externalSecrets:
   app:
