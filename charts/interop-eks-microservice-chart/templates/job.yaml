@@ -1,9 +1,9 @@
-{{- if and .Values.argocd .Values.argocd.appMonitoring .Values.argocd.appMonitoring.enable }}
+{{- if and .Values.argocd .Values.argocd.appMonitoring .Values.argocd.appMonitoring.enable }} #add checks on argocd.appMonitoring values when enable is true
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ .Values.name }}-tf-apply-monitoring
-  namespace: {{ .Values.namespace }}
+  namespace: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.jobNamespace "context" $) }}
   annotations:
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded

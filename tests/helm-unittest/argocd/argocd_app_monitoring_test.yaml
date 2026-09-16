@@ -15,6 +15,7 @@ tests:
   - it: renders Job when app monitoring is enabled
     set:
       argocd.appMonitoring.enable: true
+      argocd.appMonitoring.jobNamespace: argocd-monitoring
       argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
       argocd.appMonitoring.projectRepositoryURL: git::https://github.com/pagopa/interop-core-deployment
       argocd.appMonitoring.projectRepositoryRef: main
@@ -35,6 +36,9 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: argocd-tf-apply-monitoring
+      - equal:
+          path: metadata.namespace
+          value: argocd-monitoring
       - contains:
           path: spec.template.spec.containers[0].env
           content:
