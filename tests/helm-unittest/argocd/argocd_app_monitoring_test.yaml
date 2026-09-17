@@ -69,3 +69,13 @@ tests:
           content:
             name: TF_STATE_BUCKET_KEY_PREFIX
             value: dev-es1
+
+  - it: fails when app monitoring is enabled and required values are missing
+    set:
+      argocd.appMonitoring.enable: true
+      argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
+      argocd.appMonitoring.projectRepositoryURL: git::https://github.com/pagopa/interop-core-deployment
+      argocd.appMonitoring.tfEnv: dev
+      argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
+    asserts:
+      - failedTemplate: {}

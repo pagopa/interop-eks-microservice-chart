@@ -1,4 +1,19 @@
-{{- if and .Values.argocd .Values.argocd.appMonitoring .Values.argocd.appMonitoring.enable }} #add checks on argocd.appMonitoring values when enable is true
+{{- if and .Values.argocd .Values.argocd.appMonitoring .Values.argocd.appMonitoring.enable }}
+{{- if not .Values.argocd.appMonitoring.projectRepositoryURL }}
+{{ fail "Invalid configuration: argocd.appMonitoring.projectRepositoryURL must be set and non-empty when argocd.appMonitoring.enable is true." }}
+{{- end }}
+{{- if not .Values.argocd.appMonitoring.jobNamespace }}
+{{ fail "Invalid configuration: argocd.appMonitoring.jobNamespace must be set and non-empty when argocd.appMonitoring.enable is true." }}
+{{- end }}
+{{- if not .Values.argocd.appMonitoring.serviceAccountName }}
+{{ fail "Invalid configuration: argocd.appMonitoring.serviceAccountName must be set and non-empty when argocd.appMonitoring.enable is true." }}
+{{- end }}
+{{- if not .Values.argocd.appMonitoring.tfEnv }}
+{{ fail "Invalid configuration: argocd.appMonitoring.tfEnv must be set and non-empty when argocd.appMonitoring.enable is true." }}
+{{- end }}
+{{- if not .Values.argocd.appMonitoring.tfStateBucketKeyPrefix }}
+{{ fail "Invalid configuration: argocd.appMonitoring.tfStateBucketKeyPrefix must be set and non-empty when argocd.appMonitoring.enable is true." }}
+{{- end }}
 apiVersion: batch/v1
 kind: Job
 metadata:
