@@ -31,7 +31,10 @@ ingress:
   create: false
 
 externalSecrets:
-  create: false
+  flywayInitContainer:
+    create: false
+  app:
+    create: false
 
 podDisruptionBudget:
   create: false

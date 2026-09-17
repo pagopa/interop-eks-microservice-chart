@@ -1,0 +1,3 @@
+deployment:
+  env:
+    this-is-not-valid: value

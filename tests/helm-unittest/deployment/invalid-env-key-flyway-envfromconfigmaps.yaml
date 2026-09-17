@@ -1,0 +1,11 @@
+deployment:
+  flywayInitContainer:
+    create: true
+    executeFlywayMigrate: true
+    executeFlywayRepair: false
+    image:
+      repositoryPrefix: docker.io
+      repositoryName: flyway/flyway
+      tag: "10.0.0"
+    envFromConfigmaps:
+      this-is-not-valid: test-cm.KEY

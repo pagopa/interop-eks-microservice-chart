@@ -1,0 +1,3 @@
+deployment:
+  envFromFieldRef:
+    this-is-not-valid: metadata.name
