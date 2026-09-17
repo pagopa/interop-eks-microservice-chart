@@ -70,7 +70,7 @@ tests:
             name: TF_STATE_BUCKET_KEY_PREFIX
             value: dev-es1
 
-  - it: fails when app monitoring is enabled and required values are missing
+  - it: fails when app monitoring is enabled and one of the required values (jobNamespace) is missing
     set:
       argocd.appMonitoring.enable: true
       argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
