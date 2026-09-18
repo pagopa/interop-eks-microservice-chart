@@ -426,6 +426,93 @@
       },
       "additionalProperties": false
     },
+    "argocd": {
+      "description": "ArgoCD configuration",
+      "type": "object",
+      "properties": {
+        "appMonitoring": {
+          "description": "ArgoCD app monitoring job configuration",
+          "type": "object",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "enable": { "const": true }
+                }
+              },
+              "then": {
+                "required": [
+                  "projectRepositoryURL",
+                  "jobNamespace",
+                  "serviceAccountName",
+                  "tfEnv",
+                  "tfStateBucketKeyPrefix"
+                ],
+                "properties": {
+                  "projectRepositoryURL": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "jobNamespace": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "serviceAccountName": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "tfEnv": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "tfStateBucketKeyPrefix": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "enable": {
+              "description": "Enable the management of monitoring resources using a Job with ArgoCD PostSync hook",
+              "type": "boolean",
+              "default": false
+            },
+            "projectRepositoryURL": {
+              "description": "URL of the GitHub repository containing the 'terraform/k8s-monitoring-argocd-application' Terraform state",
+              "type": ["string", "null"]
+            },
+            "projectRepositoryRef": {
+              "description": "Git branch or tag to checkout",
+              "type": "string",
+              "default": "main"
+            },
+            "jobNamespace": {
+              "description": "Namespace where the Job with ArgoCD PostSync hook runs",
+              "type": ["string", "null"]
+            },
+            "serviceAccountName": {
+              "description": "ServiceAccount used by the Job with ArgoCD PostSync hook",
+              "type": ["string", "null"]
+            },
+            "workloadKind": {
+              "description": "Kind of workload to monitor",
+              "type": "string",
+              "default": "Deployment"
+            },
+            "tfEnv": {
+              "description": "Terraform environment to use for managing monitoring resources",
+              "type": ["string", "null"]
+            },
+            "tfStateBucketKeyPrefix": {
+              "description": "Bucket key prefix storing Terraform state file",
+              "type": ["string", "null"]
+            }
+          }
+        }
+      }
+    },
     "externalSecrets": {
       "description": "External Secrets Operator configuration - separate configuration for app and Flyway init container",
       "type": "object",
