@@ -1,0 +1,138 @@
+suite: test service
+templates:
+  - service.yaml
+tests:
+  - it: should not create service when create is false
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      service:
+        create: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a ClusterIP service
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      service:
+        create: true
+        type: ClusterIP
+        containerPort: 8080
+        portName: http
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: test-service
+      - equal:
+          path: metadata.namespace
+          value: test-namespace
+      - equal:
+          path: spec.type
+          value: ClusterIP
+
+  - it: should configure service ports correctly
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      service:
+        create: true
+        containerPort: 8080
+        targetPort: 8080
+        portName: http
+        additionalPorts:
+          - name: monitoring
+            containerPort: 9095
+            protocol: TCP
+          - name: management
+            containerPort: 8558
+            protocol: TCP
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: http
+            port: 8080
+            targetPort: 8080
+            protocol: TCP
+      - contains:
+          path: spec.ports
+          content:
+            name: monitoring
+            port: 9095
+            targetPort: 9095
+            protocol: TCP
+      - contains:
+          path: spec.ports
+          content:
+            name: management
+            port: 8558
+            targetPort: 8558
+            protocol: TCP
+
+  - it: should configure additional ports
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      service:
+        create: true
+        containerPort: 8080
+        portName: http
+        additionalPorts:
+          - name: grpc
+            containerPort: 9090
+            protocol: TCP
+          - name: metrics
+            containerPort: 9091
+            protocol: TCP
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: grpc
+            port: 9090
+            targetPort: 9090
+            protocol: TCP
+      - contains:
+          path: spec.ports
+          content:
+            name: metrics
+            port: 9091
+            targetPort: 9091
+            protocol: TCP
+
+  - it: should set proper selector labels
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      service:
+        create: true
+        containerPort: 8080
+        portName: http
+    asserts:
+      - equal:
+          path: spec.selector.app
+          value: test-service
+
+  - it: should create NodePort service
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      service:
+        create: true
+        type: NodePort
+        containerPort: 8080
+        portName: http
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort

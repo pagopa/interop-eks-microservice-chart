@@ -1,0 +1,125 @@
+suite: test deployment frontend
+templates:
+  - deployment.frontend.yaml
+tests:
+  - it: should create a frontend deployment
+    set:
+      name: test-frontend
+      namespace: test-namespace
+      techStack: frontend
+      deployment:
+        replicas: 3
+        image:
+          repositoryPrefix: test.ecr.eu-central-1.amazonaws.com
+          repositoryName: test-frontend
+          tag: "2.0.0"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: test-frontend
+      - equal:
+          path: metadata.namespace
+          value: test-namespace
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should only render when techStack is frontend
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      deployment:
+        image:
+          repositoryPrefix: test.ecr.eu-central-1.amazonaws.com
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should configure nginx container with proper settings
+    set:
+      name: test-frontend
+      namespace: test-namespace
+      techStack: frontend
+      deployment:
+        image:
+          repositoryPrefix: test.ecr.eu-central-1.amazonaws.com
+          repositoryName: test-frontend
+          tag: "1.0.0"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: test-frontend
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: test.ecr.eu-central-1.amazonaws.com/test-frontend:1.0.0
+
+  - it: should mount frontend configmap when present
+    set:
+      name: test-frontend
+      namespace: test-namespace
+      techStack: frontend
+      deployment:
+        replicas: 1
+        image:
+          repositoryPrefix: test.ecr.eu-central-1.amazonaws.com
+          tag: "1.0.0"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+      frontend:
+        nginx:
+          default.conf: |
+            server {
+              listen 8080;
+            }
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: default-conf
+            configMap:
+              name: test-frontend
+              items:
+                - key: default.conf
+                  path: default.conf
+              defaultMode: 420
+
+  - it: should configure security context for frontend
+    set:
+      name: test-frontend
+      namespace: test-namespace
+      techStack: frontend
+      deployment:
+        replicas: 1
+        image:
+          repositoryPrefix: test.ecr.eu-central-1.amazonaws.com
+          tag: "1.0.0"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 101
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false

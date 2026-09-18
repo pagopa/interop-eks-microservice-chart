@@ -1,0 +1,120 @@
+suite: test configmaps
+templates:
+  - configmap.yaml
+  - configmap.frontend.yaml
+tests:
+  - it: should create backend configmap when data provided
+    template: configmap.yaml
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      configmap:
+        APP_ENV: production
+        LOG_LEVEL: info
+        DATABASE_HOST: postgres.example.com
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: test-service
+      - equal:
+          path: metadata.namespace
+          value: test-namespace
+      - equal:
+          path: data.APP_ENV
+          value: production
+      - equal:
+          path: data.LOG_LEVEL
+          value: info
+      - equal:
+          path: data.DATABASE_HOST
+          value: postgres.example.com
+
+  - it: should not create backend configmap when no data
+    template: configmap.yaml
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create frontend configmap when data provided
+    template: configmap.frontend.yaml
+    set:
+      name: test-frontend
+      namespace: test-namespace
+      techStack: frontend
+      frontend:
+        nginx:
+          default.conf: |
+            server {
+              listen 8080;
+            }
+        env.js:
+          window.pagopa_env:
+            API_URL: https://api.example.com
+            ENV: production
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: test-frontend
+      - equal:
+          path: metadata.namespace
+          value: test-namespace
+      - matchRegex:
+          path: data["env.js"]
+          pattern: "window.pagopa_env"
+
+  - it: should not create frontend configmap when techStack is not frontend
+    template: configmap.frontend.yaml
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      configmapFrontend:
+        REACT_APP_API_URL: https://api.example.com
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should handle numeric values in configmap
+    template: configmap.yaml
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      configmap:
+        MAX_CONNECTIONS: 100
+        TIMEOUT: 30
+        ENABLED: true
+    asserts:
+      - equal:
+          path: data.MAX_CONNECTIONS
+          value: "100"
+      - equal:
+          path: data.TIMEOUT
+          value: "30"
+      - equal:
+          path: data.ENABLED
+          value: "true"
+
+  - it: should support template values in configmap
+    template: configmap.yaml
+    set:
+      name: test-service
+      namespace: test-namespace
+      techStack: nodejs
+      externalValue: some-external-value
+      configmap:
+        EXTERNAL_REF: "{{.Values.externalValue}}"
+        NAMESPACE_REF: "{{.Values.namespace}}"
+    asserts:
+      - isKind:
+          of: ConfigMap
+
