@@ -17,7 +17,7 @@ tests:
       argocd.appMonitoring.enable: true
       argocd.appMonitoring.jobNamespace: argocd-monitoring
       argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
-      argocd.appMonitoring.projectRepositoryURL: git::https://github.com/pagopa/interop-core-deployment
+      argocd.appMonitoring.projectRepositoryURL: https://github.com/pagopa/interop-core-deployment
       argocd.appMonitoring.projectRepositoryRef: main
       argocd.appMonitoring.workloadKind: Deployment
       argocd.appMonitoring.tfEnv: dev
@@ -53,7 +53,7 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: PROJECT_REPOSITORY_URL
-            value: git::https://github.com/pagopa/interop-core-deployment
+            value: https://github.com/pagopa/interop-core-deployment
       - contains:
           path: spec.template.spec.containers[0].env
           content:
@@ -74,7 +74,7 @@ tests:
     set:
       argocd.appMonitoring.enable: true
       argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
-      argocd.appMonitoring.projectRepositoryURL: git::https://github.com/pagopa/interop-core-deployment
+      argocd.appMonitoring.projectRepositoryURL: https://github.com/pagopa/interop-core-deployment
       argocd.appMonitoring.tfEnv: dev
       argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
     asserts:
