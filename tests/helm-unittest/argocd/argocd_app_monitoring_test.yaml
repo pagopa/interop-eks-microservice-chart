@@ -32,7 +32,7 @@ tests:
           value: PostSync
       - equal:
           path: metadata.annotations["argocd.argoproj.io/hook-delete-policy"]
-          value: HookSucceeded
+          value: BeforeHookCreation
       - equal:
           path: spec.template.spec.serviceAccountName
           value: argocd-tf-apply-monitoring
