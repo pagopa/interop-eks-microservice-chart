@@ -17,19 +17,19 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Values.name }}-monitoring
+  name: {{ .Values.name }}
   namespace: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.jobNamespace "context" $) }}
   annotations:
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
-  backoffLimit: 2
+  backoffLimit: 0
   template:
     spec:
       restartPolicy: Never
       serviceAccountName: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.serviceAccountName "context" $) }}
       containers:
-        - name: {{ .Values.name }}-monitoring
+        - name: {{ .Values.name }}
           image: alpine:3.20
           env:
             - name: TF_VAR_argocd_workload_name
