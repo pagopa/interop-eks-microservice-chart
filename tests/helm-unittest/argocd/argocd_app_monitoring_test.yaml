@@ -1,0 +1,81 @@
+suite: argocd app monitoring job
+templates:
+  - templates/job.yaml
+values:
+  - ../common/base.yaml
+
+tests:
+  - it: does not render Job when app monitoring is disabled
+    set:
+      argocd.appMonitoring.enable: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders Job when app monitoring is enabled
+    set:
+      argocd.appMonitoring.enable: true
+      argocd.appMonitoring.jobNamespace: argocd-monitoring
+      argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
+      argocd.appMonitoring.projectRepositoryURL: https://github.com/pagopa/interop-core-deployment
+      argocd.appMonitoring.projectRepositoryRef: main
+      argocd.appMonitoring.workloadKind: Deployment
+      argocd.appMonitoring.tfEnv: dev
+      argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Job
+      - equal:
+          path: metadata.annotations["argocd.argoproj.io/hook"]
+          value: PostSync
+      - equal:
+          path: metadata.annotations["argocd.argoproj.io/hook-delete-policy"]
+          value: BeforeHookCreation
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: argocd-tf-apply-monitoring
+      - equal:
+          path: metadata.namespace
+          value: argocd-monitoring
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TF_VAR_argocd_workload_name
+            value: test-svc
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TF_VAR_argocd_workload_kind
+            value: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PROJECT_REPOSITORY_URL
+            value: https://github.com/pagopa/interop-core-deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PROJECT_REPOSITORY_REF
+            value: main
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TF_ENV
+            value: dev
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TF_STATE_BUCKET_KEY_PREFIX
+            value: dev-es1
+
+  - it: fails when app monitoring is enabled and one of the required values (jobNamespace) is missing
+    set:
+      argocd.appMonitoring.enable: true
+      argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
+      argocd.appMonitoring.projectRepositoryURL: https://github.com/pagopa/interop-core-deployment
+      argocd.appMonitoring.tfEnv: dev
+      argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
+    asserts:
+      - failedTemplate: {}

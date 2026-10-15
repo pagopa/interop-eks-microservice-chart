@@ -1,0 +1,78 @@
+{{- if and .Values.argocd .Values.argocd.appMonitoring .Values.argocd.appMonitoring.enable }}
+{{- if not .Values.argocd.appMonitoring.projectRepositoryURL }}
+{{ fail "Invalid configuration: argocd.appMonitoring.projectRepositoryURL must be set and non-empty when argocd.appMonitoring.enable is true." }}
+{{- end }}
+{{- if not .Values.argocd.appMonitoring.jobNamespace }}
+{{ fail "Invalid configuration: argocd.appMonitoring.jobNamespace must be set and non-empty when argocd.appMonitoring.enable is true." }}
+{{- end }}
+{{- if not .Values.argocd.appMonitoring.serviceAccountName }}
+{{ fail "Invalid configuration: argocd.appMonitoring.serviceAccountName must be set and non-empty when argocd.appMonitoring.enable is true." }}
+{{- end }}
+{{- if not .Values.argocd.appMonitoring.tfEnv }}
+{{ fail "Invalid configuration: argocd.appMonitoring.tfEnv must be set and non-empty when argocd.appMonitoring.enable is true." }}
+{{- end }}
+{{- if not .Values.argocd.appMonitoring.tfStateBucketKeyPrefix }}
+{{ fail "Invalid configuration: argocd.appMonitoring.tfStateBucketKeyPrefix must be set and non-empty when argocd.appMonitoring.enable is true." }}
+{{- end }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.jobNamespace "context" $) }}
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.serviceAccountName "context" $) }}
+      containers:
+        - name: {{ .Values.name }}
+          image: alpine:3.20
+          env:
+            - name: TF_VAR_argocd_workload_name
+              value: {{ .Values.name | quote }}
+            - name: TF_VAR_argocd_workload_kind
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.workloadKind "context" $) | quote }}
+            - name: PROJECT_REPOSITORY_URL
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.projectRepositoryURL "context" $) | quote }}
+            - name: PROJECT_REPOSITORY_REF
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.projectRepositoryRef "context" $) | quote }}
+            - name: TF_ENV
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.tfEnv "context" $) | quote }}
+            - name: TF_STATE_BUCKET_KEY_PREFIX
+              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.tfStateBucketKeyPrefix "context" $) | quote }}
+          command: ["/bin/sh", "-eu", "-c"]
+          args:
+            - |
+              apk add --no-cache git curl unzip bash aws-cli >/dev/null
+
+              git clone --depth 1 https://github.com/tfutils/tfenv.git /opt/tfenv
+              export PATH="/opt/tfenv/bin:$PATH"
+
+              git clone --branch "$PROJECT_REPOSITORY_REF" "$PROJECT_REPOSITORY_URL"
+              cd "$(basename "$PROJECT_REPOSITORY_URL" .git)"/terraform
+
+              TF_VERSION="$(cat ./.terraform-version)"
+              tfenv install "$TF_VERSION"
+              tfenv use "$TF_VERSION"
+
+              cd k8s-monitoring-argocd-application
+
+              REPO_NAME="$(basename "${PROJECT_REPOSITORY_URL%.git}")"
+
+              terraform init \
+              -backend-config="./env/${TF_ENV}/backend.tfvars" \
+              -backend-config="key=${TF_STATE_BUCKET_KEY_PREFIX}/${REPO_NAME}/argocd-applications/monitoring/${TF_VAR_argocd_workload_name}.tfstate"
+
+              terraform apply -var-file="./env/${TF_ENV}/terraform.tfvars" -auto-approve
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 1Gi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+{{- end }}
