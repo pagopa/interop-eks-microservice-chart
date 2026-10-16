@@ -69,8 +69,8 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | enableLookup | bool | `true` | Enable Resources lookup on K8s cluster to resolve referenced values |
 | externalSecrets.app.create | bool | `false` | Enable ExternalSecret creation |
 | externalSecrets.app.data | list | `[]` | List of individual secret keys to sync from external secret manager. When externalSecrets.app.create is true, each secretKey is automatically injected as an env var in the Deployment, referencing externalSecrets.app.targetSecret.name (defaults to the service name). This is the ExternalSecret equivalent of the top-level "configmap" field. |
-| externalSecrets.app.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
-| externalSecrets.app.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
+| externalSecrets.app.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m"), used only when `refreshPolicy` is `Periodic` |
+| externalSecrets.app.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "CreatedOnce", "Periodic", "OnChange" ]. `refreshInterval` is only honoured with `Periodic` |
 | externalSecrets.app.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
 | externalSecrets.app.targetSecret | object | `{"creationPolicy":"Merge","deletionPolicy":"Retain","name":""}` | Target Kubernetes Secret configuration |
 | externalSecrets.app.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
@@ -78,8 +78,8 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | externalSecrets.app.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
 | externalSecrets.flywayInitContainer.create | bool | `false` | Enable ExternalSecret creation |
 | externalSecrets.flywayInitContainer.data | list | `[]` | List of individual secret keys to sync from external secret manager. When externalSecrets.flywayInitContainer.create is true, each secretKey is automatically injected as an env var in the Deployment, referencing externalSecrets.flywayInitContainer.targetSecret.name (defaults to the service name). This is the ExternalSecret equivalent of the top-level "configmap" field. |
-| externalSecrets.flywayInitContainer.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m") |
-| externalSecrets.flywayInitContainer.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ] |
+| externalSecrets.flywayInitContainer.refreshInterval | string | `"0"` | Refresh interval for the secret (e.g., "1h", "30m"), used only when `refreshPolicy` is `Periodic` |
+| externalSecrets.flywayInitContainer.refreshPolicy | string | `"OnChange"` | Refresh policy for the secret, allowed values: [ "CreatedOnce", "Periodic", "OnChange" ]. `refreshInterval` is only honoured with `Periodic` |
 | externalSecrets.flywayInitContainer.secretStoreRef | object | `{"kind":"SecretStore","name":""}` | Reference to SecretStore or ClusterSecretStore |
 | externalSecrets.flywayInitContainer.targetSecret | object | `{"creationPolicy":"Merge","deletionPolicy":"Retain","name":""}` | Target Kubernetes Secret configuration |
 | externalSecrets.flywayInitContainer.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
@@ -1045,6 +1045,7 @@ To enable the creation of an ExternalSecret for the main container, set `externa
 externalSecrets:
   app:
     create: true
+    refreshPolicy: Periodic
     refreshInterval: "1h"
     secretStoreRef:
       name: aws-secretsmanager
@@ -1072,6 +1073,7 @@ To configure a dedicated ExternalSecret for the init container, use `externalSec
 externalSecrets:
   flywayInitContainer:
     create: true
+    refreshPolicy: Periodic
     refreshInterval: "30m"
     secretStoreRef:
       name: aws-secretsmanager
@@ -1105,12 +1107,23 @@ secretStoreRef:
   kind: SecretStore         # SecretStore or ClusterSecretStore
 ```
 
-#### 7.2.2. refreshInterval
+#### 7.2.2. refreshPolicy and refreshInterval
 
-Refresh interval for synchronisation:
+`refreshPolicy` controls when External Secrets Operator re-reads the external provider. Allowed values:
+
+- `OnChange` (default): sync on creation and whenever the ExternalSecret manifest changes.
+- `Periodic`: sync every `refreshInterval`. A `refreshInterval` of `"0"` disables periodic refresh, so set a non-zero value.
+- `CreatedOnce`: sync only once, when the ExternalSecret is created.
 
 ```yaml
+refreshPolicy: Periodic
 refreshInterval: "1h"  # Every hour
+```
+
+To force a one-off re-sync of an ExternalSecret using `OnChange`, change any of its annotations, e.g.:
+
+```bash
+kubectl annotate externalsecret <name> force-sync=$(date +%s) --overwrite
 ```
 
 #### 7.2.3. targetSecret
@@ -1258,7 +1271,7 @@ When `deployment.enableRolloutAnnotations` is enabled, deployments are automatic
 - Automatic rollout every time the ExternalSecrets configuration changes
 - The hash is automatically recomputed by Helm
 
-**Note**: External Secrets Operator automatically syncs secrets from the external provider according to the configured `refreshInterval`. Pod restarts occur automatically when the ExternalSecret configuration in the chart is modified.
+**Note**: Pod restarts occur automatically only when the ExternalSecret configuration in the chart is modified. Values changed in the external provider are synced into the Kubernetes Secret only with `refreshPolicy: Periodic` (see 7.2.2), and since the Secret is consumed as environment variables, pods must be restarted to pick them up.
 
 ### 7.6. Aggregating Secrets from Multiple Sources
 

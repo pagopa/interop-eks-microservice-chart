@@ -211,9 +211,9 @@ externalSecrets:
   app:
     # -- (bool) Enable ExternalSecret creation
     create: false
-    # -- (string) Refresh interval for the secret (e.g., "1h", "30m")
+    # -- (string) Refresh interval for the secret (e.g., "1h", "30m"), used only when `refreshPolicy` is `Periodic`
     refreshInterval: "0"
-    # -- (string) Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ]
+    # -- (string) Refresh policy for the secret, allowed values: [ "CreatedOnce", "Periodic", "OnChange" ]. `refreshInterval` is only honoured with `Periodic`
     refreshPolicy: "OnChange"
     # -- (object) Reference to SecretStore or ClusterSecretStore
     secretStoreRef:
@@ -247,9 +247,9 @@ externalSecrets:
   flywayInitContainer:
     # -- (bool) Enable ExternalSecret creation
     create: false
-    # -- (string) Refresh interval for the secret (e.g., "1h", "30m")
+    # -- (string) Refresh interval for the secret (e.g., "1h", "30m"), used only when `refreshPolicy` is `Periodic`
     refreshInterval: "0"
-    # -- (string) Refresh policy for the secret, allowed values: [ "OnChange", "Interval" ]
+    # -- (string) Refresh policy for the secret, allowed values: [ "CreatedOnce", "Periodic", "OnChange" ]. `refreshInterval` is only honoured with `Periodic`
     refreshPolicy: "OnChange"
     # -- (object) Reference to SecretStore or ClusterSecretStore
     secretStoreRef:
