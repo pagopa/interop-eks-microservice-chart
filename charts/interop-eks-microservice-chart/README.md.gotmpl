@@ -952,6 +952,7 @@ To enable the creation of an ExternalSecret for the main container, set `externa
 externalSecrets:
   app:
     create: true
+    refreshPolicy: Periodic
     refreshInterval: "1h"
     secretStoreRef:
       name: aws-secretsmanager
@@ -979,6 +980,7 @@ To configure a dedicated ExternalSecret for the init container, use `externalSec
 externalSecrets:
   flywayInitContainer:
     create: true
+    refreshPolicy: Periodic
     refreshInterval: "30m"
     secretStoreRef:
       name: aws-secretsmanager
@@ -1012,12 +1014,23 @@ secretStoreRef:
   kind: SecretStore         # SecretStore or ClusterSecretStore
 ```
 
-#### 7.2.2. refreshInterval
+#### 7.2.2. refreshPolicy and refreshInterval
 
-Refresh interval for synchronisation:
+`refreshPolicy` controls when External Secrets Operator re-reads the external provider. Allowed values:
+
+- `OnChange` (default): sync on creation and whenever the ExternalSecret manifest changes.
+- `Periodic`: sync every `refreshInterval`. A `refreshInterval` of `"0"` disables periodic refresh, so set a non-zero value.
+- `CreatedOnce`: sync only once, when the ExternalSecret is created.
 
 ```yaml
+refreshPolicy: Periodic
 refreshInterval: "1h"  # Every hour
+```
+
+To force a one-off re-sync of an ExternalSecret using `OnChange`, change any of its annotations, e.g.:
+
+```bash
+kubectl annotate externalsecret <name> force-sync=$(date +%s) --overwrite
 ```
 
 #### 7.2.3. targetSecret
@@ -1165,7 +1178,7 @@ When `deployment.enableRolloutAnnotations` is enabled, deployments are automatic
 - Automatic rollout every time the ExternalSecrets configuration changes
 - The hash is automatically recomputed by Helm
 
-**Note**: External Secrets Operator automatically syncs secrets from the external provider according to the configured `refreshInterval`. Pod restarts occur automatically when the ExternalSecret configuration in the chart is modified.
+**Note**: Pod restarts occur automatically only when the ExternalSecret configuration in the chart is modified. Values changed in the external provider are synced into the Kubernetes Secret only with `refreshPolicy: Periodic` (see 7.2.2), and since the Secret is consumed as environment variables, pods must be restarted to pick them up.
 
 ### 7.6. Aggregating Secrets from Multiple Sources
 
