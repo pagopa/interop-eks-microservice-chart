@@ -155,8 +155,10 @@ spec:
         {{ $key }}: {{ $renderedVal | quote }}
         {{- end }}
         {{- end }}
-
-        {{- include "interop-eks-microservice-chart.generateRolloutAnnotations" . | nindent 8 }}
+        {{- $rolloutAnnotations := include "interop-eks-microservice-chart.generateRolloutAnnotations" . | trim }}
+        {{- if $rolloutAnnotations }}
+        {{- $rolloutAnnotations | nindent 8 }}
+        {{- end }}
     spec:
       {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ .Values.name | quote }}
