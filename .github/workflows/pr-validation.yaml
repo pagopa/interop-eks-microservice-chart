@@ -59,15 +59,6 @@ jobs:
           trap 'rm -rf "$temp_dir"' EXIT
 
           base_values="tests/helm-unittest/common/base.yaml"
-          # Folder-specific defaults are layered on top of the common base.
-          declare -A folder_bases=(
-            [flyway]="flyway-chart-test-values-base.yaml"
-            [ingress-alb]="ingress-alb-values-base.yaml"
-            [ingress-nginx]="ingress-nginx-values-base.yaml"
-            [keda-paused]="keda-paused-values-base.yaml"
-            [poddisruptionbudget]="poddisruptionbudget_base.yaml"
-            [serviceaccount]="serviceaccount-values-base.yaml"
-          )
           # Select values fixtures, excluding test suites and negative test inputs.
           find tests/helm-unittest -type f -name '*.yaml' \
             ! -name '*_test*' ! -name '*invalid*' \
@@ -81,22 +72,29 @@ jobs:
           failed=0
           while IFS= read -r values_file; do
             values_dir=$(dirname "$values_file")
-            folder=$(basename "$values_dir")
-            folder_base="${folder_bases[$folder]:-}"
-            # PDB end-to-end fixtures use a different base from the other PDB fixtures.
-            if [[ "$folder" == "poddisruptionbudget" && "$(basename "$values_file")" == poddisruptionbudget_e2e_* ]]; then
-              folder_base="poddisruptionbudget_e2e_values_base.yaml"
+            # Each fixture directory may define at most one *base.yaml file.
+            folder_bases=("$values_dir/"*base.yaml)
+            # Discard the literal glob when no base file matches.
+            if [[ ! -f "${folder_bases[0]}" ]]; then
+              folder_bases=()
+            fi
+            if [[ "${#folder_bases[@]}" -gt 1 ]]; then
+              echo "::error::Multiple *base.yaml files found in $values_dir"
+              exit 1
+            fi
+            # Folder bases are inputs for fixtures, not standalone render cases.
+            # The shared common base is still checked on its own.
+            if [[ "$values_file" == *base.yaml && "$values_file" != "$base_values" ]]; then
+              continue
             fi
             # Helm applies values in order: common base, folder base, then fixture.
             args=(--values "$base_values")
-            if [[ -n "$folder_base" ]]; then
-              # Folder bases may be incomplete and must not be rendered on their own.
-              if [[ "$values_file" == "$values_dir/$folder_base" ]]; then
-                continue
-              fi
-              args+=(--values "$values_dir/$folder_base")
+            if [[ "${#folder_bases[@]}" -eq 1 && "${folder_bases[0]}" != "$base_values" ]]; then
+              args+=(--values "${folder_bases[0]}")
             fi
-            args+=(--values "$values_file")
+            if [[ "$values_file" != "$base_values" ]]; then
+              args+=(--values "$values_file")
+            fi
 
             echo "Checking $values_file"
             checked=$((checked + 1))
