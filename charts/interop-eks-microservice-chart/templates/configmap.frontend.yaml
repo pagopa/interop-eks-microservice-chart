@@ -16,6 +16,6 @@ data:
   {{- toYaml (index .Values.frontend.nginx "default.conf") | nindent 4 }}
   {{- end }}
   {{- if has "env.js" $projected }}
-  {{ include "interop-eks-microservice-chart.generateFrontendConfigmapData" (dict "context" $) | nindent 2 }}
+  {{- include "interop-eks-microservice-chart.generateFrontendConfigmapData" (dict "context" $) | trim | nindent 2 }}
   {{- end }}
 {{- end }}

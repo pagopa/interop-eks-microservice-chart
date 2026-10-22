@@ -4,17 +4,14 @@ if [ "$INTERNAL_DOWNLOAD_REDSHIFT_DRIVER" = "true" ]; then
 else
   echo "Skip Redshift JDBC driver download."
 fi
-
 # Function to resolve a path that can be either a single file or a directory.
 # If it's a file, it copies it to a temp directory and returns the temp directory path.
 # If it's a directory, it returns the directory path as is.
 resolve_location() {
   input_path="$1"
-
   if [ "${input_path#filesystem:}" != "$input_path" ]; then
     input_path="${input_path#filesystem:}"
   fi
-
   if [ -f "$input_path" ]; then
       dirname "$input_path"
   elif [ -d "$input_path" ]; then
@@ -24,29 +21,24 @@ resolve_location() {
       exit 1
   fi
 }
-
 LOCATIONS_ARG=""
 if [ -n "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" ]; then
   echo "INTERNAL_FLYWAY_MIGRATIONS_PATHS found: $INTERNAL_FLYWAY_MIGRATIONS_PATHS"
   locations=""
   tmplist=$(mktemp)
   echo "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" | tr ',' '\n' > "$tmplist"
-
   # Temporary workaround: assume INTERNAL_FLYWAY_MIGRATIONS_PATHS contains only one path (either file or directory) and resolve it directly without looping.
   first_path=$(head -n 1 "$tmplist" | tr -d '[:space:]')
   if [ -n "$first_path" ]; then
     location=$(resolve_location "$first_path")
     locations="filesystem:$location"
   fi
-
-
   #while IFS= read -r path; do
   #  path=$(echo "$path" | tr -d '[:space:]')
   #  [ -z "$path" ] && continue
   #  location=$(resolve_location "$path")
   #  locations="${locations:+$locations,}filesystem:$location"
   #done < "$tmplist"
-
   rm -f "$tmplist"
   if [ -n "$locations" ]; then
     LOCATIONS_ARG="-locations=$locations"
@@ -57,7 +49,6 @@ if [ -n "$INTERNAL_FLYWAY_MIGRATIONS_PATHS" ]; then
 else
   echo "INTERNAL_FLYWAY_MIGRATIONS_PATHS not set — using default Flyway locations."
 fi
-
 case "$INTERNAL_FLYWAY_ACTION" in
   "repair")
     echo "Starting Flyway repair..."

@@ -155,8 +155,10 @@ spec:
         {{ $key }}: {{ $renderedVal | quote }}
         {{- end }}
         {{- end }}
-
-        {{- include "interop-eks-microservice-chart.generateRolloutAnnotations" . | nindent 8 }}
+        {{- $rolloutAnnotations := include "interop-eks-microservice-chart.generateRolloutAnnotations" . | trim }}
+        {{- if $rolloutAnnotations }}
+        {{- $rolloutAnnotations | nindent 8 }}
+        {{- end }}
     spec:
       {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ .Values.name | quote }}
@@ -175,7 +177,7 @@ spec:
             - /bin/sh
             - -c
             - |
-{{- .Files.Get "files/flyway-init.sh" | nindent 14 }}
+{{- .Files.Get "files/flyway-init.sh" | trimSuffix "\n" | nindent 14 }}
           {{- if and .Values.externalSecrets .Values.externalSecrets.flywayInitContainer .Values.externalSecrets.flywayInitContainer.create (or .Values.externalSecrets.flywayInitContainer.data .Values.externalSecrets.flywayInitContainer.dataFrom) }}
           {{- $esSecretName := include "interop-eks-microservice-chart.render-template" (dict "value" (.Values.externalSecrets.flywayInitContainer.targetSecret.name | default (printf "%s-flyway" $root.Values.name)) "context" $) }}
           envFrom:
@@ -246,11 +248,11 @@ spec:
           {{- if and .Values.deployment .Values.deployment.livenessProbe }}
           livenessProbe:
             {{- toYaml .Values.deployment.livenessProbe | nindent 12 }}
-          {{- end }} {{/* End of livenessProbe section */}}
+          {{- end }}{{/* End of livenessProbe section */}}
           {{- if and .Values.deployment .Values.deployment.readinessProbe }}
           readinessProbe:
             {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
-          {{- end }} {{/* End of readinessProbe section */}}
+          {{- end }}{{/* End of readinessProbe section */}}
           {{- if and .Values.deployment.preStopHookGracefulTermination .Values.deployment.preStopHookGracefulTermination.create }}
           lifecycle:
             {{- if and .Values.deployment.postStartHook .Values.deployment.postStartHook.create .Values.deployment.postStartHook.command }}

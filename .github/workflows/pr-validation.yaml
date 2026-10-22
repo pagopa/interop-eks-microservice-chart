@@ -45,6 +45,74 @@ jobs:
         run: |
           helm plugin install https://github.com/helm-unittest/helm-unittest --version v1.0.3
 
+      - name: Install YAML validation tools
+        run: |
+          pip install yamllint==1.38.0
+          yamllint -v
+
+      - name: Lint rendered Helm unittest values
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          temp_dir=$(mktemp -d)
+          trap 'rm -rf "$temp_dir"' EXIT
+
+          base_values="tests/helm-unittest/common/base.yaml"
+          # Select values fixtures, excluding test suites and negative test inputs.
+          find tests/helm-unittest -type f -name '*.yaml' \
+            ! -name '*_test*' ! -name '*invalid*' \
+            ! -name '*fail*' | sort > "$temp_dir/values"
+          if [[ ! -s "$temp_dir/values" ]]; then
+            echo "::error::No Helm values files found"
+            exit 1
+          fi
+
+          checked=0
+          failed=0
+          while IFS= read -r values_file; do
+            values_dir=$(dirname "$values_file")
+            # Each fixture directory may define at most one *base.yaml file.
+            folder_bases=("$values_dir/"*base.yaml)
+            # Discard the literal glob when no base file matches.
+            if [[ ! -f "${folder_bases[0]}" ]]; then
+              folder_bases=()
+            fi
+            if [[ "${#folder_bases[@]}" -gt 1 ]]; then
+              echo "::error::Multiple *base.yaml files found in $values_dir"
+              exit 1
+            fi
+            # Folder bases are inputs for fixtures, not standalone render cases.
+            # The shared common base is still checked on its own.
+            if [[ "$values_file" == *base.yaml && "$values_file" != "$base_values" ]]; then
+              continue
+            fi
+            # Helm applies values in order: common base, folder base, then fixture.
+            args=(--values "$base_values")
+            if [[ "${#folder_bases[@]}" -eq 1 && "${folder_bases[0]}" != "$base_values" ]]; then
+              args+=(--values "${folder_bases[0]}")
+            fi
+            if [[ "$values_file" != "$base_values" ]]; then
+              args+=(--values "$values_file")
+            fi
+
+            echo "Checking $values_file"
+            checked=$((checked + 1))
+            # Lint the raw rendered YAML only if Helm succeeds; collect failures
+            # without stopping validation of the remaining fixtures.
+            if ! helm template sanity-check ./charts/interop-eks-microservice-chart \
+              "${args[@]}" > "$temp_dir/rendered.yaml"; then
+              echo "::error::Helm rendering failed for $values_file"
+              failed=$((failed + 1))
+            elif ! yamllint --strict --format parsable \
+              --config-file tests/yamllint/config.yaml "$temp_dir/rendered.yaml"; then
+              echo "::error::yamllint failed for $values_file"
+              failed=$((failed + 1))
+            fi
+          done < "$temp_dir/values"
+          echo "yamllint: $checked values files checked, $failed failed"
+          [[ "$checked" -gt 0 && "$failed" -eq 0 ]]
+
       - name: Run helm unittest
         run: |
           set -euo pipefail
