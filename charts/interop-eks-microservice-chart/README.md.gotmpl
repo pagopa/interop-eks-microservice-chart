@@ -221,6 +221,40 @@ deployment:
     create: true
 ```
 
+### 2.1 Migrations source selection
+
+Two mutually exclusive options are supported to provide Flyway SQL migrations:
+
+* `deployment.flywayInitContainer.migrationDomain`: selects a key from root-level `migrations` and renders a dedicated ConfigMap automatically.
+* `deployment.flywayInitContainer.migrationsConfigmap`: uses an existing ConfigMap already present in the namespace.
+
+`migrationDomain` and `migrationsConfigmap` cannot be set together.
+
+Example using `migrationDomain`:
+
+```yaml
+deployment:
+  flywayInitContainer:
+    create: true
+    migrationDomain: agreement-domain
+
+migrations:
+  agreement-domain:
+    V1__Init.sql: |-
+      CREATE TABLE IF NOT EXISTS public.agreement(id UUID PRIMARY KEY);
+    V2__Patch.sql: |-
+      ALTER TABLE public.agreement ADD COLUMN created_at TIMESTAMP;
+```
+
+Example using existing `migrationsConfigmap`:
+
+```yaml
+deployment:
+  flywayInitContainer:
+    create: true
+    migrationsConfigmap: existing-migrations-configmap
+```
+
 For the container to start correctly, the following ConfigMaps and Secrets must be present in the cluster/namespace where the microservice is deployed:
 
 * ConfigMap "interop-be-db-commons" - common DB configurations, referenced keys listed below:
