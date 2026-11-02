@@ -32,6 +32,7 @@ tests:
       argocd.appMonitoring.workloadKind: Deployment
       argocd.appMonitoring.tfEnv: dev
       argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
+      namespace: dev-argocd-deploy
     asserts:
       - hasDocuments:
           count: 1
@@ -98,6 +99,7 @@ tests:
       argocd.appMonitoring.tfEnv: dev
       argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
       argocd.appMonitoring.tfPlanOnly: true
+      namespace: dev-argocd-deploy
     asserts:
       - matchRegex:
           path: spec.template.spec.containers[0].args[0]
@@ -115,6 +117,7 @@ tests:
       argocd.appMonitoring.tfEnv: dev
       argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
       argocd.appMonitoring.tfPlanOnly: false
+      namespace: dev-argocd-deploy
     asserts:
       - matchRegex:
           path: spec.template.spec.containers[0].args[0]
