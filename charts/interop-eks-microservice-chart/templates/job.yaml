@@ -46,8 +46,6 @@ spec:
               value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.tfStateBucketKeyPrefix "context" $) | quote }}
             - name: TF_VAR_K8S_NAMESPACE
               value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.namespace "context" $) | quote }}
-            - name: TF_PLAN_ONLY
-              value: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.tfPlanOnly "context" $) | quote }}
           command: ["/bin/sh", "-eu", "-c"]
           args:
             - |
@@ -71,7 +69,7 @@ spec:
               -backend-config="./env/${TF_ENV}/backend.tfvars" \
               -backend-config="key=${TF_STATE_BUCKET_KEY_PREFIX}/${REPO_NAME}/argocd-applications/monitoring/${TF_VAR_K8S_NAMESPACE}/${TF_VAR_argocd_workload_name}.tfstate"
 
-              {{- if eq "$TF_PLAN_ONLY" "true" }}
+              {{- if .Values.argocd.appMonitoring.tfPlanOnly }}
               terraform plan -var-file="./env/${TF_ENV}/terraform.tfvars"
               {{- else }}
               terraform apply -var-file="./env/${TF_ENV}/terraform.tfvars" -auto-approve
