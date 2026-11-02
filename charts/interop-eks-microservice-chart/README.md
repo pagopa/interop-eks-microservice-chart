@@ -13,7 +13,6 @@ The following table lists the configurable parameters of the Interop-eks-microse
 |-----|------|---------|-------------|
 | argocd.appMonitoring.enable | bool | `false` | Enable the management of monitoring resources using a Job with ArgoCD PostSync hook |
 | argocd.appMonitoring.jobNamespace | string | `nil` | Namespace in which the Job with ArgoCD PostSync hook runs |
-| argocd.appMonitoring.k8sNamespace | string | `nil` | Kubernetes namespace where the workload is deployed |
 | argocd.appMonitoring.projectRepositoryRef | string | `"main"` | GitHub branch or tag to checkout |
 | argocd.appMonitoring.projectRepositoryURL | string | `nil` | URL of the GitHub repository containing the 'terraform/k8s-monitoring-argocd-application' Terraform state |
 | argocd.appMonitoring.serviceAccountName | string | `nil` | Name of the ServiceAccount with the IRSA annotation granting the Job the permission to manage AWS monitoring resources |
