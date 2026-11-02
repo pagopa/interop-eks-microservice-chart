@@ -13,10 +13,12 @@ The following table lists the configurable parameters of the Interop-eks-microse
 |-----|------|---------|-------------|
 | argocd.appMonitoring.enable | bool | `false` | Enable the management of monitoring resources using a Job with ArgoCD PostSync hook |
 | argocd.appMonitoring.jobNamespace | string | `nil` | Namespace in which the Job with ArgoCD PostSync hook runs |
+| argocd.appMonitoring.k8sNamespace | string | `nil` | Kubernetes namespace where the workload is deployed |
 | argocd.appMonitoring.projectRepositoryRef | string | `"main"` | GitHub branch or tag to checkout |
 | argocd.appMonitoring.projectRepositoryURL | string | `nil` | URL of the GitHub repository containing the 'terraform/k8s-monitoring-argocd-application' Terraform state |
 | argocd.appMonitoring.serviceAccountName | string | `nil` | Name of the ServiceAccount with the IRSA annotation granting the Job the permission to manage AWS monitoring resources |
 | argocd.appMonitoring.tfEnv | string | `nil` | Terraform environment to use for managing monitoring resources |
+| argocd.appMonitoring.tfPlanOnly | bool | `false` | Only run `terraform plan` without applying changes |
 | argocd.appMonitoring.tfStateBucketKeyPrefix | string | `nil` | Bucket key prefix storing the Terraform state file |
 | argocd.appMonitoring.workloadKind | string | `"Deployment"` | Kind of workload to monitor |
 | autoscaling.keda | object | `{"cooldownPeriod":null,"create":false,"maxReplicaCount":null,"minReplicaCount":null,"paused":false,"pollingInterval":null,"triggers":null}` | KEDA autoscaling configuration |

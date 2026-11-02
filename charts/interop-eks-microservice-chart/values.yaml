@@ -92,6 +92,10 @@ argocd:
     tfEnv:
     # -- (string) Bucket key prefix storing the Terraform state file
     tfStateBucketKeyPrefix:
+    # -- (bool) Only run `terraform plan` without applying changes
+    tfPlanOnly: false
+    # -- (string) Kubernetes namespace where the workload is deployed
+    k8sNamespace:
 
 deployment:
   # -- (bool) Enable annotation generation for referenced configmaps and secrets

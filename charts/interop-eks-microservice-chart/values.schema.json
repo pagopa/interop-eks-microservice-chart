@@ -508,6 +508,15 @@
             "tfStateBucketKeyPrefix": {
               "description": "Bucket key prefix storing Terraform state file",
               "type": ["string", "null"]
+            },
+            "tfPlanOnly": {
+              "description": "Only run `terraform plan` without applying changes",
+              "type": "boolean",
+              "default": false
+            },
+            "k8sNamespace": {
+              "description": "Kubernetes namespace where the workload is deployed",
+              "type": ["string", "null"]
             }
           }
         }

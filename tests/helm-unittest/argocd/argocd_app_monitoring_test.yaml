@@ -12,6 +12,17 @@ tests:
       - hasDocuments:
           count: 0
 
+  - it: fails when app monitoring is enabled and one of the required values (jobNamespace) is missing
+    set:
+      argocd.appMonitoring.enable: true
+      argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
+      argocd.appMonitoring.projectRepositoryURL: https://github.com/pagopa/interop-core-deployment
+      argocd.appMonitoring.tfEnv: dev
+      argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
+      argocd.appMonitoring.k8sNamespace: dev
+    asserts:
+      - failedTemplate: {}
+
   - it: renders Job when app monitoring is enabled
     set:
       argocd.appMonitoring.enable: true
@@ -22,6 +33,7 @@ tests:
       argocd.appMonitoring.workloadKind: Deployment
       argocd.appMonitoring.tfEnv: dev
       argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
+      argocd.appMonitoring.k8sNamespace: dev-argocd-deploy
     asserts:
       - hasDocuments:
           count: 1
@@ -67,15 +79,74 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].env
           content:
+            name: TF_VAR_K8S_NAMESPACE
+            value: dev-argocd-deploy
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
             name: TF_STATE_BUCKET_KEY_PREFIX
             value: dev-es1
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '(?m)^\s*-backend-config="key=\$\{TF_STATE_BUCKET_KEY_PREFIX\}/\$\{REPO_NAME\}/argocd-applications/monitoring/\$\{TF_VAR_K8S_NAMESPACE\}/\$\{TF_VAR_argocd_workload_name\}\.tfstate"$'
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '(?m)^\s*terraform apply -var-file="\./env/\$\{TF_ENV\}/terraform\.tfvars" -auto-approve$'
+      - notMatchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: 'terraform plan\b'
 
-  - it: fails when app monitoring is enabled and one of the required values (jobNamespace) is missing
+  - it: renders terraform plan without apply when tfPlanOnly is true
     set:
       argocd.appMonitoring.enable: true
+      argocd.appMonitoring.jobNamespace: argocd-monitoring
       argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
       argocd.appMonitoring.projectRepositoryURL: https://github.com/pagopa/interop-core-deployment
       argocd.appMonitoring.tfEnv: dev
       argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
+      argocd.appMonitoring.k8sNamespace: dev-argocd-deploy
+      argocd.appMonitoring.tfPlanOnly: true
     asserts:
-      - failedTemplate: {}
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '(?m)^\s*terraform plan -var-file="\./env/\$\{TF_ENV\}/terraform\.tfvars"$'
+      - notMatchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: 'terraform apply\b'
+
+  - it: renders terraform apply without plan when tfPlanOnly is false
+    set:
+      argocd.appMonitoring.enable: true
+      argocd.appMonitoring.jobNamespace: argocd-monitoring
+      argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
+      argocd.appMonitoring.projectRepositoryURL: https://github.com/pagopa/interop-core-deployment
+      argocd.appMonitoring.tfEnv: dev
+      argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
+      argocd.appMonitoring.k8sNamespace: dev-argocd-deploy
+      argocd.appMonitoring.tfPlanOnly: false
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '(?m)^\s*terraform apply -var-file="\./env/\$\{TF_ENV\}/terraform\.tfvars" -auto-approve$'
+      - notMatchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: 'terraform plan\b'
+
+  - it: renders a templated k8sNamespace independently of the Job namespace
+    set:
+      argocd.appMonitoring.enable: true
+      argocd.appMonitoring.jobNamespace: argocd-monitoring
+      argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
+      argocd.appMonitoring.projectRepositoryURL: https://github.com/pagopa/interop-core-deployment
+      argocd.appMonitoring.tfEnv: dev
+      argocd.appMonitoring.tfStateBucketKeyPrefix: dev-es1
+      argocd.appMonitoring.k8sNamespace: dev-argocd-deploy
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TF_VAR_K8S_NAMESPACE
+            value: dev-argocd-deploy
+      - equal:
+          path: metadata.namespace
+          value: argocd-monitoring
