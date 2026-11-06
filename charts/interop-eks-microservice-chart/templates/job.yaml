@@ -17,7 +17,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Values.name }}
+  name: {{ .Values.name | trunc 48 }}-{{ .Values.namespace }}
   namespace: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .Values.argocd.appMonitoring.jobNamespace "context" $) }}
   annotations:
     argocd.argoproj.io/hook: PostSync
