@@ -93,6 +93,24 @@ tests:
           path: spec.template.spec.containers[0].args[0]
           pattern: 'terraform plan\b'
 
+  - it: truncates a workload name longer than 48 characters in the Job name
+    set:
+      name: abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvw
+      namespace: prod-analytics
+      argocd.appMonitoring.enable: true
+      argocd.appMonitoring.jobNamespace: argocd-monitoring
+      argocd.appMonitoring.serviceAccountName: argocd-tf-apply-monitoring
+      argocd.appMonitoring.projectRepositoryURL: https://github.com/pagopa/interop-core-deployment
+      argocd.appMonitoring.tfEnv: prod
+      argocd.appMonitoring.tfStateBucketKeyPrefix: prod-es1
+    asserts:
+      - equal:
+          path: metadata.name
+          value: abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuv-prod-analytics
+      - matchRegex:
+          path: metadata.name
+          pattern: '^.{63}$'
+
   - it: renders terraform plan without apply when tfPlanOnly is true
     set:
       argocd.appMonitoring.enable: true
