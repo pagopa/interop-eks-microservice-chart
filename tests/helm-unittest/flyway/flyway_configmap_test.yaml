@@ -1,0 +1,21 @@
+suite: flyway configmap
+templates:
+  - templates/configmap.flyway.yaml
+
+tests:
+  - it: renders configmap data from selected migrationDomain
+    values:
+      - flyway_migrationdomain_catalog.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: domain-a
+      - equal:
+          path: metadata.namespace
+          value: test-namespace
+      - exists:
+          path: data["V1__Init.sql"]
+      - exists:
+          path: data["V2__Alter.sql"]
