@@ -103,7 +103,7 @@
 {{- if not (hasKey $migrationsRoot .Values.deployment.flywayInitContainer.migrationDomain) }}
 {{ fail (printf "Invalid configuration: deployment.flywayInitContainer.migrationDomain '%s' not found in root migrations map." .Values.deployment.flywayInitContainer.migrationDomain) }}
 {{- end }}
-{{- $flyway_migrations_configmap = .Values.deployment.flywayInitContainer.migrationDomain -}}
+{{- $flyway_migrations_configmap = include "interop-eks-microservice-chart.flywayConfigmapName" . -}}
 {{- else if .Values.deployment.flywayInitContainer.migrationsConfigmap }}
 {{- $flyway_migrations_configmap = .Values.deployment.flywayInitContainer.migrationsConfigmap -}}
 {{- end }}

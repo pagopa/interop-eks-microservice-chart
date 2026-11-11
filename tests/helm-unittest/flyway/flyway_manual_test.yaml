@@ -139,4 +139,4 @@ tests:
           value: migrations-files
       - equal:
           path: spec.template.spec.volumes[0].projected.sources[0].configMap.name
-          value: domain-a
+          value: flyway-migration-domain-service-flyway-domain-a

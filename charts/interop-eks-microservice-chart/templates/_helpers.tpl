@@ -137,6 +137,10 @@ true
 {{- end -}}
 {{- end -}}
 
+{{- define "interop-eks-microservice-chart.flywayConfigmapName" -}}
+{{- printf "%s-flyway-%s" .Values.name .Values.deployment.flywayInitContainer.migrationDomain -}}
+{{- end -}}
+
 {{/*
 Generate annotations (in deployment.spec.template.metadata) for each configmap, secret and service account referenced by the deployment.
 Usage:
@@ -152,7 +156,7 @@ Usage:
 {{- end }}
 {{- $flywayConfigmapName := "" }}
 {{- if and .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.migrationDomain }}
-{{- $flywayConfigmapName = .Values.deployment.flywayInitContainer.migrationDomain }}
+{{- $flywayConfigmapName = include "interop-eks-microservice-chart.flywayConfigmapName" . }}
 {{- else if and .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.migrationsConfigmap }}
 {{- $flywayConfigmapName = .Values.deployment.flywayInitContainer.migrationsConfigmap }}
 {{- end }}
@@ -216,7 +220,7 @@ Usage:
 {{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.enableRolloutAnnotations }}
 {{- $configmapName := "" }}
 {{- if .Values.deployment.flywayInitContainer.migrationDomain }}
-{{- $configmapName = .Values.deployment.flywayInitContainer.migrationDomain }}
+{{- $configmapName = include "interop-eks-microservice-chart.flywayConfigmapName" . }}
 {{- else if .Values.deployment.flywayInitContainer.migrationsConfigmap }}
 {{- $configmapName = .Values.deployment.flywayInitContainer.migrationsConfigmap }}
 {{- end }}

@@ -1,9 +1,12 @@
 suite: flyway configmap
 templates:
   - templates/configmap.flyway.yaml
+  - templates/deployment.yaml
+  - templates/serviceaccount.yaml
 
 tests:
   - it: renders configmap data from selected migrationDomain
+    template: templates/configmap.flyway.yaml
     values:
       - flyway_migrationdomain_catalog.yaml
     asserts:
@@ -11,7 +14,7 @@ tests:
           of: ConfigMap
       - equal:
           path: metadata.name
-          value: domain-a
+          value: flyway-migration-domain-service-flyway-domain-a
       - equal:
           path: metadata.namespace
           value: test-namespace
@@ -19,3 +22,36 @@ tests:
           path: data["V1__Init.sql"]
       - exists:
           path: data["V2__Alter.sql"]
+
+  - it: isolates configmaps for services sharing a migration domain
+    template: templates/configmap.flyway.yaml
+    values:
+      - flyway_migrationdomain_catalog.yaml
+    set:
+      name: another-service
+    asserts:
+      - equal:
+          path: metadata.name
+          value: another-service-flyway-domain-a
+      - exists:
+          path: data["V1__Init.sql"]
+
+  - it: uses the service-prefixed configmap for mounts and rollout annotations
+    template: templates/deployment.yaml
+    values:
+      - flyway_migrationdomain_catalog.yaml
+    set:
+      name: another-service
+      deployment.enableRolloutAnnotations: true
+      enableLookup: false
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].projected.sources[0].configMap.name
+          value: another-service-flyway-domain-a
+      - exists:
+          path: spec.template.metadata.annotations["another-service-flyway-domain-a/flywayConfigmap.sha256"]
+      - equal:
+          path: spec.template.metadata.annotations["another-service-flyway-domain-a/flywayConfigmap.resourceVersion"]
+          value: LOOKUP_PLACEHOLDER
+      - notExists:
+          path: spec.template.metadata.annotations["domain-a/flywayConfigmap.resourceVersion"]
