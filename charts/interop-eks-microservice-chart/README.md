@@ -1,7 +1,7 @@
 
 # interop-eks-microservice-chart
 
-![Version: 1.48.0](https://img.shields.io/badge/Version-1.48.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.50.1](https://img.shields.io/badge/Version-1.50.1-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for PagoPa Interop Microservices
 
@@ -17,6 +17,7 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | argocd.appMonitoring.projectRepositoryURL | string | `nil` | URL of the GitHub repository containing the 'terraform/k8s-monitoring-argocd-application' Terraform state |
 | argocd.appMonitoring.serviceAccountName | string | `nil` | Name of the ServiceAccount with the IRSA annotation granting the Job the permission to manage AWS monitoring resources |
 | argocd.appMonitoring.tfEnv | string | `nil` | Terraform environment to use for managing monitoring resources |
+| argocd.appMonitoring.tfPlanOnly | bool | `false` | Only run `terraform plan` without applying changes |
 | argocd.appMonitoring.tfStateBucketKeyPrefix | string | `nil` | Bucket key prefix storing the Terraform state file |
 | argocd.appMonitoring.workloadKind | string | `"Deployment"` | Kind of workload to monitor |
 | autoscaling.keda | object | `{"cooldownPeriod":null,"create":false,"maxReplicaCount":null,"minReplicaCount":null,"paused":false,"pollingInterval":null,"triggers":null}` | KEDA autoscaling configuration |
