@@ -36,6 +36,105 @@ tests:
       - exists:
           path: data["V1__Init.sql"]
 
+  - it: does not duplicate flyway for a domain that already starts with it
+    template: templates/configmap.flyway.yaml
+    values:
+      - flyway_migrationdomain_catalog.yaml
+    set:
+      name: workload
+      deployment.flywayInitContainer.migrationDomain: flyway-digest-tracking
+      migrations:
+        flyway-digest-tracking:
+          V1__Init.sql: SELECT 1;
+    asserts:
+      - equal:
+          path: metadata.name
+          value: workload-flyway-digest-tracking
+      - equal:
+          path: data["V1__Init.sql"]
+          value: SELECT 1;
+
+  - it: adds flyway for a domain without it
+    template: templates/configmap.flyway.yaml
+    values:
+      - flyway_migrationdomain_catalog.yaml
+    set:
+      name: workload
+      deployment.flywayInitContainer.migrationDomain: event-store-migrations
+      migrations:
+        event-store-migrations:
+          V1__Init.sql: SELECT 2;
+    asserts:
+      - equal:
+          path: metadata.name
+          value: workload-flyway-event-store-migrations
+      - equal:
+          path: data["V1__Init.sql"]
+          value: SELECT 2;
+
+  - it: adds flyway when it appears elsewhere in the domain
+    template: templates/configmap.flyway.yaml
+    values:
+      - flyway_migrationdomain_catalog.yaml
+    set:
+      name: workload
+      deployment.flywayInitContainer.migrationDomain: tracking-flyway-migrations
+      migrations:
+        tracking-flyway-migrations:
+          V1__Init.sql: SELECT 3;
+    asserts:
+      - equal:
+          path: metadata.name
+          value: workload-flyway-tracking-flyway-migrations
+
+  - it: uses the nonduplicated configmap name for mounts and rollout annotations
+    template: templates/deployment.yaml
+    values:
+      - flyway_migrationdomain_catalog.yaml
+    set:
+      name: workload
+      deployment.flywayInitContainer.migrationDomain: flyway-digest-tracking
+      deployment.enableRolloutAnnotations: true
+      enableLookup: false
+      migrations:
+        flyway-digest-tracking:
+          V1__Init.sql: SELECT 1;
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].projected.sources[0].configMap.name
+          value: workload-flyway-digest-tracking
+      - exists:
+          path: spec.template.metadata.annotations["workload-flyway-digest-tracking/flywayConfigmap.sha256"]
+      - equal:
+          path: spec.template.metadata.annotations["workload-flyway-digest-tracking/flywayConfigmap.resourceVersion"]
+          value: LOOKUP_PLACEHOLDER
+      - notExists:
+          path: spec.template.metadata.annotations["workload-flyway-flyway-digest-tracking/flywayConfigmap.sha256"]
+      - notExists:
+          path: spec.template.metadata.annotations["workload-flyway-flyway-digest-tracking/flywayConfigmap.resourceVersion"]
+
+  - it: uses the prefixed configmap name for mounts and rollout annotations
+    template: templates/deployment.yaml
+    values:
+      - flyway_migrationdomain_catalog.yaml
+    set:
+      name: workload
+      deployment.flywayInitContainer.migrationDomain: event-store-migrations
+      deployment.enableRolloutAnnotations: true
+      enableLookup: false
+      migrations:
+        event-store-migrations:
+          V1__Init.sql: SELECT 2;
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].projected.sources[0].configMap.name
+          value: workload-flyway-event-store-migrations
+      - exists:
+          path: spec.template.metadata.annotations["workload-flyway-event-store-migrations/flywayConfigmap.sha256"]
+      - equal:
+          path: spec.template.metadata.annotations["workload-flyway-event-store-migrations/flywayConfigmap.resourceVersion"]
+          value: LOOKUP_PLACEHOLDER
+
   - it: uses the service-prefixed configmap for mounts and rollout annotations
     template: templates/deployment.yaml
     values:

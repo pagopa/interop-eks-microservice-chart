@@ -138,7 +138,12 @@ true
 {{- end -}}
 
 {{- define "interop-eks-microservice-chart.flywayConfigmapName" -}}
-{{- printf "%s-flyway-%s" .Values.name .Values.deployment.flywayInitContainer.migrationDomain -}}
+{{- $domain := .Values.deployment.flywayInitContainer.migrationDomain -}}
+{{- if hasPrefix "flyway" $domain -}}
+{{- printf "%s-%s" .Values.name $domain -}}
+{{- else -}}
+{{- printf "%s-flyway-%s" .Values.name $domain -}}
+{{- end -}}
 {{- end -}}
 
 {{/*
