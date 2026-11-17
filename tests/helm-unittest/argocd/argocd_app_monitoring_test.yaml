@@ -85,7 +85,7 @@ tests:
             value: dev-es1
       - matchRegex:
           path: spec.template.spec.containers[0].args[0]
-          pattern: '(?m)^\s*-backend-config="key=\$\{TF_STATE_BUCKET_KEY_PREFIX\}/\$\{REPO_NAME\}/argocd-applications/monitoring/\$\{TF_VAR_K8S_NAMESPACE\}/\$\{TF_VAR_argocd_workload_name\}\.tfstate"$'
+          pattern: '(?m)^\s*-backend-config="key=\$\{TF_STATE_BUCKET_KEY_PREFIX\}/\$\{REPO_NAME\}/argocd-applications/monitoring/\$\{TF_VAR_k8s_namespace\}/\$\{TF_VAR_argocd_workload_name\}\.tfstate"$'
       - matchRegex:
           path: spec.template.spec.containers[0].args[0]
           pattern: '(?m)^\s*terraform apply -var-file="\./env/\$\{TF_ENV\}/terraform\.tfvars" -auto-approve$'
@@ -160,7 +160,7 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].env
           content:
-            name: TF_VAR_K8S_NAMESPACE
+            name: TF_VAR_k8s_namespace
             value: dev-argocd-deploy
       - equal:
           path: metadata.namespace
