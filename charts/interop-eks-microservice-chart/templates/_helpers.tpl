@@ -137,6 +137,15 @@ true
 {{- end -}}
 {{- end -}}
 
+{{- define "interop-eks-microservice-chart.flywayConfigmapName" -}}
+{{- $domain := .Values.deployment.flywayInitContainer.migrationDomain -}}
+{{- if hasPrefix "flyway" $domain -}}
+{{- printf "%s-%s" .Values.name $domain -}}
+{{- else -}}
+{{- printf "%s-flyway-%s" .Values.name $domain -}}
+{{- end -}}
+{{- end -}}
+
 {{/*
 Generate annotations (in deployment.spec.template.metadata) for each configmap, secret and service account referenced by the deployment.
 Usage:
@@ -149,6 +158,16 @@ Usage:
 {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.frontend.yaml") . | sha256sum | quote }}
 {{- else if include "interop-eks-microservice-chart.hasBackendConfigmap" . }}
 {{ .Values.name }}/configmap.sha256: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum | quote }}
+{{- end }}
+{{- $flywayConfigmapName := "" }}
+{{- if and .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.migrationDomain }}
+{{- $flywayConfigmapName = include "interop-eks-microservice-chart.flywayConfigmapName" . }}
+{{- else if and .Values.deployment.flywayInitContainer .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+{{- $flywayConfigmapName = .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+{{- end }}
+{{- $flywayConfigmapRendered := include (print $.Template.BasePath "/configmap.flyway.yaml") . }}
+{{- if and $flywayConfigmapName $flywayConfigmapRendered }}
+{{ $flywayConfigmapName }}/flywayConfigmap.sha256: {{ $flywayConfigmapRendered | sha256sum | quote }}
 {{- end }}
 {{- end }}
 
@@ -203,8 +222,14 @@ Usage:
 {{- end }}
 {{- end }}
 
-{{- if and .Values.deployment .Values.deployment.flywayInitContainer.migrationsConfigmap .Values.deployment.enableRolloutAnnotations }}
-{{- $configmapName := .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+{{- if and .Values.deployment .Values.deployment.flywayInitContainer .Values.deployment.enableRolloutAnnotations }}
+{{- $configmapName := "" }}
+{{- if .Values.deployment.flywayInitContainer.migrationDomain }}
+{{- $configmapName = include "interop-eks-microservice-chart.flywayConfigmapName" . }}
+{{- else if .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+{{- $configmapName = .Values.deployment.flywayInitContainer.migrationsConfigmap }}
+{{- end }}
+{{- if $configmapName }}
 {{- if $.Values.enableLookup }}
 {{- $configmap := lookup "v1" "ConfigMap" $.Values.namespace $configmapName }}
 {{- if $configmap }}
@@ -212,6 +237,7 @@ Usage:
 {{- end }}
 {{- else }}
 {{ $configmapName }}/flywayConfigmap.resourceVersion: "LOOKUP_PLACEHOLDER"
+{{- end }}
 {{- end }}
 {{- end }}
 
