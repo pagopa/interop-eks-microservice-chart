@@ -17,7 +17,7 @@ externalSecrets:
   flywayInitContainer:
     create: true
     refreshInterval: "30m"
-    refreshPolicy: "Interval"
+    refreshPolicy: "Periodic"
     secretStoreRef:
       name: flyway-secret-store
       kind: SecretStore
