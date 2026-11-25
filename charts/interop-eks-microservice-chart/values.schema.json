@@ -558,7 +558,7 @@
             "refreshPolicy": {
               "description": "Refresh policy for the secret",
               "type": "string",
-              "enum": ["OnChange", "Interval"],
+              "enum": ["CreatedOnce", "Periodic", "OnChange"],
               "default": "OnChange"
             },
             "secretStoreRef": {
@@ -663,7 +663,7 @@
             "refreshPolicy": {
               "description": "Refresh policy for the secret",
               "type": "string",
-              "enum": ["OnChange", "Interval"],
+              "enum": ["CreatedOnce", "Periodic", "OnChange"],
               "default": "OnChange"
             },
             "secretStoreRef": {
