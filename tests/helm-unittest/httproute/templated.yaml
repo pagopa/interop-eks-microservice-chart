@@ -1,4 +1,4 @@
-commons:
+locals:
   appHostname: app.example.internal
   gatewayName: internal
   gatewayNamespace: gateways
@@ -6,11 +6,11 @@ commons:
 gateway:
   httpRoute:
     parentRefs:
-      - name: "{{.Values.commons.gatewayName}}"
-        namespace: "{{.Values.commons.gatewayNamespace}}"
+      - name: "{{.Values.locals.gatewayName}}"
+        namespace: "{{.Values.locals.gatewayNamespace}}"
         sectionName: http
     hostnames:
-      - "{{.Values.commons.appHostname}}"
+      - "{{.Values.locals.appHostname}}"
       - static.example.internal
     rules:
       - matches:
@@ -20,5 +20,5 @@ gateway:
         filters:
           - type: RequestRedirect
             requestRedirect:
-              hostname: "{{.Values.commons.appHostname}}"
+              hostname: "{{.Values.locals.appHostname}}"
               statusCode: 301

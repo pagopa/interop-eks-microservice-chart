@@ -1,5 +1,5 @@
 # Rendered values with YAML syntax must stay values, not change the rule
-commons:
+locals:
   withQuote: "it's"
   withColon: "a: b"
   withComment: "x # y"
@@ -13,13 +13,13 @@ gateway:
             requestHeaderModifier:
               set:
                 - name: X-Quote
-                  value: "{{.Values.commons.withQuote}}"
+                  value: "{{.Values.locals.withQuote}}"
                 - name: X-Colon
-                  value: "prefix-{{.Values.commons.withColon}}"
+                  value: "prefix-{{.Values.locals.withColon}}"
                 - name: X-Comment
-                  value: "prefix-{{.Values.commons.withComment}}"
+                  value: "prefix-{{.Values.locals.withComment}}"
                 - name: X-Bool
-                  value: "{{.Values.commons.boolLike}}"
+                  value: "{{.Values.locals.boolLike}}"
           - type: RequestRedirect
             requestRedirect:
               statusCode: 301

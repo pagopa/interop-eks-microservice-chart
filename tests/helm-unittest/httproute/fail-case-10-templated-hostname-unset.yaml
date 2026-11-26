@@ -1,4 +1,4 @@
-commons:
+locals:
   appHostname: ""
 
 gateway:
@@ -7,4 +7,4 @@ gateway:
     parentRefs:
       - name: external
     hostnames:
-      - "{{.Values.commons.appHostname}}"
+      - "{{.Values.locals.appHostname}}"
