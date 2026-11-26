@@ -165,3 +165,10 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "headers(: Array must have at most 16 items|.: maxItems: got 17, want 16)"
+
+  - it: counts one default match for a rule without matches
+    values:
+      - fail-case-24-too-many-matches-with-default.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.rules have 129 matches in total; the Gateway API allows at most 128"

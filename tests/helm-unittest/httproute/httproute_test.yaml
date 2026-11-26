@@ -92,6 +92,23 @@ tests:
       - equal:
           path: spec.rules[0].filters[1].requestRedirect.statusCode
           value: 301
+      - notExists:
+          path: spec.rules[0].backendRefs
+
+  - it: leaves backendRefs out of redirect rules only
+    values:
+      - redirect.yaml
+    asserts:
+      - notExists:
+          path: spec.rules[0].backendRefs
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: RequestRedirect
+      - equal:
+          path: spec.rules[1].backendRefs
+          value:
+            - name: test-svc
+              port: 8083
 
   - it: renders every rule with its matches and filters and the microservice backend
     values:

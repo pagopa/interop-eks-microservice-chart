@@ -1,0 +1,19 @@
+# The Gateway API rejects backendRefs together with a RequestRedirect filter
+gateway:
+  httpRoute:
+    rules:
+      - matches:
+          - path:
+              type: Exact
+              value: /old-path
+        filters:
+          - type: RequestRedirect
+            requestRedirect:
+              path:
+                type: ReplaceFullPath
+                replaceFullPath: /new-path
+              statusCode: 301
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /

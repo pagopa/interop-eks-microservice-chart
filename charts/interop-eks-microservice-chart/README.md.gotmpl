@@ -385,7 +385,7 @@ When `create: true`, these fields are required:
 - `filters`: Gateway API [HTTPRouteFilter](https://gateway-api.sigs.k8s.io/reference/spec/#httproutefilter) list, rendered as-is
 - `timeouts`: `request` and `backendRequest`, as Gateway API durations (e.g. `30s`, `2m`)
 
-`backendRefs` cannot be set: every rule sends traffic to the microservice Service.
+`backendRefs` cannot be set: every rule sends traffic to the microservice Service, except rules with a `RequestRedirect` filter, which get no `backendRefs` because the Gateway API doesn't allow both.
 
 The Gateway API limits are checked when rendering: 16 rules, 64 matches per rule and 128 across all rules, 16 filters per rule, 16 headers and 16 query parameters per match.
 

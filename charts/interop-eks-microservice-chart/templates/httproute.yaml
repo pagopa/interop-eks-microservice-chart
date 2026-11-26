@@ -4,10 +4,10 @@
   {{ fail "gateway.httpRoute.create requires service.create and service.containerPort: the route sends traffic to the microservice Service." }}
 {{- end }}
 
-{{- /* Gateway API limit across all rules, which the schema can't express */}}
+{{- /* Gateway API limit across all rules, which the schema can't express; the API server gives a rule without matches one default match */}}
 {{- $matchCount := 0 }}
 {{- range $httpRoute.rules }}
-{{- $matchCount = add $matchCount (len (.matches | default list)) }}
+{{- $matchCount = add $matchCount (max 1 (len (.matches | default list))) }}
 {{- end }}
 {{- if gt $matchCount 128 }}
   {{ fail (printf "gateway.httpRoute.rules have %d matches in total; the Gateway API allows at most 128." $matchCount) }}
@@ -54,23 +54,28 @@ spec:
     {{- end }}
   rules:
     {{- range $rules }}
-    {{- /* Matches and filters are Gateway API objects, rendered as-is; the backend is always the microservice Service */}}
+    {{- /* Matches and filters are Gateway API objects, rendered as-is */}}
+    {{- $rule := dict }}
+    {{- with .matches }}
+    {{- $_ := set $rule "matches" . }}
+    {{- end }}
+    {{- with .filters }}
+    {{- $_ := set $rule "filters" . }}
+    {{- end }}
     {{- /* A rule's timeouts replace the route default as a whole; timeouts: {} turns them off for the rule */}}
-    {{- $timeouts := hasKey . "timeouts" | ternary .timeouts $httpRoute.timeouts }}
-    - backendRefs:
-        - name: {{ $.Values.name }}
-          port: {{ $.Values.service.servicePort | default $.Values.service.containerPort }}
-      {{- with .matches }}
-      matches:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .filters }}
-      filters:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $timeouts }}
-      timeouts:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+    {{- with (hasKey . "timeouts" | ternary .timeouts $httpRoute.timeouts) }}
+    {{- $_ := set $rule "timeouts" . }}
+    {{- end }}
+    {{- /* The backend is the microservice Service, except on redirect rules: the Gateway API rejects backendRefs together with a RequestRedirect filter */}}
+    {{- $redirect := false }}
+    {{- range .filters }}
+    {{- if eq .type "RequestRedirect" }}
+    {{- $redirect = true }}
+    {{- end }}
+    {{- end }}
+    {{- if not $redirect }}
+    {{- $_ := set $rule "backendRefs" (list (dict "name" $.Values.name "port" ($.Values.service.servicePort | default $.Values.service.containerPort))) }}
+    {{- end }}
+    {{- toYaml (list $rule) | nindent 4 }}
     {{- end }}
 {{- end }}

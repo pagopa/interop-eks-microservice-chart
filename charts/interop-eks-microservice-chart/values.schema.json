@@ -515,7 +515,7 @@
               "$ref": "#/definitions/gatewayHttpRouteTimeouts"
             },
             "rules": {
-              "description": "Route rules; backendRefs are always the microservice Service",
+              "description": "Route rules; backendRefs are set by the chart (the microservice Service, none on redirect rules)",
               "type": "array",
               "maxItems": 16,
               "items": {
