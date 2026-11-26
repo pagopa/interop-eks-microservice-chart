@@ -14,7 +14,7 @@
 {{- end }}
 
 {{- $annotations := $httpRoute.annotations | default dict }}
-{{- $rules := $httpRoute.rules | default (list (dict "matches" (list (dict "path" (dict "type" "PathPrefix" "value" "/"))))) }}
+{{- $rules := $httpRoute.rules | default (list dict) }}
 
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -55,10 +55,8 @@ spec:
   rules:
     {{- range $rules }}
     {{- /* Matches and filters are Gateway API objects, rendered as-is */}}
-    {{- $rule := dict }}
-    {{- with .matches }}
-    {{- $_ := set $rule "matches" . }}
-    {{- end }}
+    {{- /* A rule without matches gets the API server default match, written out so ArgoCD doesn't see the stored route as drifted */}}
+    {{- $rule := dict "matches" (.matches | default (list (dict "path" (dict "type" "PathPrefix" "value" "/")))) }}
     {{- with .filters }}
     {{- $_ := set $rule "filters" . }}
     {{- end }}

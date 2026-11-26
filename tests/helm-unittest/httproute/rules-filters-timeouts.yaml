@@ -29,5 +29,6 @@ gateway:
               type: PathPrefix
               value: /
             headers:
-              - name: X-Probe
+              - type: Exact
+                name: X-Probe
                 value: "true"

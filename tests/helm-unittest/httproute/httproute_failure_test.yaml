@@ -207,3 +207,17 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "value(: Does not match pattern .\\^/.|.: .api. does not match pattern .\\^/.)"
+
+  - it: fails schema validation when a header match has no type
+    values:
+      - fail-case-30-header-without-type.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "headers[./]0(: type is required|.: missing property .type.)"
+
+  - it: fails schema validation when a query param match has no type
+    values:
+      - fail-case-31-query-param-without-type.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "queryParams[./]0(: type is required|.: missing property .type.)"

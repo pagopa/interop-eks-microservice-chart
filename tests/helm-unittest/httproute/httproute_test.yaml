@@ -191,6 +191,19 @@ tests:
             type: RegularExpression
             value: ".*/v[0-9]+/.*"
 
+  - it: writes the default match on a rule without matches
+    values:
+      - redirect-without-matches.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].matches
+          value:
+            - path:
+                type: PathPrefix
+                value: /
+      - notExists:
+          path: spec.rules[0].backendRefs
+
   - it: renders no timeouts when none are set
     values:
       - default-rule.yaml

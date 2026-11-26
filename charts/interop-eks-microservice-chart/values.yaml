@@ -100,6 +100,7 @@ gateway:
     timeouts: {}
     # -- (list) Route rules; when empty, a single rule matches every path (PathPrefix "/").
     # Each item may contain matches (list of Gateway API HTTPRouteMatch), filters (list of Gateway API HTTPRouteFilter) and timeouts, rendered as-is: rules don't support templating.
+    # A rule without matches gets the default match (PathPrefix "/") written out. Header and queryParam matches must set type, name and value.
     # Every match must set path (type, and value starting with "/" for Exact and PathPrefix), like ingress rules set path and pathType: the API server would otherwise add a default path and ArgoCD would see the route as drifted.
     # Gateway API limits: 16 rules, 64 matches per rule and 128 across all rules, 16 filters per rule, 16 headers and 16 queryParams per match.
     # backendRefs cannot be set: they are the microservice Service, except on rules with a RequestRedirect filter, which the Gateway API requires without backendRefs.

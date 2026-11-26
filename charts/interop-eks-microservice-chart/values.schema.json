@@ -534,14 +534,64 @@
                       "additionalProperties": false,
                       "properties": {
                         "headers": {
-                          "description": "Gateway API HTTPHeaderMatch list",
+                          "description": "Gateway API HTTPHeaderMatch list; type is required, so the API server has no default to fill in",
                           "type": "array",
-                          "maxItems": 16
+                          "maxItems": 16,
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "type",
+                              "name",
+                              "value"
+                            ],
+                            "additionalProperties": false,
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "Exact",
+                                  "RegularExpression"
+                                ]
+                              },
+                              "name": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            }
+                          }
                         },
                         "queryParams": {
-                          "description": "Gateway API HTTPQueryParamMatch list",
+                          "description": "Gateway API HTTPQueryParamMatch list; type is required, so the API server has no default to fill in",
                           "type": "array",
-                          "maxItems": 16
+                          "maxItems": 16,
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "type",
+                              "name",
+                              "value"
+                            ],
+                            "additionalProperties": false,
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "Exact",
+                                  "RegularExpression"
+                                ]
+                              },
+                              "name": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            }
+                          }
                         },
                         "method": {
                           "description": "HTTP method",
