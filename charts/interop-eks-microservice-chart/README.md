@@ -330,7 +330,9 @@ deployment:
 
 Two mutually exclusive options are supported to provide Flyway SQL migrations:
 
-* `deployment.flywayInitContainer.migrationDomain`: selects a key from root-level `migrations` and renders a dedicated ConfigMap, where `<name>` is the Deployment name (`values.name`). Its name is `<name>-<migrationDomain>` when the domain starts with `flyway`, and `<name>-flyway-<migrationDomain>` otherwise. Services sharing a migration domain must have distinct names within the namespace.
+* `deployment.flywayInitContainer.migrationDomain`: selects a key from root-level `migrations` and renders a dedicated ConfigMap. Its name  is `<name>-<migrationDomain>` when the domain starts with `flyway` and `<name>-flyway-<migrationDomain>` otherwise.
+Note: `<name>` is the Deployment name (`values.name`). 
+Services sharing a migration domain must have distinct names within the namespace.
 
 Upgrading changes the generated ConfigMap name for domains starting with `flyway` (for example, `<name>-flyway-flyway-digest-tracking` becomes `<name>-flyway-digest-tracking`). The Deployment volume and rollout annotations follow the new name; update any external references to the old ConfigMap name.
 * `deployment.flywayInitContainer.migrationsConfigmap`: uses an existing ConfigMap already present in the namespace.
