@@ -1,0 +1,7 @@
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - namespace: envoy-gateway-system
+    hostnames:
+      - test.example.internal

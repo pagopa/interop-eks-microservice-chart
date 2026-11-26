@@ -1,0 +1,59 @@
+{{- $httpRoute := (.Values.gateway | default dict).httpRoute | default dict }}
+{{- if $httpRoute.create }}
+{{- if not (and .Values.service.create .Values.service.containerPort) }}
+  {{ fail "gateway.httpRoute.create requires service.create and service.containerPort: the route sends traffic to the microservice Service." }}
+{{- end }}
+
+{{- $annotations := $httpRoute.annotations | default dict }}
+{{- $rules := $httpRoute.rules | default (list (dict "matches" (list (dict "path" (dict "type" "PathPrefix" "value" "/"))))) }}
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
+  {{- if $annotations }}
+  annotations:
+    {{- toYaml $annotations | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    {{- range $httpRoute.parentRefs }}
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .name "context" $) | quote }}
+      {{- if .namespace }}
+      namespace: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .namespace "context" $) | quote }}
+      {{- end }}
+      {{- if .sectionName }}
+      sectionName: {{ .sectionName | quote }}
+      {{- end }}
+    {{- end }}
+  hostnames:
+    {{- range $httpRoute.hostnames }}
+    - {{ include "interop-eks-microservice-chart.render-template" (dict "value" . "context" $) | quote }}
+    {{- end }}
+  rules:
+    {{- range $rules }}
+    {{- /* Matches and filters are Gateway API objects, rendered as-is after templating; the backend is always the microservice Service */}}
+    {{- $rule := include "interop-eks-microservice-chart.render-template" (dict "value" . "context" $) | fromYaml }}
+    {{- $timeouts := $rule.timeouts | default $httpRoute.timeouts }}
+    - backendRefs:
+        - name: {{ $.Values.name }}
+          port: {{ $.Values.service.servicePort | default $.Values.service.containerPort }}
+      {{- with $rule.matches }}
+      matches:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $rule.filters }}
+      filters:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $timeouts }}
+      timeouts:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- end }}
+{{- end }}

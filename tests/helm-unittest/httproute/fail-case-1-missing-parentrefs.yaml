@@ -1,0 +1,5 @@
+gateway:
+  httpRoute:
+    create: true
+    hostnames:
+      - test.example.internal

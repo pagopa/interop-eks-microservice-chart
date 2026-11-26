@@ -1,0 +1,68 @@
+suite: gateway httproute failures
+templates:
+  - templates/httproute.yaml
+values:
+  - ../common/base.yaml
+
+tests:
+  - it: fails schema validation when parentRefs is missing
+    values:
+      - fail-case-1-missing-parentrefs.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails schema validation when parentRefs is empty
+    values:
+      - fail-case-2-empty-parentrefs.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails schema validation when a parentRef has no name
+    values:
+      - fail-case-3-parentref-without-name.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails schema validation when hostnames is missing
+    values:
+      - fail-case-4-missing-hostnames.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails schema validation when hostnames is empty
+    values:
+      - fail-case-5-empty-hostnames.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails when the microservice Service is disabled
+    values:
+      - fail-case-6-service-disabled.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.create requires service.create and service.containerPort"
+
+  - it: fails schema validation when a rule sets backendRefs
+    values:
+      - fail-case-7-rule-with-backendrefs.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails schema validation when a filter has no type
+    values:
+      - fail-case-8-filter-without-type.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails schema validation when a timeout is not a Gateway API duration
+    values:
+      - fail-case-9-invalid-timeout.yaml
+    asserts:
+      - failedTemplate: {}
+
+  - it: fails when a templated hostname renders empty
+    values:
+      - fail-case-10-templated-hostname-unset.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "must be set and non-empty"

@@ -1,0 +1,10 @@
+commons:
+  appHostname: ""
+
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames:
+      - "{{.Values.commons.appHostname}}"

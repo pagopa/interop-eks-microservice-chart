@@ -74,6 +74,48 @@ ingress:
   #       pathType: Exact
   rules: ~
 
+gateway:
+  httpRoute:
+    # -- (bool) Enable Gateway API HTTPRoute generation; requires service.create and service.containerPort, the route sends traffic to the microservice Service.
+    # Independent of ingress.create: both can be enabled at once.
+    create: false
+    # -- (object) Annotations to apply to the HTTPRoute resource
+    annotations: {}
+    # -- (list) Gateways the route attaches to; required when gateway.httpRoute.create is true, at least one item.
+    # Each item must contain: name (string); namespace (string) and sectionName (string, the Gateway listener) are optional.
+    # name and namespace support templating.
+    # Example:
+    #   parentRefs:
+    #     - name: external
+    #       namespace: envoy-gateway-system
+    parentRefs: []
+    # -- (list) Hostnames the route matches; required when gateway.httpRoute.create is true, at least one item. Support templating.
+    hostnames: []
+    # -- (object) Default Gateway API timeouts (request, backendRequest) for every rule, overridden by rules[].timeouts; when unset, the Gateway implementation's default applies.
+    # Example:
+    #   timeouts:
+    #     request: 30s
+    #     backendRequest: 30s
+    timeouts: {}
+    # -- (list) Route rules; when empty, a single rule matches every path (PathPrefix "/").
+    # Each item may contain matches (list of Gateway API HTTPRouteMatch), filters (list of Gateway API HTTPRouteFilter) and timeouts, rendered as-is and supporting templating.
+    # backendRefs are always the microservice Service and cannot be set.
+    # Example:
+    #   rules:
+    #     - matches:
+    #         - path:
+    #             type: PathPrefix
+    #             value: /api
+    #       filters:
+    #         - type: URLRewrite
+    #           urlRewrite:
+    #             path:
+    #               type: ReplacePrefixMatch
+    #               replacePrefixMatch: /
+    #       timeouts:
+    #         request: 120s
+    rules: []
+
 argocd:
   appMonitoring:
     # -- (bool) Enable the management of monitoring resources using a Job with ArgoCD PostSync hook

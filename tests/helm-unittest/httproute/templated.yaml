@@ -1,0 +1,24 @@
+commons:
+  appHostname: app.example.internal
+  gatewayName: internal
+  gatewayNamespace: gateways
+
+gateway:
+  httpRoute:
+    parentRefs:
+      - name: "{{.Values.commons.gatewayName}}"
+        namespace: "{{.Values.commons.gatewayNamespace}}"
+        sectionName: http
+    hostnames:
+      - "{{.Values.commons.appHostname}}"
+      - static.example.internal
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /old
+        filters:
+          - type: RequestRedirect
+            requestRedirect:
+              hostname: "{{.Values.commons.appHostname}}"
+              statusCode: 301

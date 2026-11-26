@@ -1,0 +1,25 @@
+suite: gateway httproute defaults and ingress
+templates:
+  - templates/httproute.yaml
+  - templates/ingress-generic.yaml
+values:
+  - ../common/base.yaml
+
+tests:
+  - it: does not render the HTTPRoute with the chart defaults
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/httproute.yaml
+
+  - it: renders the HTTPRoute alongside an Ingress
+    values:
+      - httproute-base.yaml
+      - with-ingress.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/httproute.yaml
+      - hasDocuments:
+          count: 1
+        template: templates/ingress-generic.yaml

@@ -1,0 +1,141 @@
+suite: gateway httproute
+templates:
+  - templates/httproute.yaml
+values:
+  - ../common/base.yaml
+  - httproute-base.yaml
+
+tests:
+  - it: does not render the HTTPRoute when disabled
+    values:
+      - httproute-disabled.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders a single rule matching every path when no rules are set
+    values:
+      - default-rule.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: HTTPRoute
+      - isAPIVersion:
+          of: gateway.networking.k8s.io/v1
+      - equal:
+          path: metadata.name
+          value: test-svc
+      - equal:
+          path: metadata.namespace
+          value: test-namespace
+      - equal:
+          path: metadata.annotations["example.com/owner"]
+          value: test
+      - equal:
+          path: spec.parentRefs
+          value:
+            - group: gateway.networking.k8s.io
+              kind: Gateway
+              name: external
+              namespace: envoy-gateway-system
+      - equal:
+          path: spec.hostnames
+          value:
+            - test.example.internal
+      - equal:
+          path: spec.rules
+          value:
+            - backendRefs:
+                - name: test-svc
+                  port: 8083
+              matches:
+                - path:
+                    type: PathPrefix
+                    value: /
+
+  - it: renders templated hostnames, Gateway name and namespace, and filter values
+    values:
+      - templated.yaml
+    asserts:
+      - equal:
+          path: spec.parentRefs[0]
+          value:
+            group: gateway.networking.k8s.io
+            kind: Gateway
+            name: internal
+            namespace: gateways
+            sectionName: http
+      - equal:
+          path: spec.hostnames
+          value:
+            - app.example.internal
+            - static.example.internal
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect
+          value:
+            hostname: app.example.internal
+            statusCode: 301
+
+  - it: renders every rule with its matches and filters and the microservice backend
+    values:
+      - rules-filters-timeouts.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.rules
+          count: 2
+      - equal:
+          path: spec.rules[0].matches[0].path
+          value:
+            type: PathPrefix
+            value: /api
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: URLRewrite
+      - equal:
+          path: spec.rules[0].filters[1].requestHeaderModifier.set[0].name
+          value: X-Forwarded-Prefix
+      - equal:
+          path: spec.rules[1].matches[1].headers[0].name
+          value: X-Probe
+      - notExists:
+          path: spec.rules[1].filters
+      - equal:
+          path: spec.rules[0].backendRefs
+          value:
+            - name: test-svc
+              port: 8083
+      - equal:
+          path: spec.rules[1].backendRefs
+          value:
+            - name: test-svc
+              port: 8083
+
+  - it: applies the default timeouts to rules without their own and lets a rule override them
+    values:
+      - rules-filters-timeouts.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].timeouts
+          value:
+            request: 2m
+      - equal:
+          path: spec.rules[1].timeouts
+          value:
+            request: 30s
+            backendRequest: 10s
+
+  - it: renders no timeouts when none are set
+    values:
+      - default-rule.yaml
+    asserts:
+      - notExists:
+          path: spec.rules[0].timeouts
+
+  - it: sends traffic to service.servicePort when set
+    values:
+      - service-port.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 80

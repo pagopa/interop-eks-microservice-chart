@@ -1,0 +1,8 @@
+ingress:
+  create: true
+  type: generic
+  ingressClassName: nginx
+  rules:
+    - host: test.example.internal
+      path: /
+      pathType: Prefix

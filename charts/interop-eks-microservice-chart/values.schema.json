@@ -421,6 +421,179 @@
         }
       }
     },
+    "gateway": {
+      "description": "Gateway API resources",
+      "type": "object",
+      "properties": {
+        "httpRoute": {
+          "description": "Gateway API HTTPRoute properties",
+          "type": "object",
+          "allOf": [
+            {
+              "comment": "When create:true, parentRefs and hostnames are required and must be non-empty.",
+              "if": {
+                "properties": {
+                  "create": {
+                    "const": true
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "parentRefs",
+                  "hostnames"
+                ],
+                "properties": {
+                  "parentRefs": {
+                    "minItems": 1
+                  },
+                  "hostnames": {
+                    "minItems": 1
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "create": {
+              "description": "Enable HTTPRoute creation",
+              "type": "boolean",
+              "default": false
+            },
+            "annotations": {
+              "description": "Annotations to apply to the HTTPRoute resource",
+              "type": "object",
+              "default": {},
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "parentRefs": {
+              "description": "Gateways the route attaches to",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "description": "Gateway name",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "namespace": {
+                    "description": "Gateway namespace; defaults to the route namespace",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sectionName": {
+                    "description": "Gateway listener name",
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            "hostnames": {
+              "description": "Hostnames the route matches",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "timeouts": {
+              "description": "Gateway API HTTPRoute rule timeouts",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "request": {
+                  "description": "Timeout for the whole request, from the client to the response",
+                  "type": "string",
+                  "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
+                },
+                "backendRequest": {
+                  "description": "Timeout for each request to the backend; must not exceed request",
+                  "type": "string",
+                  "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
+                }
+              }
+            },
+            "rules": {
+              "description": "Route rules; backendRefs are always the microservice Service",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "matches": {
+                    "description": "Gateway API HTTPRouteMatch list",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "PathPrefix",
+                                "Exact",
+                                "RegularExpression"
+                              ]
+                            },
+                            "value": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "filters": {
+                    "description": "Gateway API HTTPRouteFilter list",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      }
+                    }
+                  },
+                  "timeouts": {
+                    "description": "Gateway API HTTPRoute rule timeouts",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "request": {
+                        "description": "Timeout for the whole request, from the client to the response",
+                        "type": "string",
+                        "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
+                      },
+                      "backendRequest": {
+                        "description": "Timeout for each request to the backend; must not exceed request",
+                        "type": "string",
+                        "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "name": {
       "description": "Service name",
       "type": "string"

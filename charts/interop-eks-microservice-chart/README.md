@@ -87,6 +87,12 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | externalSecrets.flywayInitContainer.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
 | externalSecrets.flywayInitContainer.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
 | externalSecrets.flywayInitContainer.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
+| gateway.httpRoute.annotations | object | `{}` | Annotations to apply to the HTTPRoute resource |
+| gateway.httpRoute.create | bool | `false` | Enable Gateway API HTTPRoute generation; requires service.create and service.containerPort, the route sends traffic to the microservice Service. Independent of ingress.create: both can be enabled at once. |
+| gateway.httpRoute.hostnames | list | `[]` | Hostnames the route matches; required when gateway.httpRoute.create is true, at least one item. Support templating. |
+| gateway.httpRoute.parentRefs | list | `[]` | Gateways the route attaches to; required when gateway.httpRoute.create is true, at least one item. Each item must contain: name (string); namespace (string) and sectionName (string, the Gateway listener) are optional. name and namespace support templating. Example:   parentRefs:     - name: external       namespace: envoy-gateway-system |
+| gateway.httpRoute.rules | list | `[]` | Route rules; when empty, a single rule matches every path (PathPrefix "/"). Each item may contain matches (list of Gateway API HTTPRouteMatch), filters (list of Gateway API HTTPRouteFilter) and timeouts, rendered as-is and supporting templating. backendRefs are always the microservice Service and cannot be set. Example:   rules:     - matches:         - path:             type: PathPrefix             value: /api       filters:         - type: URLRewrite           urlRewrite:             path:               type: ReplacePrefixMatch               replacePrefixMatch: /       timeouts:         request: 120s |
+| gateway.httpRoute.timeouts | object | `{}` | Default Gateway API timeouts (request, backendRequest) for every rule, overridden by rules[].timeouts; when unset, the Gateway implementation's default applies. Example:   timeouts:     request: 30s     backendRequest: 30s |
 | ingress.annotations | list | `{}` | list of annotations to apply to the Ingress resource |
 | ingress.applicationPath | string | `nil` | Path prefix for the ALB ingress rule; used when ingress.type is "alb" |
 | ingress.create | bool | `false` | ingress.create and service.targetGroupArn must be mutually exclusive. |
@@ -474,6 +480,84 @@ ingress:
 ```
 
 If `ingress.type` is `alb`, `ingress.rules` can be `null` (for example `rules: ~`) or omitted.
+
+### 3.3 Gateway API HTTPRoute (`gateway.httpRoute`)
+
+When `gateway.httpRoute.create` is `true`, the chart renders `templates/httproute.yaml`: a Gateway API `HTTPRoute` (`gateway.networking.k8s.io/v1`) sending traffic to the microservice Service, on `service.servicePort` or, when unset, `service.containerPort`. It requires `service.create` and `service.containerPort`.
+
+It's independent of `ingress.create`: a microservice can have both, for example while moving from an Ingress to a Gateway.
+
+When `create: true`, these fields are required:
+- `parentRefs` (at least one entry): the Gateways the route attaches to. Each entry must define `name`; `namespace` (defaults to the route namespace) and `sectionName` (a Gateway listener) are optional.
+- `hostnames` (at least one entry). A route without hostnames would match every hostname of the Gateway listener, taking traffic meant for other services.
+
+`rules` is optional: when empty, the chart renders a single rule matching every path (`PathPrefix` `/`). Each rule can define:
+- `matches`: Gateway API [HTTPRouteMatch](https://gateway-api.sigs.k8s.io/reference/spec/#httproutematch) list, rendered as-is
+- `filters`: Gateway API [HTTPRouteFilter](https://gateway-api.sigs.k8s.io/reference/spec/#httproutefilter) list, rendered as-is
+- `timeouts`: `request` and `backendRequest`, as Gateway API durations (e.g. `30s`, `2m`)
+
+`backendRefs` cannot be set: every rule sends traffic to the microservice Service.
+
+`timeouts` at the `httpRoute` level is the default for every rule without its own `timeouts`. When neither is set, the Gateway implementation's default applies.
+
+`parentRefs` name and namespace, `hostnames` and everything in `rules` support templating.
+
+Minimal example:
+
+```
+# /microservices/agreement-management/qa/values.yaml
+
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: "external"
+        namespace: "envoy-gateway-system"
+    hostnames:
+      - "{{.Values.commons.appHostname}}"
+```
+
+Example with a prefix rewrite, a redirect and timeouts:
+
+```
+# /microservices/agreement-management/qa/values.yaml
+
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: "external"
+        namespace: "envoy-gateway-system"
+        sectionName: "http"
+    hostnames:
+      - "api.dev.interop.pagopa.it"
+    timeouts:
+      request: 30s
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /api
+        filters:
+          - type: URLRewrite
+            urlRewrite:
+              path:
+                type: ReplacePrefixMatch
+                replacePrefixMatch: /
+        timeouts:
+          request: 2m
+      - matches:
+          - path:
+              type: Exact
+              value: /old-path
+        filters:
+          - type: RequestRedirect
+            requestRedirect:
+              path:
+                type: ReplaceFullPath
+                replaceFullPath: /new-path
+              statusCode: 301
+```
 ---
 
 ## 4. Service
