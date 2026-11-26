@@ -18,6 +18,6 @@ metadata:
 data:
   {{- range $key, $val := $selectedMigrations }}
   {{ $key }}: |-
-{{ $val | nindent 4 }}
+{{ $val | indent 4 }}
   {{- end }}
 {{- end }}
