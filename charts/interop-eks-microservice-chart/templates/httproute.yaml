@@ -28,7 +28,7 @@ spec:
       namespace: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .namespace "context" $) | quote }}
       {{- end }}
       {{- if .sectionName }}
-      sectionName: {{ .sectionName | quote }}
+      sectionName: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .sectionName "context" $) | quote }}
       {{- end }}
     {{- end }}
   hostnames:
@@ -39,7 +39,8 @@ spec:
     {{- range $rules }}
     {{- /* Matches and filters are Gateway API objects, rendered as-is after templating; the backend is always the microservice Service */}}
     {{- $rule := (include "interop-eks-microservice-chart.render-template-tree" (dict "value" . "context" $) | fromJson).value }}
-    {{- $timeouts := $rule.timeouts | default $httpRoute.timeouts }}
+    {{- /* Each timeout set on the rule overrides the route default for that field only */}}
+    {{- $timeouts := merge (deepCopy ($rule.timeouts | default dict)) ($httpRoute.timeouts | default dict) }}
     - backendRefs:
         - name: {{ $.Values.name }}
           port: {{ $.Values.service.servicePort | default $.Values.service.containerPort }}

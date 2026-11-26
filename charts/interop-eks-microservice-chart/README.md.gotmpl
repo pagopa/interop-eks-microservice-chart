@@ -383,13 +383,13 @@ When `create: true`, these fields are required:
 `rules` is optional: when empty, the chart renders a single rule matching every path (`PathPrefix` `/`). Each rule can define:
 - `matches`: Gateway API [HTTPRouteMatch](https://gateway-api.sigs.k8s.io/reference/spec/#httproutematch) list, rendered as-is
 - `filters`: Gateway API [HTTPRouteFilter](https://gateway-api.sigs.k8s.io/reference/spec/#httproutefilter) list, rendered as-is
-- `timeouts`: `request` and `backendRequest`, as Gateway API durations (e.g. `30s`, `2m`)
+- `timeouts`: `request` and `backendRequest`, as Gateway API durations (e.g. `30s`, `2m`); `backendRequest` must not exceed `request`
 
 `backendRefs` cannot be set: every rule sends traffic to the microservice Service.
 
-`timeouts` at the `httpRoute` level is the default for every rule without its own `timeouts`. When neither is set, the Gateway implementation's default applies.
+`timeouts` at the `httpRoute` level is the default for every rule: each field a rule sets in its own `timeouts` overrides the default for that rule, the others are kept. When neither is set, the Gateway implementation's default applies.
 
-`parentRefs` name and namespace, `hostnames` and everything in `rules` support templating.
+`parentRefs` (`name`, `namespace`, `sectionName`), `hostnames` and the string values in `rules` support templating. A templated value always renders as a string, so numbers (ports, status codes), path match types and timeouts must be literal values.
 
 Minimal example:
 

@@ -1,0 +1,4 @@
+# A deployment repo removing the key: Helm drops null values when merging
+gateway:
+  httpRoute:
+    create: null

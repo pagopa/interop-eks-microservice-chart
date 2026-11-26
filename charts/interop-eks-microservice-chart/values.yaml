@@ -83,7 +83,7 @@ gateway:
     annotations: {}
     # -- (list) Gateways the route attaches to; required when gateway.httpRoute.create is true, at least one item.
     # Each item must contain: name (string); namespace (string) and sectionName (string, the Gateway listener) are optional.
-    # name and namespace support templating.
+    # name, namespace and sectionName support templating.
     # Example:
     #   parentRefs:
     #     - name: external
@@ -91,14 +91,16 @@ gateway:
     parentRefs: []
     # -- (list) Hostnames the route matches; required when gateway.httpRoute.create is true, at least one item. Support templating.
     hostnames: []
-    # -- (object) Default Gateway API timeouts (request, backendRequest) for every rule, overridden by rules[].timeouts; when unset, the Gateway implementation's default applies.
+    # -- (object) Default Gateway API timeouts (request, backendRequest) for every rule; each field set in rules[].timeouts overrides it for that rule. When unset, the Gateway implementation's default applies.
+    # Durations must be literal (e.g. 30s, 2m), not templated; backendRequest must not exceed request.
     # Example:
     #   timeouts:
     #     request: 30s
     #     backendRequest: 30s
     timeouts: {}
     # -- (list) Route rules; when empty, a single rule matches every path (PathPrefix "/").
-    # Each item may contain matches (list of Gateway API HTTPRouteMatch), filters (list of Gateway API HTTPRouteFilter) and timeouts, rendered as-is and supporting templating.
+    # Each item may contain matches (list of Gateway API HTTPRouteMatch), filters (list of Gateway API HTTPRouteFilter) and timeouts, rendered as-is.
+    # Templating works in string values and always renders a string: numbers (ports, status codes), path match types and timeouts must be literal.
     # backendRefs are always the microservice Service and cannot be set.
     # Example:
     #   rules:

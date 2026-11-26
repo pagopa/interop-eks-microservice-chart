@@ -90,9 +90,9 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | gateway.httpRoute.annotations | object | `{}` | Annotations to apply to the HTTPRoute resource |
 | gateway.httpRoute.create | bool | `false` | Enable Gateway API HTTPRoute generation; requires service.create and service.containerPort, the route sends traffic to the microservice Service. Independent of ingress.create: both can be enabled at once. |
 | gateway.httpRoute.hostnames | list | `[]` | Hostnames the route matches; required when gateway.httpRoute.create is true, at least one item. Support templating. |
-| gateway.httpRoute.parentRefs | list | `[]` | Gateways the route attaches to; required when gateway.httpRoute.create is true, at least one item. Each item must contain: name (string); namespace (string) and sectionName (string, the Gateway listener) are optional. name and namespace support templating. Example:   parentRefs:     - name: external       namespace: envoy-gateway-system |
-| gateway.httpRoute.rules | list | `[]` | Route rules; when empty, a single rule matches every path (PathPrefix "/"). Each item may contain matches (list of Gateway API HTTPRouteMatch), filters (list of Gateway API HTTPRouteFilter) and timeouts, rendered as-is and supporting templating. backendRefs are always the microservice Service and cannot be set. Example:   rules:     - matches:         - path:             type: PathPrefix             value: /api       filters:         - type: URLRewrite           urlRewrite:             path:               type: ReplacePrefixMatch               replacePrefixMatch: /       timeouts:         request: 120s |
-| gateway.httpRoute.timeouts | object | `{}` | Default Gateway API timeouts (request, backendRequest) for every rule, overridden by rules[].timeouts; when unset, the Gateway implementation's default applies. Example:   timeouts:     request: 30s     backendRequest: 30s |
+| gateway.httpRoute.parentRefs | list | `[]` | Gateways the route attaches to; required when gateway.httpRoute.create is true, at least one item. Each item must contain: name (string); namespace (string) and sectionName (string, the Gateway listener) are optional. name, namespace and sectionName support templating. Example:   parentRefs:     - name: external       namespace: envoy-gateway-system |
+| gateway.httpRoute.rules | list | `[]` | Route rules; when empty, a single rule matches every path (PathPrefix "/"). Each item may contain matches (list of Gateway API HTTPRouteMatch), filters (list of Gateway API HTTPRouteFilter) and timeouts, rendered as-is. Templating works in string values and always renders a string: numbers (ports, status codes), path match types and timeouts must be literal. backendRefs are always the microservice Service and cannot be set. Example:   rules:     - matches:         - path:             type: PathPrefix             value: /api       filters:         - type: URLRewrite           urlRewrite:             path:               type: ReplacePrefixMatch               replacePrefixMatch: /       timeouts:         request: 120s |
+| gateway.httpRoute.timeouts | object | `{}` | Default Gateway API timeouts (request, backendRequest) for every rule; each field set in rules[].timeouts overrides it for that rule. When unset, the Gateway implementation's default applies. Durations must be literal (e.g. 30s, 2m), not templated; backendRequest must not exceed request. Example:   timeouts:     request: 30s     backendRequest: 30s |
 | ingress.annotations | list | `{}` | list of annotations to apply to the Ingress resource |
 | ingress.applicationPath | string | `nil` | Path prefix for the ALB ingress rule; used when ingress.type is "alb" |
 | ingress.create | bool | `false` | ingress.create and service.targetGroupArn must be mutually exclusive. |
@@ -494,13 +494,13 @@ When `create: true`, these fields are required:
 `rules` is optional: when empty, the chart renders a single rule matching every path (`PathPrefix` `/`). Each rule can define:
 - `matches`: Gateway API [HTTPRouteMatch](https://gateway-api.sigs.k8s.io/reference/spec/#httproutematch) list, rendered as-is
 - `filters`: Gateway API [HTTPRouteFilter](https://gateway-api.sigs.k8s.io/reference/spec/#httproutefilter) list, rendered as-is
-- `timeouts`: `request` and `backendRequest`, as Gateway API durations (e.g. `30s`, `2m`)
+- `timeouts`: `request` and `backendRequest`, as Gateway API durations (e.g. `30s`, `2m`); `backendRequest` must not exceed `request`
 
 `backendRefs` cannot be set: every rule sends traffic to the microservice Service.
 
-`timeouts` at the `httpRoute` level is the default for every rule without its own `timeouts`. When neither is set, the Gateway implementation's default applies.
+`timeouts` at the `httpRoute` level is the default for every rule: each field a rule sets in its own `timeouts` overrides the default for that rule, the others are kept. When neither is set, the Gateway implementation's default applies.
 
-`parentRefs` name and namespace, `hostnames` and everything in `rules` support templating.
+`parentRefs` (`name`, `namespace`, `sectionName`), `hostnames` and the string values in `rules` support templating. A templated value always renders as a string, so numbers (ports, status codes), path match types and timeouts must be literal values.
 
 Minimal example:
 

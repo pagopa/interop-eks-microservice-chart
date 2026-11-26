@@ -430,8 +430,11 @@
           "type": "object",
           "allOf": [
             {
-              "comment": "When create:true, parentRefs and hostnames are required and must be non-empty.",
+              "comment": "When create:true, parentRefs and hostnames are required and must be non-empty; a missing or null create counts as false.",
               "if": {
+                "required": [
+                  "create"
+                ],
                 "properties": {
                   "create": {
                     "const": true

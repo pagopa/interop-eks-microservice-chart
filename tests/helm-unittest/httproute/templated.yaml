@@ -1,9 +1,9 @@
 gateway:
   httpRoute:
     parentRefs:
-      - name: internal
+      - name: "gateway-{{ .Values.namespace }}"
         namespace: "{{ .Values.namespace }}"
-        sectionName: http
+        sectionName: "{{ .Values.name }}-http"
     hostnames:
       - "{{ .Values.name }}.example.internal"
       - static.example.internal

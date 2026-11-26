@@ -12,6 +12,14 @@ tests:
           count: 0
         template: templates/httproute.yaml
 
+  - it: treats a missing or null create as false, without requiring parentRefs and hostnames
+    values:
+      - create-null.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/httproute.yaml
+
   - it: renders the HTTPRoute alongside an Ingress
     values:
       - httproute-base.yaml

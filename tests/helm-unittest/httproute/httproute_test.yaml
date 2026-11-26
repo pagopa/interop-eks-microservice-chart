@@ -54,7 +54,7 @@ tests:
                     type: PathPrefix
                     value: /
 
-  - it: renders templated hostnames, Gateway namespace and filter values
+  - it: renders templated hostnames, Gateway references and filter values
     values:
       - templated.yaml
     asserts:
@@ -63,9 +63,9 @@ tests:
           value:
             group: gateway.networking.k8s.io
             kind: Gateway
-            name: internal
+            name: gateway-test-namespace
             namespace: test-namespace
-            sectionName: http
+            sectionName: test-svc-http
       - equal:
           path: spec.hostnames
           value:
@@ -130,7 +130,7 @@ tests:
             - name: test-svc
               port: 8083
 
-  - it: applies the default timeouts to rules without their own and lets a rule override them
+  - it: applies the default timeouts to every rule and lets a rule override single fields
     values:
       - rules-filters-timeouts.yaml
     asserts:
@@ -138,6 +138,7 @@ tests:
           path: spec.rules[0].timeouts
           value:
             request: 2m
+            backendRequest: 10s
       - equal:
           path: spec.rules[1].timeouts
           value:
