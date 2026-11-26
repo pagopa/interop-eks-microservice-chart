@@ -7,13 +7,3 @@ gateway:
     hostnames:
       - "{{ .Values.name }}.example.internal"
       - static.example.internal
-    rules:
-      - matches:
-          - path:
-              type: PathPrefix
-              value: /old
-        filters:
-          - type: RequestRedirect
-            requestRedirect:
-              hostname: "{{ .Values.name }}.example.internal"
-              statusCode: 301

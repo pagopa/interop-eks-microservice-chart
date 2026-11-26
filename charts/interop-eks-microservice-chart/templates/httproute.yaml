@@ -21,14 +21,17 @@ metadata:
 spec:
   parentRefs:
     {{- range $httpRoute.parentRefs }}
+    {{- /* Optional fields are rendered first, so a template rendering empty leaves the field out */}}
+    {{- $namespace := include "interop-eks-microservice-chart.render-template" (dict "value" (.namespace | default "") "context" $) }}
+    {{- $sectionName := include "interop-eks-microservice-chart.render-template" (dict "value" (.sectionName | default "") "context" $) }}
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .name "context" $) | quote }}
-      {{- if .namespace }}
-      namespace: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .namespace "context" $) | quote }}
+      {{- if $namespace }}
+      namespace: {{ $namespace | quote }}
       {{- end }}
-      {{- if .sectionName }}
-      sectionName: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .sectionName "context" $) | quote }}
+      {{- if $sectionName }}
+      sectionName: {{ $sectionName | quote }}
       {{- end }}
     {{- end }}
   hostnames:
@@ -37,9 +40,9 @@ spec:
     {{- end }}
   rules:
     {{- range $rules }}
-    {{- /* Matches and filters are Gateway API objects, rendered as-is after templating; the backend is always the microservice Service */}}
-    {{- $rule := (include "interop-eks-microservice-chart.render-template-tree" (dict "value" . "context" $) | fromJson).value }}
-    {{- /* Each timeout set on the rule overrides the route default for that field only */}}
+    {{- /* Matches and filters are Gateway API objects, rendered as-is; the backend is always the microservice Service */}}
+    {{- $rule := . }}
+    {{- /* Each timeout set on the rule overrides the route default for that field only; deepCopy keeps merge from changing .Values */}}
     {{- $timeouts := merge (deepCopy ($rule.timeouts | default dict)) ($httpRoute.timeouts | default dict) }}
     - backendRefs:
         - name: {{ $.Values.name }}

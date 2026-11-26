@@ -54,7 +54,7 @@ tests:
                     type: PathPrefix
                     value: /
 
-  - it: renders templated hostnames, Gateway references and filter values
+  - it: renders templated hostnames and Gateway references
     values:
       - templated.yaml
     asserts:
@@ -71,25 +71,33 @@ tests:
           value:
             - test-svc.example.internal
             - static.example.internal
-      - equal:
-          path: spec.rules[0].filters[0].requestRedirect
-          value:
-            hostname: test-svc.example.internal
-            statusCode: 301
 
-  - it: keeps rendered values with YAML syntax as values
+  - it: leaves out optional parentRef fields that render empty
     values:
-      - templated-special-characters.yaml
+      - parentref-optional-empty.yaml
+    asserts:
+      - equal:
+          path: spec.parentRefs
+          value:
+            - group: gateway.networking.k8s.io
+              kind: Gateway
+              name: external
+
+  - it: renders rules as written, without templating
+    values:
+      - rules-as-is.yaml
     asserts:
       - equal:
           path: spec.rules[0].filters[0].requestHeaderModifier.set
           value:
+            - name: X-Template
+              value: "{{ .Values.name }}"
             - name: X-Quote
               value: "it's"
             - name: X-Colon
-              value: "prefix-a: b"
+              value: "a: b"
             - name: X-Comment
-              value: "prefix-x # y"
+              value: "x # y"
             - name: X-Bool
               value: "true"
       - equal:

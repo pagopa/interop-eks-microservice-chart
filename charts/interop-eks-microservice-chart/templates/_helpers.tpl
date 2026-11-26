@@ -118,31 +118,6 @@ Usage:
 {{- end -}}
 
 {{/*
-Renders the templates in every string of a map or list, keeping its structure: a rendered value can't change the YAML around it.
-Returns JSON wrapped as {"value": ...}, since include returns a string.
-Usage:
-{{ (include "interop-eks-microservice-chart.render-template-tree" ( dict "value" .Values.path.to.the.Value "context" $ ) | fromJson).value }}
-*/}}
-{{- define "interop-eks-microservice-chart.render-template-tree" -}}
-{{- $context := .context }}
-{{- $rendered := .value }}
-{{- if kindIs "map" .value }}
-  {{- $rendered = dict }}
-  {{- range $key, $val := .value }}
-    {{- $_ := set $rendered $key (include "interop-eks-microservice-chart.render-template-tree" (dict "value" $val "context" $context) | fromJson).value }}
-  {{- end }}
-{{- else if kindIs "slice" .value }}
-  {{- $rendered = list }}
-  {{- range .value }}
-    {{- $rendered = append $rendered (include "interop-eks-microservice-chart.render-template-tree" (dict "value" . "context" $context) | fromJson).value }}
-  {{- end }}
-{{- else if kindIs "string" .value }}
-  {{- $rendered = include "interop-eks-microservice-chart.render-template" (dict "value" .value "context" $context) }}
-{{- end }}
-{{- dict "value" $rendered | toJson -}}
-{{- end -}}
-
-{{/*
 Truthy when templates/configmap.yaml renders a ConfigMap.
 Source of truth for the backend ConfigMap render condition.
 */}}

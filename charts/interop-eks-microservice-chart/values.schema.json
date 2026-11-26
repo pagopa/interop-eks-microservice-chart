@@ -442,10 +442,6 @@
                 }
               },
               "then": {
-                "required": [
-                  "parentRefs",
-                  "hostnames"
-                ],
                 "properties": {
                   "parentRefs": {
                     "minItems": 1

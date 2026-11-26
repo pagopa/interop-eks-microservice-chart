@@ -9,31 +9,36 @@ tests:
     values:
       - fail-case-1-missing-parentrefs.yaml
     asserts:
-      - failedTemplate: {}
+      - failedTemplate:
+          errorPattern: "parentRefs(: Array must have at least 1 items|.: minItems: got 0, want 1)"
 
   - it: fails schema validation when parentRefs is empty
     values:
       - fail-case-2-empty-parentrefs.yaml
     asserts:
-      - failedTemplate: {}
+      - failedTemplate:
+          errorPattern: "parentRefs(: Array must have at least 1 items|.: minItems: got 0, want 1)"
 
   - it: fails schema validation when a parentRef has no name
     values:
       - fail-case-3-parentref-without-name.yaml
     asserts:
-      - failedTemplate: {}
+      - failedTemplate:
+          errorPattern: "parentRefs[./]0(: name is required|.: missing property .name.)"
 
   - it: fails schema validation when hostnames is missing
     values:
       - fail-case-4-missing-hostnames.yaml
     asserts:
-      - failedTemplate: {}
+      - failedTemplate:
+          errorPattern: "hostnames(: Array must have at least 1 items|.: minItems: got 0, want 1)"
 
   - it: fails schema validation when hostnames is empty
     values:
       - fail-case-5-empty-hostnames.yaml
     asserts:
-      - failedTemplate: {}
+      - failedTemplate:
+          errorPattern: "hostnames(: Array must have at least 1 items|.: minItems: got 0, want 1)"
 
   - it: fails when the microservice Service is disabled
     values:
@@ -46,19 +51,22 @@ tests:
     values:
       - fail-case-7-rule-with-backendrefs.yaml
     asserts:
-      - failedTemplate: {}
+      - failedTemplate:
+          errorPattern: "rules[./]0(: Additional property backendRefs is not allowed|.: additional properties .backendRefs. not allowed)"
 
   - it: fails schema validation when a filter has no type
     values:
       - fail-case-8-filter-without-type.yaml
     asserts:
-      - failedTemplate: {}
+      - failedTemplate:
+          errorPattern: "filters[./]0(: type is required|.: missing property .type.)"
 
   - it: fails schema validation when a timeout is not a Gateway API duration
     values:
       - fail-case-9-invalid-timeout.yaml
     asserts:
-      - failedTemplate: {}
+      - failedTemplate:
+          errorPattern: "timeouts[./]request.*(D|d)oes not match pattern"
 
   - it: fails when a templated hostname renders empty
     values:

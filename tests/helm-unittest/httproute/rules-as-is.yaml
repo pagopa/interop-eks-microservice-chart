@@ -1,0 +1,21 @@
+# Rules are rendered as written: no templating, values with YAML syntax stay values
+gateway:
+  httpRoute:
+    rules:
+      - filters:
+          - type: RequestHeaderModifier
+            requestHeaderModifier:
+              set:
+                - name: X-Template
+                  value: "{{ .Values.name }}"
+                - name: X-Quote
+                  value: "it's"
+                - name: X-Colon
+                  value: "a: b"
+                - name: X-Comment
+                  value: "x # y"
+                - name: X-Bool
+                  value: "true"
+          - type: RequestRedirect
+            requestRedirect:
+              statusCode: 301
