@@ -96,7 +96,7 @@ tests:
       - failedTemplate:
           errorPattern: "(Additional property rule is not allowed|additional properties .rule. not allowed)"
 
-  - it: fails when a hostname written with spaces renders empty
+  - it: fails when a hostname template with spaces inside the braces renders empty
     values:
       - fail-case-14-hostname-renders-empty.yaml
     asserts:
