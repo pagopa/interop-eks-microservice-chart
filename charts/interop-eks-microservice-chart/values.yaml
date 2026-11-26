@@ -83,16 +83,16 @@ gateway:
     annotations: {}
     # -- (list) Gateways the route attaches to; required when gateway.httpRoute.create is true, at least one item.
     # Each item must contain: name (string); namespace (string) and sectionName (string, the Gateway listener) are optional.
-    # name, namespace and sectionName support templating.
+    # name, namespace and sectionName support templating and must not render empty: to leave namespace or sectionName out, omit the key.
     # Example:
     #   parentRefs:
     #     - name: external
     #       namespace: envoy-gateway-system
     parentRefs: []
-    # -- (list) Hostnames the route matches; required when gateway.httpRoute.create is true, at least one item. Support templating.
+    # -- (list) Hostnames the route matches; required when gateway.httpRoute.create is true, at least one item. Support templating and must not render empty.
     hostnames: []
-    # -- (object) Default Gateway API timeouts (request, backendRequest) for every rule; each field set in rules[].timeouts overrides it for that rule. When unset, the Gateway implementation's default applies.
-    # Durations use the Gateway API format (e.g. 30s, 2m). In the timeouts each rule ends up with, after combining the two, backendRequest must not exceed request.
+    # -- (object) Default Gateway API timeouts (request, backendRequest) for every rule; a rule with its own rules[].timeouts uses those instead, as a whole. When unset, the Gateway implementation's default applies.
+    # Durations use the Gateway API format (e.g. 30s, 2m); backendRequest must not exceed request.
     # Example:
     #   timeouts:
     #     request: 30s

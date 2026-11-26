@@ -1,0 +1,7 @@
+# Helm deletes null keys: the chart default is removed too
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames: ~

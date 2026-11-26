@@ -72,17 +72,6 @@ tests:
             - test-svc.example.internal
             - static.example.internal
 
-  - it: leaves out optional parentRef fields that render empty
-    values:
-      - parentref-optional-empty.yaml
-    asserts:
-      - equal:
-          path: spec.parentRefs
-          value:
-            - group: gateway.networking.k8s.io
-              kind: Gateway
-              name: external
-
   - it: renders rules as written, without templating
     values:
       - rules-as-is.yaml
@@ -138,7 +127,7 @@ tests:
             - name: test-svc
               port: 8083
 
-  - it: applies the default timeouts to every rule and lets a rule override single fields
+  - it: applies the default timeouts to rules without their own, and a rule's timeouts replace the default as a whole
     values:
       - rules-filters-timeouts.yaml
     asserts:
@@ -146,7 +135,6 @@ tests:
           path: spec.rules[0].timeouts
           value:
             request: 2m
-            backendRequest: 10s
       - equal:
           path: spec.rules[1].timeouts
           value:

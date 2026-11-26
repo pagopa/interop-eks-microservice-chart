@@ -1,7 +1,0 @@
-# Optional parentRef fields rendering empty are left out, not emitted as ""
-gateway:
-  httpRoute:
-    parentRefs:
-      - name: external
-        namespace: "{{ if false }}unused{{ end }}"
-        sectionName: "{{ if false }}unused{{ end }}"

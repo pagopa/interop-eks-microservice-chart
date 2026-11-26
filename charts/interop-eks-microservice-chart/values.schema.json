@@ -424,10 +424,12 @@
     "gateway": {
       "description": "Gateway API resources",
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "httpRoute": {
           "description": "Gateway API HTTPRoute properties",
           "type": "object",
+          "additionalProperties": false,
           "allOf": [
             {
               "comment": "When create:true, parentRefs and hostnames are required and must be non-empty; a missing or null create counts as false.",
@@ -442,6 +444,10 @@
                 }
               },
               "then": {
+                "required": [
+                  "parentRefs",
+                  "hostnames"
+                ],
                 "properties": {
                   "parentRefs": {
                     "minItems": 1
@@ -504,21 +510,7 @@
               }
             },
             "timeouts": {
-              "description": "Gateway API HTTPRoute rule timeouts",
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "request": {
-                  "description": "Timeout for the whole request, from the client to the response",
-                  "type": "string",
-                  "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
-                },
-                "backendRequest": {
-                  "description": "Timeout for each request to the backend; must not exceed request",
-                  "type": "string",
-                  "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
-                }
-              }
+              "$ref": "#/definitions/gatewayHttpRouteTimeouts"
             },
             "rules": {
               "description": "Route rules; backendRefs are always the microservice Service",
@@ -570,21 +562,7 @@
                     }
                   },
                   "timeouts": {
-                    "description": "Gateway API HTTPRoute rule timeouts",
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                      "request": {
-                        "description": "Timeout for the whole request, from the client to the response",
-                        "type": "string",
-                        "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
-                      },
-                      "backendRequest": {
-                        "description": "Timeout for each request to the backend; must not exceed request",
-                        "type": "string",
-                        "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
-                      }
-                    }
+                    "$ref": "#/definitions/gatewayHttpRouteTimeouts"
                   }
                 }
               }
@@ -1003,6 +981,28 @@
       }
     }
   ],
+  "definitions": {
+    "gatewayHttpRouteTimeouts": {
+      "description": "Gateway API HTTPRoute rule timeouts",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "description": "Timeout for the whole request, from the client to the response",
+          "$ref": "#/definitions/gatewayDuration"
+        },
+        "backendRequest": {
+          "description": "Timeout for each request to the backend; must not exceed request",
+          "$ref": "#/definitions/gatewayDuration"
+        }
+      }
+    },
+    "gatewayDuration": {
+      "description": "Gateway API duration (e.g. 30s, 2m, 1h30m)",
+      "type": "string",
+      "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
+    }
+  },
   "required": [
     "name",
     "namespace",

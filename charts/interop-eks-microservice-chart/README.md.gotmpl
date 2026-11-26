@@ -387,9 +387,9 @@ When `create: true`, these fields are required:
 
 `backendRefs` cannot be set: every rule sends traffic to the microservice Service.
 
-`timeouts` at the `httpRoute` level is the default for every rule: each field a rule sets in its own `timeouts` overrides the default for that rule, the others are kept. When neither is set, the Gateway implementation's default applies. In the timeouts each rule ends up with, `backendRequest` must not exceed `request`: the chart can't check it, the Gateway API rejects the route when it's applied.
+`timeouts` at the `httpRoute` level is the default for every rule; a rule with its own `timeouts` uses those instead, as a whole, so a rule's timeouts are always the ones written in one place. When neither is set, the Gateway implementation's default applies. `backendRequest` must not exceed `request`: the chart can't check it, the Gateway API rejects the route when it's applied.
 
-`parentRefs` (`name`, `namespace`, `sectionName`) and `hostnames` support templating. `rules` and `timeouts` are rendered as written, without templating.
+`parentRefs` (`name`, `namespace`, `sectionName`) and `hostnames` support templating; the chart fails if one of them renders empty. To leave `namespace` or `sectionName` out, omit the key. `rules` and `timeouts` are rendered as written, without templating.
 
 Minimal example:
 

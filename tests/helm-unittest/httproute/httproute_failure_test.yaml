@@ -74,3 +74,45 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "must be set and non-empty"
+
+  - it: fails when hostnames is set to null
+    values:
+      - fail-case-11-null-hostnames.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(hostnames is required|missing property .hostnames.)"
+
+  - it: fails when parentRefs is set to null
+    values:
+      - fail-case-12-null-parentrefs.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(parentRefs is required|missing property .parentRefs.)"
+
+  - it: fails schema validation on an unknown httpRoute key
+    values:
+      - fail-case-13-unknown-key.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(Additional property rule is not allowed|additional properties .rule. not allowed)"
+
+  - it: fails when a hostname written with spaces renders empty
+    values:
+      - fail-case-14-hostname-renders-empty.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.hostnames\\[0\\] renders empty"
+
+  - it: fails when an optional parentRef field renders empty
+    values:
+      - fail-case-15-parentref-field-renders-empty.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.parentRefs\\[0\\].namespace renders empty"
+
+  - it: fails schema validation when a rule timeout is not a Gateway API duration
+    values:
+      - fail-case-16-invalid-rule-timeout.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "backendRequest.*(D|d)oes not match pattern"

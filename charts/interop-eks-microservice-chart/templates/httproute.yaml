@@ -3,6 +3,10 @@
 {{- if not (and .Values.service.create .Values.service.containerPort) }}
   {{ fail "gateway.httpRoute.create requires service.create and service.containerPort: the route sends traffic to the microservice Service." }}
 {{- end }}
+{{- /* Also checked by the schema; without hostnames the route would match every host of the Gateway listener */}}
+{{- if or (empty $httpRoute.parentRefs) (empty $httpRoute.hostnames) }}
+  {{ fail "gateway.httpRoute.create requires at least one parentRefs and one hostnames entry." }}
+{{- end }}
 
 {{- $annotations := $httpRoute.annotations | default dict }}
 {{- $rules := $httpRoute.rules | default (list (dict "matches" (list (dict "path" (dict "type" "PathPrefix" "value" "/"))))) }}
@@ -20,38 +24,41 @@ metadata:
   {{- end }}
 spec:
   parentRefs:
-    {{- range $httpRoute.parentRefs }}
-    {{- /* Optional fields are rendered first, so a template rendering empty leaves the field out */}}
-    {{- $namespace := include "interop-eks-microservice-chart.render-template" (dict "value" (.namespace | default "") "context" $) }}
-    {{- $sectionName := include "interop-eks-microservice-chart.render-template" (dict "value" (.sectionName | default "") "context" $) }}
+    {{- range $index, $parentRef := $httpRoute.parentRefs }}
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: {{ include "interop-eks-microservice-chart.render-template" (dict "value" .name "context" $) | quote }}
-      {{- if $namespace }}
-      namespace: {{ $namespace | quote }}
+      {{- /* Templated fields must not render empty: to leave an optional field out, omit it */}}
+      {{- range $field := list "name" "namespace" "sectionName" }}
+      {{- if hasKey $parentRef $field }}
+      {{- $rendered := include "interop-eks-microservice-chart.render-template" (dict "value" (get $parentRef $field) "context" $) }}
+      {{- if not $rendered }}
+        {{ fail (printf "gateway.httpRoute.parentRefs[%d].%s renders empty." $index $field) }}
       {{- end }}
-      {{- if $sectionName }}
-      sectionName: {{ $sectionName | quote }}
+      {{ $field }}: {{ $rendered | quote }}
+      {{- end }}
       {{- end }}
     {{- end }}
   hostnames:
-    {{- range $httpRoute.hostnames }}
-    - {{ include "interop-eks-microservice-chart.render-template" (dict "value" . "context" $) | quote }}
+    {{- range $index, $hostname := $httpRoute.hostnames }}
+    {{- $rendered := include "interop-eks-microservice-chart.render-template" (dict "value" $hostname "context" $) }}
+    {{- if not $rendered }}
+      {{ fail (printf "gateway.httpRoute.hostnames[%d] renders empty." $index) }}
+    {{- end }}
+    - {{ $rendered | quote }}
     {{- end }}
   rules:
     {{- range $rules }}
     {{- /* Matches and filters are Gateway API objects, rendered as-is; the backend is always the microservice Service */}}
-    {{- $rule := . }}
-    {{- /* Each timeout set on the rule overrides the route default for that field only; deepCopy keeps merge from changing .Values */}}
-    {{- $timeouts := merge (deepCopy ($rule.timeouts | default dict)) ($httpRoute.timeouts | default dict) }}
+    {{- /* A rule's timeouts replace the route default as a whole */}}
+    {{- $timeouts := .timeouts | default $httpRoute.timeouts }}
     - backendRefs:
         - name: {{ $.Values.name }}
           port: {{ $.Values.service.servicePort | default $.Values.service.containerPort }}
-      {{- with $rule.matches }}
+      {{- with .matches }}
       matches:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $rule.filters }}
+      {{- with .filters }}
       filters:
         {{- toYaml . | nindent 8 }}
       {{- end }}
