@@ -555,6 +555,31 @@
                             "value"
                           ],
                           "additionalProperties": false,
+                          "allOf": [
+                            {
+                              "comment": "Like the Gateway API: Exact and PathPrefix values must start with '/', RegularExpression values can be any regex.",
+                              "if": {
+                                "required": [
+                                  "type"
+                                ],
+                                "properties": {
+                                  "type": {
+                                    "enum": [
+                                      "Exact",
+                                      "PathPrefix"
+                                    ]
+                                  }
+                                }
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "pattern": "^/"
+                                  }
+                                }
+                              }
+                            }
+                          ],
                           "properties": {
                             "type": {
                               "type": "string",

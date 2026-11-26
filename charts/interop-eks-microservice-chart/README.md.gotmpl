@@ -381,7 +381,7 @@ When `create: true`, these fields are required:
 - `hostnames` (1 to 16 entries). A route without hostnames would match every hostname of the Gateway listener, taking traffic meant for other services. Each must render a valid Gateway API hostname: lowercase, no scheme or port, optionally starting with `*.`, at most 253 characters.
 
 `rules` is optional: when empty, the chart renders a single rule matching every path (`PathPrefix` `/`). Each rule can define:
-- `matches`: Gateway API [HTTPRouteMatch](https://gateway-api.sigs.k8s.io/reference/spec/#httproutematch) list (`path`, `headers`, `queryParams`, `method`), rendered as-is; unknown keys are rejected, since a misspelled match would match every path. Every match must set `path` with `type` and `value`, as Ingress rules set `path` and `pathType`: otherwise the API server adds a default path and ArgoCD sees the route as drifted. To match on headers only, use `path: {type: PathPrefix, value: /}`
+- `matches`: Gateway API [HTTPRouteMatch](https://gateway-api.sigs.k8s.io/reference/spec/#httproutematch) list (`path`, `headers`, `queryParams`, `method`), rendered as-is; unknown keys are rejected, since a misspelled match would match every path. Every match must set `path` with `type` and `value` (starting with `/` for `Exact` and `PathPrefix`), as Ingress rules set `path` and `pathType`: otherwise the API server adds a default path and ArgoCD sees the route as drifted. To match on headers only, use `path: {type: PathPrefix, value: /}`
 - `filters`: Gateway API [HTTPRouteFilter](https://gateway-api.sigs.k8s.io/reference/spec/#httproutefilter) list, rendered as-is
 - `timeouts`: `request` and `backendRequest`, as Gateway API durations (e.g. `30s`, `2m`)
 

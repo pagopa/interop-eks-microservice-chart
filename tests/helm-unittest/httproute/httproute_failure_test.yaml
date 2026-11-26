@@ -193,3 +193,17 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "(type is required|missing property .type.)"
+
+  - it: fails schema validation when an Exact path value doesn't start with /
+    values:
+      - fail-case-28-exact-path-without-slash.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "value(: Does not match pattern .\\^/.|.: .api. does not match pattern .\\^/.)"
+
+  - it: fails schema validation when a PathPrefix path value doesn't start with /
+    values:
+      - fail-case-29-prefix-path-without-slash.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "value(: Does not match pattern .\\^/.|.: .api. does not match pattern .\\^/.)"

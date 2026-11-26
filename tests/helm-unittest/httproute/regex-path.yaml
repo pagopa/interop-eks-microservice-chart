@@ -1,0 +1,8 @@
+# RegularExpression values don't need a leading "/"
+gateway:
+  httpRoute:
+    rules:
+      - matches:
+          - path:
+              type: RegularExpression
+              value: ".*/v[0-9]+/.*"

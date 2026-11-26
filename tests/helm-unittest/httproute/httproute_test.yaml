@@ -181,6 +181,16 @@ tests:
           value:
             request: 10s
 
+  - it: accepts a RegularExpression path value without a leading slash
+    values:
+      - regex-path.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].matches[0].path
+          value:
+            type: RegularExpression
+            value: ".*/v[0-9]+/.*"
+
   - it: renders no timeouts when none are set
     values:
       - default-rule.yaml
