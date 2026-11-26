@@ -1,0 +1,25 @@
+# Rendered values with YAML syntax must stay values, not change the rule
+commons:
+  withQuote: "it's"
+  withColon: "a: b"
+  withComment: "x # y"
+  boolLike: "true"
+
+gateway:
+  httpRoute:
+    rules:
+      - filters:
+          - type: RequestHeaderModifier
+            requestHeaderModifier:
+              set:
+                - name: X-Quote
+                  value: "{{.Values.commons.withQuote}}"
+                - name: X-Colon
+                  value: "prefix-{{.Values.commons.withColon}}"
+                - name: X-Comment
+                  value: "prefix-{{.Values.commons.withComment}}"
+                - name: X-Bool
+                  value: "{{.Values.commons.boolLike}}"
+          - type: RequestRedirect
+            requestRedirect:
+              statusCode: 301

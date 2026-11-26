@@ -38,7 +38,7 @@ spec:
   rules:
     {{- range $rules }}
     {{- /* Matches and filters are Gateway API objects, rendered as-is after templating; the backend is always the microservice Service */}}
-    {{- $rule := include "interop-eks-microservice-chart.render-template" (dict "value" . "context" $) | fromYaml }}
+    {{- $rule := (include "interop-eks-microservice-chart.render-template-tree" (dict "value" . "context" $) | fromJson).value }}
     {{- $timeouts := $rule.timeouts | default $httpRoute.timeouts }}
     - backendRefs:
         - name: {{ $.Values.name }}

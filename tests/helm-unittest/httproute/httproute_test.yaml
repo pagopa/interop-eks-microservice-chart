@@ -77,6 +77,25 @@ tests:
             hostname: app.example.internal
             statusCode: 301
 
+  - it: keeps rendered values with YAML syntax as values
+    values:
+      - templated-special-characters.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].filters[0].requestHeaderModifier.set
+          value:
+            - name: X-Quote
+              value: "it's"
+            - name: X-Colon
+              value: "prefix-a: b"
+            - name: X-Comment
+              value: "prefix-x # y"
+            - name: X-Bool
+              value: "true"
+      - equal:
+          path: spec.rules[0].filters[1].requestRedirect.statusCode
+          value: 301
+
   - it: renders every rule with its matches and filters and the microservice backend
     values:
       - rules-filters-timeouts.yaml
