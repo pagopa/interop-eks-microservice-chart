@@ -528,6 +528,9 @@
                     "maxItems": 64,
                     "items": {
                       "type": "object",
+                      "required": [
+                        "path"
+                      ],
                       "additionalProperties": false,
                       "properties": {
                         "headers": {
@@ -545,7 +548,12 @@
                           "type": "string"
                         },
                         "path": {
+                          "description": "Path match; required, so the API server has no default to fill in",
                           "type": "object",
+                          "required": [
+                            "type",
+                            "value"
+                          ],
                           "additionalProperties": false,
                           "properties": {
                             "type": {

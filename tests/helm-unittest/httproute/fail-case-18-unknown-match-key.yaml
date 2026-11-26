@@ -8,6 +8,7 @@ gateway:
       - test.example.internal
     rules:
       - matches:
-          - pth:
+          - path:
               type: Exact
               value: /api
+            mehtod: GET

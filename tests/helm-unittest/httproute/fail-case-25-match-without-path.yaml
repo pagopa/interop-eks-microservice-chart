@@ -1,0 +1,11 @@
+# Without path the API server adds a default one, which ArgoCD sees as drift
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames:
+      - test.example.internal
+    rules:
+      - matches:
+          - method: GET

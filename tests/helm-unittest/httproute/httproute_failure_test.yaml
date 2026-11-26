@@ -129,7 +129,7 @@ tests:
       - fail-case-18-unknown-match-key.yaml
     asserts:
       - failedTemplate:
-          errorPattern: "(Additional property pth is not allowed|additional properties .pth. not allowed)"
+          errorPattern: "(Additional property mehtod is not allowed|additional properties .mehtod. not allowed)"
 
   - it: fails schema validation on an unknown path match key
     values:
@@ -172,3 +172,24 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "gateway.httpRoute.rules have 129 matches in total; the Gateway API allows at most 128"
+
+  - it: fails schema validation when a match has no path
+    values:
+      - fail-case-25-match-without-path.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(path is required|missing property .path.)"
+
+  - it: fails schema validation when a path match has no value
+    values:
+      - fail-case-26-path-without-value.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(value is required|missing property .value.)"
+
+  - it: fails schema validation when a path match has no type
+    values:
+      - fail-case-27-path-without-type.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(type is required|missing property .type.)"
