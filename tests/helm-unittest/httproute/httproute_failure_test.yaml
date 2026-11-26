@@ -101,7 +101,7 @@ tests:
       - fail-case-14-hostname-renders-empty.yaml
     asserts:
       - failedTemplate:
-          errorPattern: "gateway.httpRoute.hostnames\\[0\\] renders empty"
+          errorPattern: "gateway.httpRoute.hostnames\\[0\\] renders .*not a valid Gateway API hostname"
 
   - it: fails when an optional parentRef field renders empty
     values:
@@ -116,3 +116,31 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "backendRequest.*(D|d)oes not match pattern"
+
+  - it: fails when a hostname is not a valid Gateway API hostname
+    values:
+      - fail-case-17-invalid-hostname.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.hostnames\\[0\\] renders .*HTTPS://Api.Example:443.*not a valid Gateway API hostname"
+
+  - it: fails schema validation on an unknown match key
+    values:
+      - fail-case-18-unknown-match-key.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(Additional property pth is not allowed|additional properties .pth. not allowed)"
+
+  - it: fails schema validation on an unknown path match key
+    values:
+      - fail-case-19-unknown-path-key.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(Additional property vaule is not allowed|additional properties .vaule. not allowed)"
+
+  - it: fails schema validation with more hostnames than the Gateway API allows
+    values:
+      - fail-case-20-too-many-hostnames.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "hostnames(: Array must have at most 16 items|.: maxItems: got 17, want 16)"

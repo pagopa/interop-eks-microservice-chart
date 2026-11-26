@@ -476,6 +476,7 @@
             "parentRefs": {
               "description": "Gateways the route attaches to",
               "type": "array",
+              "maxItems": 32,
               "items": {
                 "type": "object",
                 "required": [
@@ -504,6 +505,7 @@
             "hostnames": {
               "description": "Hostnames the route matches",
               "type": "array",
+              "maxItems": 16,
               "items": {
                 "type": "string",
                 "minLength": 1
@@ -515,6 +517,7 @@
             "rules": {
               "description": "Route rules; backendRefs are always the microservice Service",
               "type": "array",
+              "maxItems": 16,
               "items": {
                 "type": "object",
                 "additionalProperties": false,
@@ -522,11 +525,26 @@
                   "matches": {
                     "description": "Gateway API HTTPRouteMatch list",
                     "type": "array",
+                    "maxItems": 64,
                     "items": {
                       "type": "object",
+                      "additionalProperties": false,
                       "properties": {
+                        "headers": {
+                          "description": "Gateway API HTTPHeaderMatch list",
+                          "type": "array"
+                        },
+                        "queryParams": {
+                          "description": "Gateway API HTTPQueryParamMatch list",
+                          "type": "array"
+                        },
+                        "method": {
+                          "description": "HTTP method",
+                          "type": "string"
+                        },
                         "path": {
                           "type": "object",
+                          "additionalProperties": false,
                           "properties": {
                             "type": {
                               "type": "string",
@@ -548,6 +566,7 @@
                   "filters": {
                     "description": "Gateway API HTTPRouteFilter list",
                     "type": "array",
+                    "maxItems": 16,
                     "items": {
                       "type": "object",
                       "required": [

@@ -141,6 +141,17 @@ tests:
             request: 30s
             backendRequest: 10s
 
+  - it: lets a rule turn the default timeouts off with an empty timeouts
+    values:
+      - timeouts-opt-out.yaml
+    asserts:
+      - notExists:
+          path: spec.rules[0].timeouts
+      - equal:
+          path: spec.rules[1].timeouts
+          value:
+            request: 10s
+
   - it: renders no timeouts when none are set
     values:
       - default-rule.yaml

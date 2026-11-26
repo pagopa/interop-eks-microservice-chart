@@ -1,0 +1,24 @@
+# The Gateway API allows at most 16 hostnames per HTTPRoute
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames:
+      - host0.example.internal
+      - host1.example.internal
+      - host2.example.internal
+      - host3.example.internal
+      - host4.example.internal
+      - host5.example.internal
+      - host6.example.internal
+      - host7.example.internal
+      - host8.example.internal
+      - host9.example.internal
+      - host10.example.internal
+      - host11.example.internal
+      - host12.example.internal
+      - host13.example.internal
+      - host14.example.internal
+      - host15.example.internal
+      - host16.example.internal

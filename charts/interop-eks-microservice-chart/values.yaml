@@ -89,9 +89,9 @@ gateway:
     #     - name: external
     #       namespace: envoy-gateway-system
     parentRefs: []
-    # -- (list) Hostnames the route matches; required when gateway.httpRoute.create is true, at least one item. Support templating and must not render empty.
+    # -- (list) Hostnames the route matches; required when gateway.httpRoute.create is true, 1 to 16 items. Support templating; each must render a valid Gateway API hostname (lowercase, no scheme or port, optional leading "*.").
     hostnames: []
-    # -- (object) Default Gateway API timeouts (request, backendRequest) for every rule; a rule with its own rules[].timeouts uses those instead, as a whole. When unset, the Gateway implementation's default applies.
+    # -- (object) Default Gateway API timeouts (request, backendRequest) for every rule; a rule with its own rules[].timeouts uses those instead, as a whole, and `timeouts: {}` turns them off for that rule. When unset, the Gateway implementation's default applies.
     # Durations use the Gateway API format (e.g. 30s, 2m); backendRequest must not exceed request.
     # Example:
     #   timeouts:

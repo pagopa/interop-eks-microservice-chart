@@ -3,10 +3,6 @@
 {{- if not (and .Values.service.create .Values.service.containerPort) }}
   {{ fail "gateway.httpRoute.create requires service.create and service.containerPort: the route sends traffic to the microservice Service." }}
 {{- end }}
-{{- /* Also checked by the schema; without hostnames the route would match every host of the Gateway listener */}}
-{{- if or (empty $httpRoute.parentRefs) (empty $httpRoute.hostnames) }}
-  {{ fail "gateway.httpRoute.create requires at least one parentRefs and one hostnames entry." }}
-{{- end }}
 
 {{- $annotations := $httpRoute.annotations | default dict }}
 {{- $rules := $httpRoute.rules | default (list (dict "matches" (list (dict "path" (dict "type" "PathPrefix" "value" "/"))))) }}
@@ -41,16 +37,17 @@ spec:
   hostnames:
     {{- range $index, $hostname := $httpRoute.hostnames }}
     {{- $rendered := include "interop-eks-microservice-chart.render-template" (dict "value" $hostname "context" $) }}
-    {{- if not $rendered }}
-      {{ fail (printf "gateway.httpRoute.hostnames[%d] renders empty." $index) }}
+    {{- /* Checked after rendering, since the schema only sees the template; same pattern as the Gateway API Hostname type */}}
+    {{- if not (regexMatch `^(\*\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$` $rendered) }}
+      {{ fail (printf "gateway.httpRoute.hostnames[%d] renders %q, which is not a valid Gateway API hostname." $index $rendered) }}
     {{- end }}
     - {{ $rendered | quote }}
     {{- end }}
   rules:
     {{- range $rules }}
     {{- /* Matches and filters are Gateway API objects, rendered as-is; the backend is always the microservice Service */}}
-    {{- /* A rule's timeouts replace the route default as a whole */}}
-    {{- $timeouts := .timeouts | default $httpRoute.timeouts }}
+    {{- /* A rule's timeouts replace the route default as a whole; timeouts: {} turns them off for the rule */}}
+    {{- $timeouts := hasKey . "timeouts" | ternary .timeouts $httpRoute.timeouts }}
     - backendRefs:
         - name: {{ $.Values.name }}
           port: {{ $.Values.service.servicePort | default $.Values.service.containerPort }}

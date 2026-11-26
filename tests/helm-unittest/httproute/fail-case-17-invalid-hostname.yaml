@@ -1,0 +1,7 @@
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames:
+      - "HTTPS://Api.Example:443"
