@@ -47,8 +47,11 @@ tests:
           path: spec.rules
           value:
             - backendRefs:
-                - name: test-svc
+                - group: ""
+                  kind: Service
+                  name: test-svc
                   port: 8083
+                  weight: 1
               matches:
                 - path:
                     type: PathPrefix
@@ -107,8 +110,11 @@ tests:
       - equal:
           path: spec.rules[1].backendRefs
           value:
-            - name: test-svc
+            - group: ""
+              kind: Service
+              name: test-svc
               port: 8083
+              weight: 1
 
   - it: renders every rule with its matches and filters and the microservice backend
     values:
@@ -136,13 +142,19 @@ tests:
       - equal:
           path: spec.rules[0].backendRefs
           value:
-            - name: test-svc
+            - group: ""
+              kind: Service
+              name: test-svc
               port: 8083
+              weight: 1
       - equal:
           path: spec.rules[1].backendRefs
           value:
-            - name: test-svc
+            - group: ""
+              kind: Service
+              name: test-svc
               port: 8083
+              weight: 1
 
   - it: applies the default timeouts to rules without their own, and a rule's timeouts replace the default as a whole
     values:

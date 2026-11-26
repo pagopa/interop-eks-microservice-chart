@@ -73,8 +73,9 @@ spec:
     {{- $redirect = true }}
     {{- end }}
     {{- end }}
+    {{- /* group, kind and weight are the API server defaults, written out so ArgoCD doesn't see the stored route as drifted */}}
     {{- if not $redirect }}
-    {{- $_ := set $rule "backendRefs" (list (dict "name" $.Values.name "port" ($.Values.service.servicePort | default $.Values.service.containerPort))) }}
+    {{- $_ := set $rule "backendRefs" (list (dict "group" "" "kind" "Service" "name" $.Values.name "port" ($.Values.service.servicePort | default $.Values.service.containerPort) "weight" 1)) }}
     {{- end }}
     {{- toYaml (list $rule) | nindent 4 }}
     {{- end }}
