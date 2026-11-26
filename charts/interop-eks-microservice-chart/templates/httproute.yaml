@@ -4,6 +4,15 @@
   {{ fail "gateway.httpRoute.create requires service.create and service.containerPort: the route sends traffic to the microservice Service." }}
 {{- end }}
 
+{{- /* Gateway API limit across all rules, which the schema can't express */}}
+{{- $matchCount := 0 }}
+{{- range $httpRoute.rules }}
+{{- $matchCount = add $matchCount (len (.matches | default list)) }}
+{{- end }}
+{{- if gt $matchCount 128 }}
+  {{ fail (printf "gateway.httpRoute.rules have %d matches in total; the Gateway API allows at most 128." $matchCount) }}
+{{- end }}
+
 {{- $annotations := $httpRoute.annotations | default dict }}
 {{- $rules := $httpRoute.rules | default (list (dict "matches" (list (dict "path" (dict "type" "PathPrefix" "value" "/"))))) }}
 
@@ -37,8 +46,8 @@ spec:
   hostnames:
     {{- range $index, $hostname := $httpRoute.hostnames }}
     {{- $rendered := include "interop-eks-microservice-chart.render-template" (dict "value" $hostname "context" $) }}
-    {{- /* Checked after rendering, since the schema only sees the template; same pattern as the Gateway API Hostname type */}}
-    {{- if not (regexMatch `^(\*\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$` $rendered) }}
+    {{- /* Checked after rendering, since the schema only sees the template; same pattern and length as the Gateway API Hostname type */}}
+    {{- if or (gt (len $rendered) 253) (not (regexMatch `^(\*\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$` $rendered)) }}
       {{ fail (printf "gateway.httpRoute.hostnames[%d] renders %q, which is not a valid Gateway API hostname." $index $rendered) }}
     {{- end }}
     - {{ $rendered | quote }}

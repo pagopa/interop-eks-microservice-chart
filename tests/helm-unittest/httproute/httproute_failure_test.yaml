@@ -144,3 +144,24 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "hostnames(: Array must have at most 16 items|.: maxItems: got 17, want 16)"
+
+  - it: fails when a hostname is longer than the Gateway API allows
+    values:
+      - fail-case-21-hostname-too-long.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.hostnames\\[0\\] renders .*not a valid Gateway API hostname"
+
+  - it: fails with more matches across rules than the Gateway API allows
+    values:
+      - fail-case-22-too-many-matches.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.rules have 135 matches in total; the Gateway API allows at most 128"
+
+  - it: fails schema validation with more header matches than the Gateway API allows
+    values:
+      - fail-case-23-too-many-headers.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "headers(: Array must have at most 16 items|.: maxItems: got 17, want 16)"

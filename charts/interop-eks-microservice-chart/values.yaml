@@ -89,7 +89,7 @@ gateway:
     #     - name: external
     #       namespace: envoy-gateway-system
     parentRefs: []
-    # -- (list) Hostnames the route matches; required when gateway.httpRoute.create is true, 1 to 16 items. Support templating; each must render a valid Gateway API hostname (lowercase, no scheme or port, optional leading "*.").
+    # -- (list) Hostnames the route matches; required when gateway.httpRoute.create is true, 1 to 16 items. Support templating; each must render a valid Gateway API hostname (lowercase, no scheme or port, optional leading "*.", at most 253 characters).
     hostnames: []
     # -- (object) Default Gateway API timeouts (request, backendRequest) for every rule; a rule with its own rules[].timeouts uses those instead, as a whole, and `timeouts: {}` turns them off for that rule. When unset, the Gateway implementation's default applies.
     # Durations use the Gateway API format (e.g. 30s, 2m); backendRequest must not exceed request.
@@ -100,6 +100,7 @@ gateway:
     timeouts: {}
     # -- (list) Route rules; when empty, a single rule matches every path (PathPrefix "/").
     # Each item may contain matches (list of Gateway API HTTPRouteMatch), filters (list of Gateway API HTTPRouteFilter) and timeouts, rendered as-is: rules don't support templating.
+    # Gateway API limits: 16 rules, 64 matches per rule and 128 across all rules, 16 filters per rule, 16 headers and 16 queryParams per match.
     # backendRefs are always the microservice Service and cannot be set.
     # Example:
     #   rules:

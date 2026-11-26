@@ -1,0 +1,44 @@
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames:
+      - test.example.internal
+    rules:
+      - matches:
+          - headers:
+              - name: X-H0
+                value: "v"
+              - name: X-H1
+                value: "v"
+              - name: X-H2
+                value: "v"
+              - name: X-H3
+                value: "v"
+              - name: X-H4
+                value: "v"
+              - name: X-H5
+                value: "v"
+              - name: X-H6
+                value: "v"
+              - name: X-H7
+                value: "v"
+              - name: X-H8
+                value: "v"
+              - name: X-H9
+                value: "v"
+              - name: X-H10
+                value: "v"
+              - name: X-H11
+                value: "v"
+              - name: X-H12
+                value: "v"
+              - name: X-H13
+                value: "v"
+              - name: X-H14
+                value: "v"
+              - name: X-H15
+                value: "v"
+              - name: X-H16
+                value: "v"

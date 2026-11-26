@@ -532,11 +532,13 @@
                       "properties": {
                         "headers": {
                           "description": "Gateway API HTTPHeaderMatch list",
-                          "type": "array"
+                          "type": "array",
+                          "maxItems": 16
                         },
                         "queryParams": {
                           "description": "Gateway API HTTPQueryParamMatch list",
-                          "type": "array"
+                          "type": "array",
+                          "maxItems": 16
                         },
                         "method": {
                           "description": "HTTP method",
