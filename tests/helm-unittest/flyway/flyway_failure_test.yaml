@@ -3,6 +3,12 @@ templates:
   - templates/deployment.yaml
 
 tests:
+  - it: fails when both migrationDomain and migrationsConfigmap are configured
+    values:
+      - flyway_fail_migrationdomain_and_configmap.yaml
+    asserts:
+      - failedTemplate: {}
+
   - it: fails when both migrationsConfigmap and migrationPaths are configured
     values:
       - flyway_fail_migrationpaths_and_configmap.yaml
