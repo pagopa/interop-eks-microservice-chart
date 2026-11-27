@@ -1,0 +1,13 @@
+# A typo must not fall back to the default rule matching every path
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames:
+      - test.example.internal
+    rule:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /api

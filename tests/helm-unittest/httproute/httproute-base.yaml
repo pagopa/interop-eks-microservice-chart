@@ -1,0 +1,11 @@
+# Base values shared by the HTTPRoute test cases.
+# Each test case file overrides only what it tests.
+
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+        namespace: envoy-gateway-system
+    hostnames:
+      - test.example.internal

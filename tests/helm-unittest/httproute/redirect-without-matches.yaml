@@ -1,0 +1,9 @@
+# A rule without matches gets the API server default match written out
+gateway:
+  httpRoute:
+    rules:
+      - filters:
+          - type: RequestRedirect
+            requestRedirect:
+              scheme: https
+              statusCode: 301

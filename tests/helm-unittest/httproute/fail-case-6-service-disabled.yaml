@@ -1,0 +1,10 @@
+service:
+  create: false
+
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames:
+      - test.example.internal

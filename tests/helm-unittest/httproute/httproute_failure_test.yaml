@@ -1,0 +1,223 @@
+suite: gateway httproute failures
+templates:
+  - templates/httproute.yaml
+values:
+  - ../common/base.yaml
+
+tests:
+  - it: fails schema validation when parentRefs is missing
+    values:
+      - fail-case-1-missing-parentrefs.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "parentRefs(: Array must have at least 1 items|.: minItems: got 0, want 1)"
+
+  - it: fails schema validation when parentRefs is empty
+    values:
+      - fail-case-2-empty-parentrefs.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "parentRefs(: Array must have at least 1 items|.: minItems: got 0, want 1)"
+
+  - it: fails schema validation when a parentRef has no name
+    values:
+      - fail-case-3-parentref-without-name.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "parentRefs[./]0(: name is required|.: missing property .name.)"
+
+  - it: fails schema validation when hostnames is missing
+    values:
+      - fail-case-4-missing-hostnames.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "hostnames(: Array must have at least 1 items|.: minItems: got 0, want 1)"
+
+  - it: fails schema validation when hostnames is empty
+    values:
+      - fail-case-5-empty-hostnames.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "hostnames(: Array must have at least 1 items|.: minItems: got 0, want 1)"
+
+  - it: fails when the microservice Service is disabled
+    values:
+      - fail-case-6-service-disabled.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.create requires service.create and service.containerPort"
+
+  - it: fails schema validation when a rule sets backendRefs
+    values:
+      - fail-case-7-rule-with-backendrefs.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "rules[./]0(: Additional property backendRefs is not allowed|.: additional properties .backendRefs. not allowed)"
+
+  - it: fails schema validation when a filter has no type
+    values:
+      - fail-case-8-filter-without-type.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "filters[./]0(: type is required|.: missing property .type.)"
+
+  - it: fails schema validation when a timeout is not a Gateway API duration
+    values:
+      - fail-case-9-invalid-timeout.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "timeouts[./]request.*(D|d)oes not match pattern"
+
+  - it: fails when a templated hostname renders empty
+    values:
+      - fail-case-10-templated-hostname-unset.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "must be set and non-empty"
+
+  - it: fails when hostnames is set to null
+    values:
+      - fail-case-11-null-hostnames.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(hostnames is required|missing property .hostnames.)"
+
+  - it: fails when parentRefs is set to null
+    values:
+      - fail-case-12-null-parentrefs.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(parentRefs is required|missing property .parentRefs.)"
+
+  - it: fails schema validation on an unknown httpRoute key
+    values:
+      - fail-case-13-unknown-key.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(Additional property rule is not allowed|additional properties .rule. not allowed)"
+
+  - it: fails when a hostname template with spaces inside the braces renders empty
+    values:
+      - fail-case-14-hostname-renders-empty.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.hostnames\\[0\\] renders .*not a valid Gateway API hostname"
+
+  - it: fails when an optional parentRef field renders empty
+    values:
+      - fail-case-15-parentref-field-renders-empty.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.parentRefs\\[0\\].namespace renders empty"
+
+  - it: fails schema validation when a rule timeout is not a Gateway API duration
+    values:
+      - fail-case-16-invalid-rule-timeout.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "backendRequest.*(D|d)oes not match pattern"
+
+  - it: fails when a hostname is not a valid Gateway API hostname
+    values:
+      - fail-case-17-invalid-hostname.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.hostnames\\[0\\] renders .*HTTPS://Api.Example:443.*not a valid Gateway API hostname"
+
+  - it: fails schema validation on an unknown match key
+    values:
+      - fail-case-18-unknown-match-key.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(Additional property mehtod is not allowed|additional properties .mehtod. not allowed)"
+
+  - it: fails schema validation on an unknown path match key
+    values:
+      - fail-case-19-unknown-path-key.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(Additional property vaule is not allowed|additional properties .vaule. not allowed)"
+
+  - it: fails schema validation with more hostnames than the Gateway API allows
+    values:
+      - fail-case-20-too-many-hostnames.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "hostnames(: Array must have at most 16 items|.: maxItems: got 17, want 16)"
+
+  - it: fails when a hostname is longer than the Gateway API allows
+    values:
+      - fail-case-21-hostname-too-long.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.hostnames\\[0\\] renders .*not a valid Gateway API hostname"
+
+  - it: fails with more matches across rules than the Gateway API allows
+    values:
+      - fail-case-22-too-many-matches.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.rules have 135 matches in total; the Gateway API allows at most 128"
+
+  - it: fails schema validation with more header matches than the Gateway API allows
+    values:
+      - fail-case-23-too-many-headers.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "headers(: Array must have at most 16 items|.: maxItems: got 17, want 16)"
+
+  - it: counts one default match for a rule without matches
+    values:
+      - fail-case-24-too-many-matches-with-default.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway.httpRoute.rules have 129 matches in total; the Gateway API allows at most 128"
+
+  - it: fails schema validation when a match has no path
+    values:
+      - fail-case-25-match-without-path.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(path is required|missing property .path.)"
+
+  - it: fails schema validation when a path match has no value
+    values:
+      - fail-case-26-path-without-value.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(value is required|missing property .value.)"
+
+  - it: fails schema validation when a path match has no type
+    values:
+      - fail-case-27-path-without-type.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "(type is required|missing property .type.)"
+
+  - it: fails schema validation when an Exact path value doesn't start with /
+    values:
+      - fail-case-28-exact-path-without-slash.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "value(: Does not match pattern .\\^/.|.: .api. does not match pattern .\\^/.)"
+
+  - it: fails schema validation when a PathPrefix path value doesn't start with /
+    values:
+      - fail-case-29-prefix-path-without-slash.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "value(: Does not match pattern .\\^/.|.: .api. does not match pattern .\\^/.)"
+
+  - it: fails schema validation when a header match has no type
+    values:
+      - fail-case-30-header-without-type.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "headers[./]0(: type is required|.: missing property .type.)"
+
+  - it: fails schema validation when a query param match has no type
+    values:
+      - fail-case-31-query-param-without-type.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "queryParams[./]0(: type is required|.: missing property .type.)"

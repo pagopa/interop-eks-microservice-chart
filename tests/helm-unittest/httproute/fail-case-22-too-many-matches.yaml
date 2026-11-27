@@ -1,0 +1,25 @@
+# 15 rules with 9 matches each: 135, over the Gateway API limit of 128 across all rules
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames:
+      - test.example.internal
+    # The same match repeated through a YAML alias: only the counts matter
+    rules:
+      - matches: [&m {path: {type: PathPrefix, value: /}}, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]
+      - matches: [*m, *m, *m, *m, *m, *m, *m, *m, *m]

@@ -1,0 +1,79 @@
+{{- $httpRoute := (.Values.gateway | default dict).httpRoute | default dict }}
+{{- if $httpRoute.create }}
+{{- if not (and .Values.service.create .Values.service.containerPort) }}
+  {{ fail "gateway.httpRoute.create requires service.create and service.containerPort: the route sends traffic to the microservice Service." }}
+{{- end }}
+
+{{- /* Each rule is built once, as rendered; matches and filters are Gateway API objects, rendered as-is */}}
+{{- $rules := list }}
+{{- $matchCount := 0 }}
+{{- range ($httpRoute.rules | default (list dict)) }}
+{{- /* A rule without matches gets the API server default match, written out so ArgoCD doesn't see the stored route as drifted */}}
+{{- $rule := dict "matches" (.matches | default (list (dict "path" (dict "type" "PathPrefix" "value" "/")))) }}
+{{- $matchCount = add $matchCount (len $rule.matches) }}
+{{- with .filters }}
+{{- $_ := set $rule "filters" . }}
+{{- end }}
+{{- /* A rule's timeouts replace the route default as a whole; timeouts: {} turns them off for the rule */}}
+{{- with (hasKey . "timeouts" | ternary .timeouts $httpRoute.timeouts) }}
+{{- $_ := set $rule "timeouts" . }}
+{{- end }}
+{{- /* The backend is the microservice Service, except on redirect rules: the Gateway API rejects backendRefs together with a RequestRedirect filter */}}
+{{- $redirect := false }}
+{{- range .filters }}
+{{- if eq .type "RequestRedirect" }}
+{{- $redirect = true }}
+{{- end }}
+{{- end }}
+{{- /* group, kind and weight are the API server defaults, written out so ArgoCD doesn't see the stored route as drifted */}}
+{{- if not $redirect }}
+{{- $_ := set $rule "backendRefs" (list (dict "group" "" "kind" "Service" "name" $.Values.name "port" ($.Values.service.servicePort | default $.Values.service.containerPort) "weight" 1)) }}
+{{- end }}
+{{- $rules = append $rules $rule }}
+{{- end }}
+{{- /* Gateway API limit across all rules, which the schema can't express */}}
+{{- if gt $matchCount 128 }}
+  {{ fail (printf "gateway.httpRoute.rules have %d matches in total; the Gateway API allows at most 128." $matchCount) }}
+{{- end }}
+
+{{- $annotations := $httpRoute.annotations | default dict }}
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "interop-eks-microservice-chart.labels" . | nindent 4 }}
+  {{- if $annotations }}
+  annotations:
+    {{- toYaml $annotations | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    {{- range $index, $parentRef := $httpRoute.parentRefs }}
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      {{- /* Templated fields must not render empty: to leave an optional field out, omit it */}}
+      {{- range $field := list "name" "namespace" "sectionName" }}
+      {{- if hasKey $parentRef $field }}
+      {{- $rendered := include "interop-eks-microservice-chart.render-template" (dict "value" (get $parentRef $field) "context" $) }}
+      {{- if not $rendered }}
+        {{ fail (printf "gateway.httpRoute.parentRefs[%d].%s renders empty." $index $field) }}
+      {{- end }}
+      {{ $field }}: {{ $rendered | quote }}
+      {{- end }}
+      {{- end }}
+    {{- end }}
+  hostnames:
+    {{- range $index, $hostname := $httpRoute.hostnames }}
+    {{- $rendered := include "interop-eks-microservice-chart.render-template" (dict "value" $hostname "context" $) }}
+    {{- /* Checked after rendering, since the schema only sees the template; same pattern and length as the Gateway API Hostname type */}}
+    {{- if or (gt (len $rendered) 253) (not (regexMatch `^(\*\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$` $rendered)) }}
+      {{ fail (printf "gateway.httpRoute.hostnames[%d] renders %q, which is not a valid Gateway API hostname." $index $rendered) }}
+    {{- end }}
+    - {{ $rendered | quote }}
+    {{- end }}
+  rules:
+    {{- toYaml $rules | nindent 4 }}
+{{- end }}

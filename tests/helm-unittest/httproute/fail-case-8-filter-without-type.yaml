@@ -1,0 +1,11 @@
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames:
+      - test.example.internal
+    rules:
+      - filters:
+          - urlRewrite:
+              hostname: other.example.internal

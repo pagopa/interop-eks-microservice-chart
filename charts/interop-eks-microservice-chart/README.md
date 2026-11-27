@@ -87,6 +87,12 @@ The following table lists the configurable parameters of the Interop-eks-microse
 | externalSecrets.flywayInitContainer.targetSecret.creationPolicy | string | `"Merge"` | Creation policy: Owner, Orphan, Merge, None |
 | externalSecrets.flywayInitContainer.targetSecret.deletionPolicy | string | `"Retain"` | Deletion policy: Retain, Delete |
 | externalSecrets.flywayInitContainer.targetSecret.name | string | `""` | Name of the target secret (defaults to microservice name) |
+| gateway.httpRoute.annotations | object | `{}` | Annotations to apply to the HTTPRoute resource |
+| gateway.httpRoute.create | bool | `false` | Enable Gateway API HTTPRoute generation; requires service.create and service.containerPort, the route sends traffic to the microservice Service. Independent of ingress.create: both can be enabled at once. |
+| gateway.httpRoute.hostnames | list | `[]` | Hostnames the route matches; required when gateway.httpRoute.create is true, 1 to 16 items. Support templating; each must render a valid Gateway API hostname (lowercase, no scheme or port, optional leading "*.", at most 253 characters). |
+| gateway.httpRoute.parentRefs | list | `[]` | Gateways the route attaches to; required when gateway.httpRoute.create is true, at least one item. Each item must contain: name (string); namespace (string) and sectionName (string, the Gateway listener) are optional. name, namespace and sectionName support templating and must not render empty: to leave namespace or sectionName out, omit the key. Example:   parentRefs:     - name: external       namespace: envoy-gateway-system |
+| gateway.httpRoute.rules | list | `[]` | Route rules; when empty, a single rule matches every path (PathPrefix "/"). Each item may contain matches (list of Gateway API HTTPRouteMatch), filters (list of Gateway API HTTPRouteFilter) and timeouts, rendered as-is: rules don't support templating. A rule without matches gets the default match (PathPrefix "/") written out. Header and queryParam matches must set type, name and value. Every match must set path (type, and value starting with "/" for Exact and PathPrefix), like ingress rules set path and pathType: the API server would otherwise add a default path and ArgoCD would see the route as drifted. Gateway API limits: 16 rules, 64 matches per rule and 128 across all rules, 16 filters per rule, 16 headers and 16 queryParams per match. backendRefs cannot be set: they are the microservice Service, except on rules with a RequestRedirect filter, which the Gateway API requires without backendRefs. Example:   rules:     - matches:         - path:             type: PathPrefix             value: /api       filters:         - type: URLRewrite           urlRewrite:             path:               type: ReplacePrefixMatch               replacePrefixMatch: /       timeouts:         request: 120s |
+| gateway.httpRoute.timeouts | object | `{}` | Default Gateway API timeouts (request, backendRequest) for every rule; a rule with its own rules[].timeouts uses those instead, as a whole, and `timeouts: {}` turns them off for that rule. When unset, the Gateway implementation's default applies. Durations use the Gateway API format (e.g. 30s, 2m); backendRequest must not exceed request. Example:   timeouts:     request: 30s     backendRequest: 30s |
 | ingress.annotations | list | `{}` | list of annotations to apply to the Ingress resource |
 | ingress.applicationPath | string | `nil` | Path prefix for the ALB ingress rule; used when ingress.type is "alb" |
 | ingress.create | bool | `false` | ingress.create and service.targetGroupArn must be mutually exclusive. |
@@ -474,6 +480,86 @@ ingress:
 ```
 
 If `ingress.type` is `alb`, `ingress.rules` can be `null` (for example `rules: ~`) or omitted.
+
+### 3.3 Gateway API HTTPRoute (`gateway.httpRoute`)
+
+When `gateway.httpRoute.create` is `true`, the chart renders `templates/httproute.yaml`: a Gateway API `HTTPRoute` (`gateway.networking.k8s.io/v1`) sending traffic to the microservice Service, on `service.servicePort` or, when unset, `service.containerPort`. It requires `service.create` and `service.containerPort`.
+
+It's independent of `ingress.create`: a microservice can have both, for example while moving from an Ingress to a Gateway.
+
+When `create: true`, these fields are required:
+- `parentRefs` (at least one entry): the Gateways the route attaches to. Each entry must define `name`; `namespace` (defaults to the route namespace) and `sectionName` (a Gateway listener) are optional.
+- `hostnames` (1 to 16 entries). A route without hostnames would match every hostname of the Gateway listener, taking traffic meant for other services. Each must render a valid Gateway API hostname: lowercase, no scheme or port, optionally starting with `*.`, at most 253 characters.
+
+`rules` is optional: when empty, the chart renders a single rule matching every path (`PathPrefix` `/`). A rule without `matches` gets that same match written out, as the API server would add it. Each rule can define:
+- `matches`: Gateway API [HTTPRouteMatch](https://gateway-api.sigs.k8s.io/reference/spec/#httproutematch) list (`path`, `headers`, `queryParams`, `method`), rendered as-is; unknown keys are rejected, since a misspelled match would match every path. Every match must set `path` with `type` and `value` (starting with `/` for `Exact` and `PathPrefix`), as Ingress rules set `path` and `pathType`: otherwise the API server adds a default path and ArgoCD sees the route as drifted. To match on headers only, use `path: {type: PathPrefix, value: /}`. Header and query parameter matches must set `type` (`Exact` or `RegularExpression`), `name` and `value`, for the same reason
+- `filters`: Gateway API [HTTPRouteFilter](https://gateway-api.sigs.k8s.io/reference/spec/#httproutefilter) list, rendered as-is. The chart doesn't add the fields the API server defaults (e.g. `statusCode: 302` on `RequestRedirect`): write them out, or enable ArgoCD's `ServerSideDiff`, otherwise ArgoCD sees the route as drifted
+- `timeouts`: `request` and `backendRequest`, as Gateway API durations (e.g. `30s`, `2m`)
+
+`backendRefs` cannot be set: every rule sends traffic to the microservice Service, except rules with a `RequestRedirect` filter, which get no `backendRefs` because the Gateway API doesn't allow both.
+
+The Gateway API limits are checked when rendering: 16 rules, 64 matches per rule and 128 across all rules, 16 filters per rule, 16 headers and 16 query parameters per match.
+
+`timeouts` at the `httpRoute` level is the default for every rule; a rule with its own `timeouts` uses those instead, as a whole, so a rule's timeouts are always the ones written in one place. `timeouts: {}` on a rule turns the default off for it, e.g. for long-polling or streaming paths. When neither is set, the Gateway implementation's default applies. `backendRequest` must not exceed `request`: the chart can't check it, the Gateway API rejects the route when it's applied.
+
+`parentRefs` (`name`, `namespace`, `sectionName`) and `hostnames` support templating; the chart fails if one of them renders empty. To leave `namespace` or `sectionName` out, omit the key. `rules` and `timeouts` are rendered as written, without templating.
+
+Minimal example:
+
+```
+# /microservices/agreement-management/qa/values.yaml
+
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: "external"
+        namespace: "envoy-gateway-system"
+    hostnames:
+      - "api.dev.interop.pagopa.it"
+```
+
+Example with a prefix rewrite, a redirect and timeouts:
+
+```
+# /microservices/agreement-management/qa/values.yaml
+
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: "external"
+        namespace: "envoy-gateway-system"
+        sectionName: "http"
+    hostnames:
+      - "api.dev.interop.pagopa.it"
+    timeouts:
+      request: 30s
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /api
+        filters:
+          - type: URLRewrite
+            urlRewrite:
+              path:
+                type: ReplacePrefixMatch
+                replacePrefixMatch: /
+        timeouts:
+          request: 2m
+      - matches:
+          - path:
+              type: Exact
+              value: /old-path
+        filters:
+          - type: RequestRedirect
+            requestRedirect:
+              path:
+                type: ReplaceFullPath
+                replaceFullPath: /new-path
+              statusCode: 301
+```
 ---
 
 ## 4. Service

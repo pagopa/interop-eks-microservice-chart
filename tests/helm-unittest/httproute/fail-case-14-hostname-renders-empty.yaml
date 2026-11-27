@@ -1,0 +1,10 @@
+locals:
+  appHostname: ""
+
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames:
+      - "{{ .Values.locals.appHostname }}"

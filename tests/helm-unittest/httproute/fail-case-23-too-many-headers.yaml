@@ -1,0 +1,14 @@
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames:
+      - test.example.internal
+    # The same header match repeated through a YAML alias: only the count matters
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /
+            headers: [&h {type: Exact, name: X-Test, value: "v"}, *h, *h, *h, *h, *h, *h, *h, *h, *h, *h, *h, *h, *h, *h, *h, *h]

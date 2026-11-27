@@ -1,0 +1,10 @@
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+    hostnames:
+      - test.example.internal
+    rules:
+      - timeouts:
+          backendRequest: 2 minutes

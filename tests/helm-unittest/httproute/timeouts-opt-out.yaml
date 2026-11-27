@@ -1,0 +1,14 @@
+gateway:
+  httpRoute:
+    timeouts:
+      request: 10s
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /stream
+        timeouts: {}
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /

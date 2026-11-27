@@ -1,0 +1,5 @@
+# No rules: a single rule matching every path
+gateway:
+  httpRoute:
+    annotations:
+      example.com/owner: test

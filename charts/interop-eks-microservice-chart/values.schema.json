@@ -421,6 +421,260 @@
         }
       }
     },
+    "gateway": {
+      "description": "Gateway API resources",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "httpRoute": {
+          "description": "Gateway API HTTPRoute properties",
+          "type": "object",
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "comment": "When create:true, parentRefs and hostnames are required and must be non-empty; a missing or null create counts as false.",
+              "if": {
+                "required": [
+                  "create"
+                ],
+                "properties": {
+                  "create": {
+                    "const": true
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "parentRefs",
+                  "hostnames"
+                ],
+                "properties": {
+                  "parentRefs": {
+                    "minItems": 1
+                  },
+                  "hostnames": {
+                    "minItems": 1
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "create": {
+              "description": "Enable HTTPRoute creation",
+              "type": "boolean",
+              "default": false
+            },
+            "annotations": {
+              "description": "Annotations to apply to the HTTPRoute resource",
+              "type": "object",
+              "default": {},
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "parentRefs": {
+              "description": "Gateways the route attaches to",
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "description": "Gateway name",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "namespace": {
+                    "description": "Gateway namespace; defaults to the route namespace",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sectionName": {
+                    "description": "Gateway listener name",
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            "hostnames": {
+              "description": "Hostnames the route matches",
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "timeouts": {
+              "$ref": "#/definitions/gatewayHttpRouteTimeouts"
+            },
+            "rules": {
+              "description": "Route rules; backendRefs are set by the chart (the microservice Service, none on redirect rules)",
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "matches": {
+                    "description": "Gateway API HTTPRouteMatch list",
+                    "type": "array",
+                    "maxItems": 64,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "path"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "headers": {
+                          "description": "Gateway API HTTPHeaderMatch list; type is required, so the API server has no default to fill in",
+                          "type": "array",
+                          "maxItems": 16,
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "type",
+                              "name",
+                              "value"
+                            ],
+                            "additionalProperties": false,
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "Exact",
+                                  "RegularExpression"
+                                ]
+                              },
+                              "name": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "queryParams": {
+                          "description": "Gateway API HTTPQueryParamMatch list; type is required, so the API server has no default to fill in",
+                          "type": "array",
+                          "maxItems": 16,
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "type",
+                              "name",
+                              "value"
+                            ],
+                            "additionalProperties": false,
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "Exact",
+                                  "RegularExpression"
+                                ]
+                              },
+                              "name": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "method": {
+                          "description": "HTTP method",
+                          "type": "string"
+                        },
+                        "path": {
+                          "description": "Path match; required, so the API server has no default to fill in",
+                          "type": "object",
+                          "required": [
+                            "type",
+                            "value"
+                          ],
+                          "additionalProperties": false,
+                          "allOf": [
+                            {
+                              "comment": "Like the Gateway API: Exact and PathPrefix values must start with '/', RegularExpression values can be any regex.",
+                              "if": {
+                                "required": [
+                                  "type"
+                                ],
+                                "properties": {
+                                  "type": {
+                                    "enum": [
+                                      "Exact",
+                                      "PathPrefix"
+                                    ]
+                                  }
+                                }
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "pattern": "^/"
+                                  }
+                                }
+                              }
+                            }
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "PathPrefix",
+                                "Exact",
+                                "RegularExpression"
+                              ]
+                            },
+                            "value": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "filters": {
+                    "description": "Gateway API HTTPRouteFilter list",
+                    "type": "array",
+                    "maxItems": 16,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      }
+                    }
+                  },
+                  "timeouts": {
+                    "$ref": "#/definitions/gatewayHttpRouteTimeouts"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "name": {
       "description": "Service name",
       "type": "string"
@@ -831,6 +1085,28 @@
       }
     }
   ],
+  "definitions": {
+    "gatewayHttpRouteTimeouts": {
+      "description": "Gateway API HTTPRoute rule timeouts",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "description": "Timeout for the whole request, from the client to the response",
+          "$ref": "#/definitions/gatewayDuration"
+        },
+        "backendRequest": {
+          "description": "Timeout for each request to the backend; must not exceed request",
+          "$ref": "#/definitions/gatewayDuration"
+        }
+      }
+    },
+    "gatewayDuration": {
+      "description": "Gateway API duration (e.g. 30s, 2m, 1h30m)",
+      "type": "string",
+      "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
+    }
+  },
   "required": [
     "name",
     "namespace",

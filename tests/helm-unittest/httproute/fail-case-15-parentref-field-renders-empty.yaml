@@ -1,0 +1,8 @@
+gateway:
+  httpRoute:
+    create: true
+    parentRefs:
+      - name: external
+        namespace: "{{ if false }}unused{{ end }}"
+    hostnames:
+      - test.example.internal

@@ -1,0 +1,6 @@
+gateway:
+  httpRoute:
+    create: true
+    parentRefs: []
+    hostnames:
+      - test.example.internal
