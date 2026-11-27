@@ -16,8 +16,5 @@ metadata:
   name: {{ include "interop-eks-microservice-chart.flywayConfigmapName" . }}
   namespace: {{ .Values.namespace }}
 data:
-  {{- range $key, $val := $selectedMigrations }}
-  {{ $key }}: |-
-{{ $val | indent 4 }}
-  {{- end }}
+  {{- $selectedMigrations | toYaml | nindent 2 }}
 {{- end }}
